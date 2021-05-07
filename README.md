@@ -1,4 +1,4 @@
-# Security Operations and Automation via PowerShell
+# SOAP Scripts
 ## Table of Contents
 * [Installation](#installation)
 * [Usage](#usage)
