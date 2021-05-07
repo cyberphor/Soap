@@ -1,4 +1,4 @@
-# Security Operations and Automation via PowerShell (SOAP)
+# Security Operations and Automation via PowerShell
 ## Table of Contents
 * [Installation](#installation)
 * [Usage](#usage)
