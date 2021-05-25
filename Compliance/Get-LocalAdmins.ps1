@@ -1,13 +1,13 @@
-function Get-NewLocalAdmins {
-  $BaselineAdmins = "Administrator","elliot.alderson"
-  $Administrator = Get-LocalGroupMember -Group "Administrators" |
+function Get-LocalAdmins {
+  $BaselineLocalAdmins = "Administrator","elliot.alderson"
+  $LocalAdmins = Get-LocalGroupMember -Group "Administrators" |
     Where-Object { $_.ObjectClass -notmatch "Group" } |
     Select-Object -ExpandProperty Name |
     ForEach-Object { $_.Split("\")[1] } |
-    Where-Object { $BaselineAdmins -notcontains $_ }
+    Where-Object { $BaselineLocalAdmins -notcontains $_ }
     
-  if ($Administrator) {
-    if ($Administrator.Count -gt 1) { $Administrator = $Administrator[0] }
+  if ($LocalAdmins) {
+    if ($LocalAdmins.Count -gt 1) { $LocalAdmins = $LocalAdmins[0] }
     $Username = (Get-WmiObject -Class Win32_NetworkLoginProfile | 
       Where-Object { $_.Name -notlike "*admin*" -and $_.Name -notlike "*service*" } |
       Sort-Object -Property LastLogon -Descending |
@@ -20,9 +20,9 @@ function Get-NewLocalAdmins {
     Add-Member -InputObject $ComputerInformation -MemberType NoteProperty -Name Username -Value $Username
     Add-Member -InputObject $ComputerInformation -MemberType NoteProperty -Name Model -Value $Model
     Add-Member -InputObject $ComputerInformation -MemberType NoteProperty -Name SerialNumber -Value $SerialNumber
-    Add-Member -InputObject $ComputerInformation -MemberType NoteProperty -Name Administrator -Value $Administrator
+    Add-Member -InputObject $ComputerInformation -MemberType NoteProperty -Name LocalAdmins -Value $LocalAdmins
     $ComputerInformation
   }
 }
 
-Get-NetLocalAdmins
+Get-LocalAdmins
