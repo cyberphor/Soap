@@ -13,3 +13,6 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 * Incident Response
   * Invoke-IncidentResponse
     * Get-SuspiciousFile 
+    * Stop-EvilProcess
+    * Block-TrafficToIpAddress
+    * Unblock-TrafficToIpAddress
