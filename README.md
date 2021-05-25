@@ -8,6 +8,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
   * Invoke-AdScrub
   * Invoke-BaselineAudit
     * Get-NewLocalAdmins
+    * Get-OpenPorts
     * Get-WirelessComputers
 * Incident Response
   * Invoke-IncidentResponse
