@@ -9,3 +9,6 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
   * Invoke-BaselineAudit
     * Get-NewLocalAdmins
     * Get-WirelessComputers
+* Incident Response
+  * Invoke-IncidentResponse
+    * Get-SuspiciousFile 
