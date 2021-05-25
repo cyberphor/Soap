@@ -9,7 +9,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 * Compliance
   * Invoke-AdScrub
   * Invoke-BaselineAudit
-    * Get-NewLocalAdmins
+    * Get-LocalAdmins
     * Get-OpenPorts
     * Get-Shares
     * Get-WirelessComputers
