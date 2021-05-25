@@ -1,4 +1,4 @@
-# contents of scare.ps1 PowerShell script (plays Imperial March from Star Wars)
+# plays Imperial March from Star Wars
 [console]::beep(440,500)
 [console]::beep(440,500)
 [console]::beep(440,500)
