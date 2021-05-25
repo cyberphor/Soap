@@ -1,6 +1,8 @@
 function Get-Shares {
-  $BaselineShares = "ADMIN$,"C$","IPC$"
-  $Shares = Get-SmbShare | Where-Object { $BaselineShares -notcontains $_.Name }
+  $BaselineShares = "ADMIN$,"C$","IPC$","print$"
+  $Shares = Get-SmbShare | 
+      Select-Object -ExpandProperty Name |
+      Where-Object { $BaselineShares -notcontains $_ }
     
   if ($Shares) {
       $Username = (Get-WmiObject -Class Win32_NetworkLoginProfile | 
