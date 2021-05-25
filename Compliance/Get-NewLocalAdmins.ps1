@@ -1,6 +1,5 @@
-$BaselineAdmins = "Administrator","elliot.alderson"
-
 function Get-NewLocalAdmins {
+  $BaselineAdmins = "Administrator","elliot.alderson"
   $Administrator = Get-LocalGroupMember -Group "Administrators" |
     Where-Object { $_.ObjectClass -notmatch "Group" } |
     Select-Object -ExpandProperty Name |
