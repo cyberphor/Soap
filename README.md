@@ -4,6 +4,8 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 
 * Adversary Emulation
   * Invoke-CyberEffect
+    * Start-RollingReboot
+    * Start-Scareware
 * Compliance
   * Invoke-AdScrub
   * Invoke-BaselineAudit
