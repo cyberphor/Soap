@@ -8,7 +8,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
     * Start-Scareware
 * Compliance
   * Invoke-AdScrub
-  * Invoke-BaselineAudit
+  * Invoke-SystemAudit
     * Get-LocalAdmins
     * Get-OpenPorts
     * Get-Shares
