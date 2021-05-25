@@ -5,5 +5,5 @@ $Computers = Get-AdComputer -Filter * -SearchBase $SearchBase | Select-Object -E
 Invoke-Command -ComputerName $Computers -ErrorAction Ignore -FilePath ./Get-WirelessComputers.ps1 |
 Select Hostname, Username, Model, SerialNumber | Format-Table -AutoSize
 
-Invoke-Command -ComputerName $Computers -ErrorAction Ignore -FilePath ./Get-WirelessComputers.ps1 |
+Invoke-Command -ComputerName $Computers -ErrorAction Ignore -FilePath ./Get-NewLocalAdmins.ps1 |
 Select Hostname, Username, Model, SerialNumber, Administrator | Format-Table -AutoSize
