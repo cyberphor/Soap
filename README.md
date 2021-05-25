@@ -1,14 +1,6 @@
-# SOAP Scripts
-## Table of Contents
-* [Installation](#installation)
-* [Usage](#usage)
+# SOAP
 
-## Installation
-Domain Controllers
-* Invoke-AdScrubUsingAtcts.ps1
-
-## Usage
-Invoke-AdScrubUsingAtcts.ps1
-```pwsg
-Invoke-AdScrubUsingAtcts.ps1
-```
+|Category|Script|
+|---|---|
+|AdversaryEmulation|Invoke-CyberEffect|
+|Compliance|Invoke-AdScrub<br>Invoke-BaselineAudit|
