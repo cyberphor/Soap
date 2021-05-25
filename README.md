@@ -16,3 +16,6 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
     * Stop-EvilProcess
     * Block-TrafficToIpAddress
     * Unblock-TrafficToIpAddress
+* Threat Hunting
+  * Invoke-ThreatHunt
+    * Get-IpAddressFromFirewallLog  
