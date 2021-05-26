@@ -27,7 +27,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
     - [x] Block-TrafficToIpAddress
     - [x] Unblock-TrafficToIpAddress
 * Systems Administration
-  - [ ] Invoke-SysAdmin
+  - [x] Invoke-Sysadmin
     - [ ] Get-Asset
     - [ ] Get-DiskSpace
 * Threat Hunting
