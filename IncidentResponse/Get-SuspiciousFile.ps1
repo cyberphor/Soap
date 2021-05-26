@@ -1,6 +1,8 @@
 function Get-SuspiciousFile {
+  Param([string]$Filename)
+  
   $SearchPath = "C:\"
-  $File = Get-ChildItem $SearchPath -Recurse -Name *foo.txt | Select-Object -First 1
+  $File = Get-ChildItem $SearchPath -Recurse -Name $Filename | Select-Object -First 1
   $FilePath = $SearchPath + $File
     
   if ($File) {
@@ -23,4 +25,4 @@ function Get-SuspiciousFile {
   }
 }
 
-Get-SuspiciousFile
+Get-SuspiciousFile -Filename $Filename
