@@ -4,7 +4,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 
 * Active Defense
   - [ ] Invoke-ActiveDefense
-    - [ ] Start-ProcessReaper
+    - [x] Start-ProcessReaper
     - [ ] Start-LogEnrichment
 * Adversary Emulation
   - [x] Invoke-CyberEffect
