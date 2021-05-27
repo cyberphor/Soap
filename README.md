@@ -4,8 +4,8 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 
 * Active Defense
   - [ ] Invoke-ActiveDefense
-    - [x] Start-ProcessReaper
     - [ ] Start-LogEnrichment
+    - [x] Start-ProcessReaper
 * Adversary Emulation
   - [x] Invoke-CyberEffect
     - [x] Start-RollingReboot
@@ -23,12 +23,13 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 * Incident Response
   - [x] Invoke-IncidentResponse
     - [x] Get-SuspiciousFile 
+    - [ ] Start-Panic
     - [x] Stop-EvilProcess
     - [x] Block-TrafficToIpAddress
     - [x] Unblock-TrafficToIpAddress
-    - [ ] Start-Panic
 * Systems Administration
   - [x] Invoke-Sysadmin
+    - [x] Enable-WinRm
     - [ ] Get-Asset
     - [ ] Get-DiskSpace
 * Threat Hunting
