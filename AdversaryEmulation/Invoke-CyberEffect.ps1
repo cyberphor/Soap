@@ -1,10 +1,16 @@
-$Credential = Get-Credential
-$Computers = ""
+Param(
+    [switch]$RollingReboot,
+    [switch]$Scareware,
+    [string]$SearchBase = (Get-AdDomain).DistinguishedName
+)
 
-$Computers | 
-foreach {
-    $Session = New-PSSession -ComputerName $_ -Credential $Credential -ErrorAction Ignore
-    Copy-Item .\Start-Scare.ps1 -Destination "C:\" -ToSession $Session -ErrorAction Ignore
+if ($RollingReboot) {
+    $Script = ".\Start-RollingReboot.ps1"
+} elseif ($Scareware) {
+    $Script = ".\Start-Scareware.ps1"
+} else {
+    exit
 }
 
-Invoke-Command -ComputerName $Computers -ErrorAction Ignore -FilePath ./Start-RollingReboot.ps1
+$Computers = Get-AdComputer -Filter * -SearchBase $SearchBase | Select-Object -ExpandProperty Name
+Invoke-Command -ComputerName $Computers -ErrorAction Ignore -FilePath $Script 
