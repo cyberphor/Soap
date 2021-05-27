@@ -8,7 +8,7 @@ if ($AssetInventory) {
     $Script = ".\Get-Asset.ps1"
     $Output = "Hostname", "Username", "Model", "SerialNumber", "FilePath", "Sha256Hash"
 } elseif ($DiskSpace) {
-    $Script = ".\Get-DiskSpace"
+    $Script = ".\Get-DiskSpace.ps1"
     $Output = "Hostname", "Username", "Model", "SerialNumber"
 } else {
     exit
