@@ -26,6 +26,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
     - [x] Stop-EvilProcess
     - [x] Block-TrafficToIpAddress
     - [x] Unblock-TrafficToIpAddress
+    - [ ] Start-Panic
 * Systems Administration
   - [x] Invoke-Sysadmin
     - [ ] Get-Asset
