@@ -32,6 +32,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
     - [x] Enable-WinRm
     - [ ] Get-Asset
     - [ ] Get-DiskSpace
+    - [ ] Move-Logs
 * Threat Hunting
   - [x] Invoke-ThreatHunt
     - [x] Get-IpAddressFromFirewallLog  
