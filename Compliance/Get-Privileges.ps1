@@ -1,5 +1,5 @@
-# powershell.exe "whoami /priv | findstr Enabled | % { $_.Split(" ")[0] } > C:\Users\Public\Privileges.txt"
-# create a scheduled task...using the Users group
+# powershell.exe "whoami /priv | findstr Enabled | % { $_.Split(" ")[0] } > C:\Users\Public\privileges-$env:USERNAME.txt"
+# create a scheduled task and run this command...using the Users group
 
 SecEdit.exe /export /areas USER_RIGHTS /cfg ./user-rights.txt /quiet
 $Privileges = Get-Content .\user-rights.txt | Where-Object { $_.StartsWith("Se") }
