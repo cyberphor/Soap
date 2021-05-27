@@ -20,4 +20,4 @@ if ($SuspiciousFile) {
 
 $Computers = Get-AdComputer -Filter * -SearchBase $SearchBase | Select-Object -ExpandProperty Name
 Invoke-Command -ComputerName $Computers -ErrorAction Ignore -FilePath $Script -ArgumentList $ArgumentList |
-Select $Output
+Select $Output | Format-Table -AutoSize
