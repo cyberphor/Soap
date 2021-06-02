@@ -7,12 +7,12 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
     - [ ] Start-LogEnrichment
     - [x] Start-ProcessReaper
 * Adversary Emulation
-  - [x] Invoke-CyberEffect
-    - [x] Start-RollingReboot
-    - [ ] Start-Scareware
+  - [ ] Invoke-AdversaryEmulation
+    - [ ] Invoke-APT1 
 * Compliance
   - [x] Invoke-AdScrub
   - [x] Invoke-SystemAudit
+    - [ ] Get-FolderPermissions 
     - [x] Get-LocalAdmins
     - [x] Get-OpenPorts
     - [x] Get-Shares
@@ -20,6 +20,10 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
   - [ ] Invoke-NetworkAudit
     - [ ] Get-DomainAdmins
     - [ ] Get-Privileges
+* Cyber Effects
+  - [x] Invoke-CyberEffect
+    - [x] Start-RollingReboot
+    - [ ] Start-Scareware
 * Incident Response
   - [x] Invoke-IncidentResponse
     - [x] Get-SuspiciousFile 
