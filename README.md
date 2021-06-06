@@ -12,7 +12,10 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 * Compliance
   - [x] Invoke-AdScrub
   - [x] Invoke-SystemAudit
-    - [ ] Get-FolderPermissions 
+    - [ ] Get-Rights
+    - [ ] Get-NtfsPermissions
+    - [ ] Get-Privileges
+    - [ ] Get-IntegrityLevels 
     - [x] Get-LocalAdmins
     - [x] Get-OpenPorts
     - [x] Get-Shares
