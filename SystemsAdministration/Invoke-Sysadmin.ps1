@@ -1,6 +1,7 @@
 Param(
     [switch]$AssetInventory,
     [switch]$DiskSpace,
+    [string]$RemoveProgram
     [string]$SearchBase = (Get-AdDomain).DistinguishedName
 )
 
@@ -10,6 +11,9 @@ if ($AssetInventory) {
 } elseif ($DiskSpace) {
     $Script = ".\Get-DiskSpace.ps1"
     $Output = "Hostname", "Username", "Model", "SerialNumber"
+} elseif ($RemoveProgram) {
+    $Script = ".\Remove-Program.ps1"
+    $Output = "Hostname"
 } else {
     exit
 }
