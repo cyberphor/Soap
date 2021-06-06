@@ -40,6 +40,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
     - [ ] Get-Asset
     - [ ] Get-DiskSpace
     - [ ] Move-Logs
+    - [ ] Remove-Program
 * Threat Hunting
   - [x] Invoke-ThreatHunt
     - [x] Get-IpAddressFromFirewallLog  
