@@ -7,7 +7,8 @@ Param(
 
 if ($AssetInventory) {
     $Script = ".\Get-Asset.ps1"
-    $Output = "Hostname", "Username", "Model", "SerialNumber", "FilePath", "Sha256Hash"
+    $Output = "IpAddress","Hostname","Version","Make","Model","SerialNumber","Architecture","OperatingSystem"
+    # Sort-Object { $_.IpAddress -as [Version] } | Format-Table -AutoSize 
 } elseif ($DiskSpace) {
     $Script = ".\Get-DiskSpace.ps1"
     $Output = "Hostname", "Username", "Model", "SerialNumber"
