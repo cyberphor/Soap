@@ -12,8 +12,8 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 * Compliance
   - [x] Invoke-AdScrub
   - [x] Invoke-SystemAudit
-    - [ ] Get-Rights
-    - [ ] Get-NtfsPermissions
+    - [ ] Get-LogonRights
+    - [ ] Get-FilePermissions
     - [ ] Get-IntegrityLevels 
     - [x] Get-LocalAdmins
     - [x] Get-OpenPorts
