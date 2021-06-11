@@ -14,7 +14,6 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
   - [x] Invoke-SystemAudit
     - [ ] Get-Rights
     - [ ] Get-NtfsPermissions
-    - [ ] Get-Privileges
     - [ ] Get-IntegrityLevels 
     - [x] Get-LocalAdmins
     - [x] Get-OpenPorts
