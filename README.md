@@ -37,7 +37,7 @@ Hello world! Below is a quick summary of the PowerShell scripts I'm developing f
 * Systems Administration
   - [x] Invoke-Sysadmin
     - [x] Enable-WinRm
-    - [ ] Get-Asset
+    - [x] Get-Asset
     - [ ] Get-DiskSpace
     - [ ] Move-Logs
     - [ ] Remove-Program
