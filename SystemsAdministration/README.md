@@ -16,6 +16,14 @@ Mandatory Integrity Control (MIC) allows the Windows kernel to “...enforce new
 * Low: very restricted
 
 ## Privileges 
+Privileges represent what users are specifically allowed to do to other processes. The following are considered maleficent privileges: 
+* Act as a Part of the Operating System: create a new logon session via username/password or group memberships. 
+* Create a Token Object: execute a command under the context of a new SAT. 
+* Debug Programs: inject a malicious DLL into a process or dump password hashes.
+* Impersonate a Client: steal someone’s SAT after they authenticate. 
+* Load and Unload Device Drivers: load drivers and execute malicious commands.  
+* Restore Files and Directories: bypass NTFS permissions and replace any file (i.e. OS or application binaries).
+* Take Ownership: change permissions (the ACL) for processes, threads, registry keys, etc. 
 
 ## User Account Control
 
