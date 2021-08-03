@@ -5,6 +5,6 @@ function Get-Computers {
 function Get-LocalGroupAdministrators {
   $Computers = Get-Computers
   Invoke-Command -ComputerName $Computers -ScriptBlock {
-    net localgroup "administrators"
-  }
+    Get-LocalGroupMember -Group "administrators"
+  } | Select-Object @{Name="Hostname";Expression={$_.PSComputerName}}, @{Name="Member";Expression={$_.Name}}
 }
