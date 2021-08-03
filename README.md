@@ -1,6 +1,4 @@
-# SOAP
-
-Hello world! Below is a quick summary of the PowerShell scripts I'm developing for Security Operations and Automation.
+## Security Operations and Automation via PowerShell (SOAP)
 
 * Active Defense
   - [ ] Invoke-ActiveDefense
