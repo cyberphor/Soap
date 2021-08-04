@@ -1,6 +1,5 @@
-## Security Operations and Automation via PowerShell (SOAP)
-
-Functions available within the soap PowerShell module:
+## SOAP
+SOAP is a PowerShell module for security operations and automation. See below for the list of functions either in development or available now: 
 - [ ] Start-LogEnrichment
 - [x] Start-ProcessReaper
 - [ ] Invoke-APT1 
