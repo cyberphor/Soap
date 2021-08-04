@@ -1,43 +1,31 @@
 ## Security Operations and Automation via PowerShell (SOAP)
 
-* Active Defense
-  - [ ] Invoke-ActiveDefense
-    - [ ] Start-LogEnrichment
-    - [x] Start-ProcessReaper
-* Adversary Emulation
-  - [ ] Invoke-AdversaryEmulation
-    - [ ] Invoke-APT1 
-* Compliance
-  - [x] Invoke-AdScrub
-  - [x] Invoke-SystemAudit
-    - [ ] Get-LogonRights
-    - [ ] Get-FilePermissions
-    - [ ] Get-IntegrityLevels 
-    - [x] Get-LocalAdmins
-    - [x] Get-OpenPorts
-    - [x] Get-Shares
-    - [x] Get-WirelessComputers
-  - [ ] Invoke-NetworkAudit
-    - [ ] Get-DomainAdmins
-    - [ ] Get-Privileges
-* Cyber Effects
-  - [x] Invoke-CyberEffect
-    - [x] Start-RollingReboot
-    - [ ] Start-Scareware
-* Incident Response
-  - [x] Invoke-IncidentResponse
-    - [x] Get-SuspiciousFile 
-    - [ ] Start-Panic
-    - [x] Stop-EvilProcess
-    - [x] Block-TrafficToIpAddress
-    - [x] Unblock-TrafficToIpAddress
-* Systems Administration
-  - [x] Invoke-Sysadmin
-    - [x] Enable-WinRm
-    - [x] Get-Asset
-    - [ ] Get-DiskSpace
-    - [ ] Move-Logs
-    - [ ] Remove-Program
-* Threat Hunting
-  - [x] Invoke-ThreatHunt
-    - [x] Get-IpAddressFromFirewallLog  
+Functions available within the soap PowerShell module:
+- [ ] Start-LogEnrichment
+- [x] Start-ProcessReaper
+- [ ] Invoke-APT1 
+- [x] Invoke-AdScrub
+- [x] Invoke-SystemAudit
+- [ ] Get-LogonRights
+- [ ] Get-FilePermissions
+- [ ] Get-IntegrityLevels 
+- [x] Get-LocalAdmins
+- [x] Get-OpenPorts
+- [x] Get-Shares
+- [x] Get-WirelessComputers
+- [ ] Get-DomainAdmins
+- [ ] Get-Privileges
+- [x] Invoke-CyberEffect
+- [x] Start-RollingReboot
+- [ ] Start-Scareware
+- [x] Get-SuspiciousFile 
+- [ ] Start-Panic
+- [x] Stop-EvilProcess
+- [x] Block-TrafficToIpAddress
+- [x] Unblock-TrafficToIpAddress
+- [x] Enable-WinRm
+- [x] Get-Asset
+- [ ] Get-DiskSpace
+- [ ] Move-Logs
+- [ ] Remove-Program
+- [x] Get-IpAddressFromFirewallLog  
