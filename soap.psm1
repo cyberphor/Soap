@@ -33,7 +33,7 @@ function Get-ComputersOnline {
         }
     }
 
-    $ComputersOnline | Sort-Object { $_ -as [Version] }
+    $ComputersOnline | Sort-Object { $_ -as [Version] } -Unique
 }
 
 function Get-LocalGroupAdministrators {
