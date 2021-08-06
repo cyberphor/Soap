@@ -42,3 +42,16 @@ function Get-LocalGroupAdministrators {
       Get-LocalGroupMember -Group "administrators"
     } | Select-Object @{Name="Hostname";Expression={$_.PSComputerName}}, @{Name="Member";Expression={$_.Name}}
 }
+
+function ConvertTo-Base64 {
+    $Text = ""
+    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
+    $EncodedText =[Convert]::ToBase64String($Bytes)
+    $EncodedText
+}
+
+function ConvertFrom-Base64 {
+    $EncodedText = ""
+    $DecodedText = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($EncodedText))
+    $DecodedText
+}
