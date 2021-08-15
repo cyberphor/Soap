@@ -5,8 +5,8 @@ function Get-ComputersInActiveDirectory {
 function Get-ComputersOnline {
     <#
     Param(
-        [Parameter(Mandatory)][string]$NetworkId,
-        [Parameter(Mandatory)][string]$NetworkRange
+        [Parameter(Position=0,Mandatory=$true)][string]$NetworkId,
+        [Parameter(Position=1,Mandatory=$true)][string]$NetworkRange
     )
     #>
     
