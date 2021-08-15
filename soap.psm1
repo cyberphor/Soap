@@ -1,5 +1,5 @@
 function Get-Computers {
-    Get-AdComputer -Filter * | Select-Object -ExpandProperty Name
+    Get-AdComputer -Filter * | Select-Object -ExpandProperty Name | Sort-Object
 }
 
 function Get-ComputersOnline {
