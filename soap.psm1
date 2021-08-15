@@ -1,8 +1,15 @@
-function Get-Computers {
+function Get-ComputersInActiveDirectory {
     Get-AdComputer -Filter * | Select-Object -ExpandProperty Name | Sort-Object
 }
 
 function Get-ComputersOnline {
+    <#
+    Param(
+        [Parameter(Mandatory)][string]$NetworkId,
+        [Parameter(Mandatory)][string]$NetworkRange
+    )
+    #>
+    
     $NetworkId = "10.11.12"
     $NetworkRange = 1..254
     Get-Event -SourceIdentifier "Ping-*" | Remove-Event -ErrorAction Ignore
