@@ -1,7 +1,14 @@
-# SOAP
-Security Operations and Automation via PowerShell
-
-## Description
+```
+   
+   _____   ____     ___     ____ 
+  / ___/  / __ \   /   |   / __ \
+  \__ \  / / / /  / /| |  / /_/ /
+ ___/ / / /_/ /  / ___ | / ____/ 
+/____/  \____/  /_/  |_|/_/      
+   
+   
+```
+# Security Operations and Automation via PowerShell (SOAP)
 SOAP, or soap.psm1, is a PowerShell module designed to enhance security operations and automation. It specifically includes functions for incident handling and penetration testing. 
 
 ## Installation
