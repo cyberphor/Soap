@@ -8,8 +8,8 @@
    
    
 ```
-# Security Operations and Automation via PowerShell (SOAP)
-SOAP, or soap.psm1, is a PowerShell module designed to enhance security operations and automation. It specifically includes functions for incident handling and penetration testing. 
+# Security Operations and Automation via PowerShell
+soap.psm1 is a PowerShell module designed to enhance security operations and automation. It specifically includes functions for incident handling and penetration testing. 
 
 ## Installation
 ```pwsh
