@@ -11,8 +11,43 @@ function Test-Port {
     }
 }
 
-function Get-ComputersInActiveDirectory {
-    Get-AdComputer -Filter * | Select-Object -ExpandProperty Name | Sort-Object
+function Get-AssetInventory {
+    [CmdletBinding(DefaultParameterSetName = "IP")]
+    param(
+        [Parameter(ParameterSetName = "IP",Position = 0)]$NetworkId = "10.11.12.",
+        [Parameter(ParameterSetName = "IP",Position = 1)]$NetworkRange = (1..254),
+        [Parameter(ParameterSetName = "DNS",Position = 0)]$Filter = "*"
+    )
+
+    $Assets = @()
+    if ($PSCmdlet.ParameterSetName -eq "IP") {
+        $NetworkRange |
+        ForEach-Object {
+            $IpAddress = $NetworkId + $_
+            $NameResolved = Resolve-DnsName -Name $IpAddress -Type PTR -DnsOnly -ErrorAction Ignore
+            if ($NameResolved -and $IpAddress -notin $Assets.IpAddress) {
+                $Hostname = $NameResolved.NameHost | Where-Object { $_ -notlike "*_site*" }
+            } else {
+                $Hostname = "-"
+            }
+            $Asset = New-Object psobject
+            Add-Member -InputObject $Asset -MemberType NoteProperty -Name IpAddress -Value $IpAddress
+            Add-Member -InputObject $Assets -MemberType NoteProperty -Name Hostname -Value $Hostname
+            $Assets += $Asset
+        }
+    } elseif ($PSCmdlet.ParameterSetName -eq "DNS") {
+        Get-AdComputer -Filter $Filter |
+        Select-Object -ExpandProperty DnsHostname |
+        ForEach-Object {
+            $NameResolved = Resolve-DnsName -Name $_ -DnsOnly -ErrorAction Ignore
+            if ($NameResolved -and $NameResolved.IpAddress -notin $Assets.IpAddress) {
+                $Asset = New-Object psobject
+                Add-Member -InputObject $Asset -MemberType NoteProperty -Name IpAddress -Value $IpAddress
+                Add-Member -InputObject $Assets -MemberType NoteProperty -Name Hostname -Value $Hostname
+                $Assets += $Asset    
+            }
+        }
+    }
 }
 
 function Get-ComputersOnline {
