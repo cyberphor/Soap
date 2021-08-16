@@ -1,3 +1,16 @@
+function Test-Port {
+    param(
+        [Parameter(Mandatory)][ipaddress]$IpAddress,
+        [Parameter(Mandatory)][int]$Port,
+        [ValidateSet("TCP","UDP")[string]$Protocol = "TCP"
+    )
+
+    if ($Protocol -eq "TCP") {
+        $TcpClient = New-Object System.Net.Sockets.TcpClient
+        $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
+    }
+}
+
 function Get-ComputersInActiveDirectory {
     Get-AdComputer -Filter * | Select-Object -ExpandProperty Name | Sort-Object
 }
