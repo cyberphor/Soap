@@ -9,7 +9,7 @@ function Get-Logs {
         *[EventData[Data[@Name='TargetUserSid'] != 'S-1-5-18']]
         "
         
-    Get-WinEvent -LogName $LogName -FilterXpath $Query
+    Get-WinEvent -ComputerName = $ComputerName -LogName $LogName -FilterXpath $Query
 }
 
 function Test-Port {
