@@ -1,3 +1,17 @@
+function Get-Logs {
+    param(
+        [Parameter()][string]$ComputerName = $env:COMPUTERNAME,
+        [ValidateSet("Security","ForwardedEvents")][string]$LogName,
+        [ValidateSet("4624")][string]$EventId
+    )
+    
+    $Query = "*[System[EventId='$EventId']] and
+        *[EventData[Data[@Name='TargetUserSid'] != 'S-1-5-18']]
+        "
+        
+    Get-WinEvent -LogName $LogName -FilterXpath $Query
+}
+
 function Test-Port {
     param(
         [Parameter(Mandatory)][ipaddress]$IpAddress,
