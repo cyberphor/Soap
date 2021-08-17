@@ -1,7 +1,7 @@
 function Get-Logs {
     param(
         [Parameter()][string]$ComputerName = $env:COMPUTERNAME,
-        [ValidateSet("Security","ForwardedEvents")][string]$LogName,
+        [ValidateSet("Security","ForwardedEvents")][string]$LogName = "Security",
         [ValidateSet("4624")][string]$EventId
     )
     
