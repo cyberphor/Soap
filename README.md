@@ -22,6 +22,6 @@ Get-AssetInventory
 ```
 
 ## Examples
-```bash
+```pwsh
 Get-WinEventParser -ComputerName EVILCORP01 -LogName Security -EventId 4624 -Days 3
 ```
