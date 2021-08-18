@@ -1,13 +1,12 @@
 ```
-   _____   ____     ___     ____ 
-  / ___/  / __ \   /   |   / __ \
-  \__ \  / / / /  / /| |  / /_/ /
- ___/ / / /_/ /  / ___ | / ____/ 
-/____/  \____/  /_/  |_|/_/      
+   _____   ____     ___      ____ 
+  / ___/  / __ \   /   |    / __ \
+  \__ \  / / / /  / /| |   / /_/ /
+ ___/ / / /_/ /  / ___ |  / ____/ 
+/____/  \____/  /_/  |_| /_/      
    
 ```
-# Security Operations and Automation via PowerShell
-soap.psm1 is a PowerShell module and includes incident handling and penetration testing functions. 
+SOAP is a PowerShell module with incident handling and penetration testing functions. 
 
 ## Installation
 ```pwsh
