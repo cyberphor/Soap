@@ -1,15 +1,35 @@
-function Get-Logs {
+function Get-WinEventParser {
     param(
-        [Parameter()][string]$ComputerName = $env:COMPUTERNAME,
-        [ValidateSet("Security","ForwardedEvents")][string]$LogName = "Security",
-        [ValidateSet("4624")][string]$EventId
+        [Parameter(Position=0)][string[]]$ComputerName,
+        [ValidateSet("Application","Security","System","ForwardedEvents")][Parameter(Position=1)][string]$LogName,
+        [ValidateSet("4624","4625","4688","5156","20001")][Parameter(Position=2)][string]$EventId,
+        [Parameter(Position=3)][int]$Days =1
     )
     
-    $Query = "*[System[EventId='$EventId']] and
-        *[EventData[Data[@Name='TargetUserSid'] != 'S-1-5-18']]
-        "
-        
-    Get-WinEvent -ComputerName = $ComputerName -LogName $LogName -FilterXpath $Query
+    $FilterHashTable = @{
+        LogName = $LogName;
+        StartTime = (Get-Date).AddDays(-$Days);
+        EndTime = (Get-Date);
+        Id = $EventID;
+    }
+    
+    if ($EventId -eq "4624") {
+        Get-WinEvent -ComputerName $ComputerName -FilterHashTable |
+        foreach {
+            $TimeCreated = $_.TimeCreated
+            $XmlData = [xml]$_.ToXml()
+            $Hostname = $XmlData.Event.System.Computer
+            $Username = $XmlData.Event.EventData.Data[5].'#text'
+            $LogonType = $XmlData.Event.EventData.Data[8].'#text'
+            
+            $Event = New-Object psobject
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
+            $Event
+        }
+    }
 }
 
 function Test-Port {
