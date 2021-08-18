@@ -14,21 +14,23 @@ function Get-WinEventParser {
     }
     
     if ($EventId -eq "4624") {
-        Get-WinEvent -ComputerName $ComputerName -FilterHashTable |
-        foreach {
-            $TimeCreated = $_.TimeCreated
-            $XmlData = [xml]$_.ToXml()
-            $Hostname = $XmlData.Event.System.Computer
-            $Username = $XmlData.Event.EventData.Data[5].'#text'
-            $LogonType = $XmlData.Event.EventData.Data[8].'#text'
+        Invoke-Command -ComputerName $ComputerName -ArgumentList $FilterHashTable -ScriptBlock {
+            Get-WinEvent -FilterHashTable $args[0] |
+            foreach {
+                $TimeCreated = $_.TimeCreated
+                $XmlData = [xml]$_.ToXml()
+                $Hostname = $XmlData.Event.System.Computer
+                $Username = $XmlData.Event.EventData.Data[5].'#text'
+                $LogonType = $XmlData.Event.EventData.Data[8].'#text'
             
-            $Event = New-Object psobject
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
-            $Event
-        }
+                $Event = New-Object psobject
+                Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
+                Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
+                Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
+                Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
+                $Event
+            }
+        } | Select-Object TimeCreated,Hostname,Username,LogonType
     }
 }
 
