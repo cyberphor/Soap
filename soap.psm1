@@ -3,7 +3,7 @@ function Get-WinEventParser {
         [Parameter(Position=0)][string[]]$ComputerName,
         [ValidateSet("Application","Security","System","ForwardedEvents")][Parameter(Position=1)][string]$LogName,
         [ValidateSet("4624","4625","4688","5156","20001")][Parameter(Position=2)][string]$EventId,
-        [Parameter(Position=3)][int]$Days =1
+        [Parameter(Position=3)][int]$Days = 1
     )
     
     $FilterHashTable = @{
