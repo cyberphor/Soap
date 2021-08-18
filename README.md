@@ -12,11 +12,16 @@ SOAP is a PowerShell module with incident handling and penetration testing funct
 ```pwsh
 Invoke-WebRequest -Url $URL -Outfile $Outfile
 Copy-Item -Path $Outfile -Destination "C:\Program Files\WindowsPowerShell\Modules\"
-Import-Module -Name soap
+Import-Module -Name soap -Force
 ```
 
 ## Usage
 Once you download and import the PowerShell module, a number of functions will become available. See below for an example of how to invoke one. 
 ```pwsh
 Get-AssetInventory
+```
+
+## Examples
+```bash
+Get-WinEventParser -ComputerName EVILCORP01 -LogName Security -EventId 4624 -Days 3
 ```
