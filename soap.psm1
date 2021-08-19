@@ -1,6 +1,6 @@
 function Get-WinEventParser {
     param(
-        [Parameter(Position=0)][string[]]$ComputerName,
+        [Parameter(Position=0)][string]$ComputerName = $env:COMPUTERNAME,
         [ValidateSet("Application","Security","System","ForwardedEvents")][Parameter(Position=1)][string]$LogName,
         [ValidateSet("4624","4625","4688","5156","20001")][Parameter(Position=2)][string]$EventId,
         [Parameter(Position=3)][int]$Days = 1
@@ -10,27 +10,25 @@ function Get-WinEventParser {
         LogName = $LogName;
         StartTime = (Get-Date).AddDays(-$Days);
         EndTime = (Get-Date);
-        Id = $EventID;
+        Id = $EventId;
     }
     
     if ($EventId -eq "4624") {
-        Invoke-Command -ComputerName $ComputerName -ArgumentList $FilterHashTable -ScriptBlock {
-            Get-WinEvent -FilterHashTable $args[0] |
-            foreach {
-                $TimeCreated = $_.TimeCreated
-                $XmlData = [xml]$_.ToXml()
-                $Hostname = $XmlData.Event.System.Computer
-                $Username = $XmlData.Event.EventData.Data[5].'#text'
-                $LogonType = $XmlData.Event.EventData.Data[8].'#text'
+        Get-WinEvent -ComputerName $ComputerName -FilterHashTable $FilterHashTable |
+        foreach {
+            $TimeCreated = $_.TimeCreated
+            $XmlData = [xml]$_.ToXml()
+            $Hostname = $XmlData.Event.System.Computer
+            $Username = $XmlData.Event.EventData.Data[5].'#text'
+            $LogonType = $XmlData.Event.EventData.Data[8].'#text'
             
-                $Event = New-Object psobject
-                Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
-                Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
-                Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
-                Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
-                $Event
-            }
-        } | Select-Object TimeCreated,Hostname,Username,LogonType
+            $Event = New-Object psobject
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
+            $Event
+        } 
     }
 }
 
