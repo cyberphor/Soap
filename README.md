@@ -16,10 +16,7 @@ Import-Module -Name soap -Force
 ```
 
 ## Usage
-Once you download and import the PowerShell module, a number of functions will become available. See below for an example of how to invoke one. 
-```pwsh
-Get-AssetInventory
-```
+Once you download and import the PowerShell module, a number of functions will become available. See below for examples invoking them. 
 
 ## Examples
 ```pwsh
