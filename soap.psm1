@@ -205,7 +205,7 @@ function Get-LocalAdministrators {
     $Computers = (Get-AdComputer -Filter "ObjectClass -like 'Computer'").Name
     Invoke-Command -ErrorAction Ignore -ComputerName $Computers -ScriptBlock{
         (Get-LocalGroupMember -Group "Administrators").Name | 
-        Where-Object { $_ -notmatch '(*Domain Admins|*Administrator)' }
+        Where-Object { $_ -notmatch '(.*Domain Admins|.*Administrator)' }
     }
 }
 
