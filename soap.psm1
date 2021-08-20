@@ -1,35 +1,144 @@
-function Get-WinEventParser {
+function Invoke-WinEventParser {
     param(
-        [Parameter(Position=0)][string]$ComputerName = $env:COMPUTERNAME,
+        [Parameter(Position=0)][string]$ComputerName,
         [ValidateSet("Application","Security","System","ForwardedEvents")][Parameter(Position=1)][string]$LogName,
-        [ValidateSet("4624","4625","4688","5156","20001")][Parameter(Position=2)][string]$EventId,
-        [Parameter(Position=3)][int]$Days = 1
+        [ValidateSet("4624","4625","4688","5156","6416")][Parameter(Position=2)]$EventId,
+        [Parameter(Position=3)][int]$Days=1
     )
-    
-    $FilterHashTable = @{
-        LogName = $LogName;
-        StartTime = (Get-Date).AddDays(-$Days);
-        EndTime = (Get-Date);
-        Id = $EventId;
-    }
-    
+
+    $Date = (Get-Date -Format yyyy-MM-dd-HHmm)
+    $Path = "C:\EventId-$EventId-$Date.csv"
+
     if ($EventId -eq "4624") {
-        Get-WinEvent -ComputerName $ComputerName -FilterHashTable $FilterHashTable |
-        foreach {
+        $FilterXPath = "*[
+            System[
+                (EventId=4624)
+            ] and
+            EventData[
+                Data[@Name='TargetUserSid'] != 'S-1-5-18' and
+                Data[@Name='LogonType'] = '2' or
+                Data[@Name='LogonType'] = '3' or
+                Data[@Name='LogonType'] = '7' or
+                Data[@Name='LogonType'] = '10' or
+                Data[@Name='LogonType'] = '11'
+            ]
+        ]"
+
+        filter Read-WinEvent {
             $TimeCreated = $_.TimeCreated
             $XmlData = [xml]$_.ToXml()
             $Hostname = $XmlData.Event.System.Computer
             $Username = $XmlData.Event.EventData.Data[5].'#text'
             $LogonType = $XmlData.Event.EventData.Data[8].'#text'
-            
+            $Event = New-Object psobject
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
+            if ($Event.Username -notmatch '(.*\$$|DWM-|ANONYMOUS*)') { $Event }
+        }
+    } elseif ($EventId -eq "4625") {
+        $FilterXPath = "*[
+            System[
+                (EventId=4625)
+            ] and
+            EventData[
+                Data[@Name='TargetUserName'] != '-'
+            ]
+        ]"
+
+        filter Read-WinEvent {
+            $TimeCreated = $_.TimeCreated
+            $XmlData = [xml]$_.ToXml()
+            $Hostname = $XmlData.Event.System.Computer
+            $Username = $XmlData.Event.EventData.Data[5].'#text'
+            $LogonType = $XmlData.Event.EventData.Data[10].'#text'
             $Event = New-Object psobject
             Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
             Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
             Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
             Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
             $Event
-        } 
-    }
+        }
+    } elseif ($EventId -eq "4688") {
+        $FilterXPath = "*[
+            System[
+                (EventId=4688)
+            ] and
+            EventData[
+                Data[@Name='TargetUserName'] != '-' and
+                Data[@Name='TargetUserName'] != 'LOCAL SERVICE'
+            ]
+        ]"
+
+        filter Read-WinEvent {
+            $TimeCreated = $_.TimeCreated
+            $XmlData = [xml]$_.ToXml()
+            $Hostname = $XmlData.Event.System.Computer
+            $Username = $XmlData.Event.EventData.Data[8].'#text'
+            $CommandLine = $XmlData.Event.EventData.Data[10].'#text'
+            $Event = New-Object psobject
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name CommandLine -Value $CommandLine
+            if ($Event.Username -notmatch '(.*\$$|DWM-)') { $Event }
+        }
+    } elseif ($EventId -eq "5156") {
+        $FilterXPath = "*[
+            System[
+                (EventId=4688)
+            ] and
+            EventData[
+                Data[@Name='DestAddress'] != '127.0.0.1' and
+                Data[@Name='DestAddress'] != '::1'
+            ]
+        ]"
+
+        filter Read-WinEvent {
+            $TimeCreated = $_.TimeCreated
+            $XmlData = [xml]$_.ToXml()
+            $Hostname = $XmlData.Event.System.Computer
+            $DestAddress = $XmlData.Event.EventData.Data[5].'#text'
+            $DestPort = $XmlData.Event.EventData.Data[6].'#text'
+            $Event = New-Object psobject
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name DestinationAddress -Value $DestAddress
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name DestinationPort -Value $DestPort
+            $Event
+        }
+    } elseif ($EventId -eq "6416") {
+        $FilterXPath = "*[
+            System[
+                (EventId=6416)
+            ] 
+        ]"
+
+        filter Read-WinEvent {
+            $TimeCreated = $_.TimeCreated
+            $XmlData = [xml]$_.ToXml()
+            $Hostname = $XmlData.Event.System.Computer
+            $DeviceDescription = $XmlData.Event.EventData.Data[5].'#text'
+            $ClassName = $XmlData.Event.EventData.Data[7].'#text'
+            $Event = New-Object psobject
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name ClassName -Value $ClassName
+            Add-Member -InputObject $Event -MemberType NoteProperty -Name DeviceDescription -Value $DeviceDescription
+            $Event
+        }
+    } 
+
+    Get-WinEvent -ComputerName $ComputerName -LogName $LogName -FilterXPath $FilterXPath |
+    Read-WinEvent |
+    ConvertTo-Csv -NoTypeInformation |
+    Tee-Object -FilePath $Path |
+    ConvertFrom-Csv
+
+    $Events = Get-Content $Path
+    Remove-Item -Path $Path
+    $Events | ConvertFrom-Csv | Export-Csv -NoTypeInformation -Path $Path
 }
 
 function Test-Port {
