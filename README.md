@@ -12,13 +12,13 @@ SOAP is a PowerShell module with incident handling and penetration testing funct
 ```pwsh
 $Repo = "soap"
 $Download = "$Repo.zip"
-$Uri = "https://github.com/cyberphor/soap/archive/master.zip" 
+$Uri = "https://github.com/cyberphor/$Repo/archive/master.zip" 
 Invoke-WebRequest -Uri $Uri -OutFile $Download
 Expand-Archive $Download
 Remove-Item $Download
 
 Copy-Item -Path $Repo -Destination "C:\Program Files\WindowsPowerShell\Modules\"
-Import-Module -Name soap -Force
+Import-Module -Name $Repo -Force
 ```
 
 ## Usage
