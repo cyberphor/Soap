@@ -26,7 +26,7 @@ Once you download and import the PowerShell module, a number of functions will b
 
 ## Examples
 ```pwsh
-Invoke-WinEventParser -ComputerName EVILCORP01 -LogName ForwardedEvents -EventId 4624 -Days 3
+Invoke-WinEventParser -ComputerName WindowsEventCollector01 -LogName ForwardedEvents -EventId 4624 -Days 3
 
 TimeCreated          Hostname Username        LogonType
 -----------          -------- --------        ---------
