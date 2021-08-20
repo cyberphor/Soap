@@ -1,4 +1,4 @@
-## Functions
+## SOAP Functions
 
 SOAP does or will include the functions listed below.
 - [ ] Start-LogEnrichment
