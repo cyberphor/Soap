@@ -10,8 +10,14 @@ SOAP is a PowerShell module with incident handling and penetration testing funct
 
 ## Installation
 ```pwsh
-Invoke-WebRequest -Url $URL -Outfile $Outfile
-Copy-Item -Path $Outfile -Destination "C:\Program Files\WindowsPowerShell\Modules\"
+$Repo = "soap"
+$Download = "$Repo.zip"
+$Uri = "https://github.com/cyberphor/soap/archive/master.zip" 
+Invoke-WebRequest -Uri $Uri -OutFile $Download
+Expand-Archive $Download
+Remove-Item $Download
+
+Copy-Item -Path $Repo -Destination "C:\Program Files\WindowsPowerShell\Modules\"
 Import-Module -Name soap -Force
 ```
 
@@ -20,7 +26,7 @@ Once you download and import the PowerShell module, a number of functions will b
 
 ## Examples
 ```pwsh
-Get-WinEventParser -ComputerName EVILCORP01 -LogName Security -EventId 4624 -Days 3
+Invoke-WinEventParser -ComputerName EVILCORP01 -LogName ForwardedEvents -EventId 4624 -Days 3
 
 TimeCreated          Hostname Username        LogonType
 -----------          -------- --------        ---------
