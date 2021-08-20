@@ -201,11 +201,11 @@ function Test-Port {
     }
 }
 
-function Get-LocalGroupAdministrators {
-    $Computers = Get-Computers
-    Invoke-Command -ComputerName $Computers -ScriptBlock {
-      Get-LocalGroupMember -Group "administrators"
-    } | Select-Object @{Name="Hostname";Expression={$_.PSComputerName}}, @{Name="Member";Expression={$_.Name}}
+function Get-LocalAdministrators {
+    $Computers = (Get-AdComputer -Filter "ObjectClass -like 'Computer'").Name
+    Invoke-Command -ErrorAction Ignore -ComputerName $Computers -ScriptBlock{
+        (Get-LocalGroupMember -Group "Administrators").Name
+    }
 }
 
 filter ConvertTo-Base64 {
