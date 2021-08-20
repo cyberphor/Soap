@@ -211,8 +211,8 @@ function Get-LocalGroupAdministrators {
 filter ConvertTo-Base64 {
     $Text = $_
     $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
-    $EncodedText =[Convert]::ToBase64String($Bytes)
-    $EncodedText
+    $EncodedText = [Convert]::ToBase64String($Bytes)
+    $EncodedText 
 }
 
 filter ConvertFrom-Base64 {
