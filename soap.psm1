@@ -144,7 +144,7 @@ function Invoke-WinEventParser {
 function Get-AssetInventory {
     param(
         [Parameter(Position = 0)]$NetworkId = "10.11.12.",
-        [Parameter(Position = 1)]$NetworkRange = (1..254),
+        [Parameter(Position = 1)]$NetworkRange = (1..254)
     )
 
     $IpAddresses = @()
@@ -192,7 +192,7 @@ function Test-Port {
     param(
         [Parameter(Mandatory)][ipaddress]$IpAddress,
         [Parameter(Mandatory)][int]$Port,
-        [ValidateSet("TCP","UDP")[string]$Protocol = "TCP"
+        [ValidateSet("TCP","UDP")][string]$Protocol = "TCP"
     )
 
     if ($Protocol -eq "TCP") {
