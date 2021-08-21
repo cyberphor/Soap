@@ -22,6 +22,10 @@ function Read-SoapModule {
     ise "C:\Program Files\WindowsPowerShell\Modules\soap\soap.psm1"
 }
 
+function Remove-SoapModule {
+    Remove-Item -Path "C:\Program Files\WindowsPowerShell\Modules\soap" -Recurse
+}
+
 function Invoke-WinEventParser {
     param(
         [Parameter(Position=0)][string]$ComputerName,
