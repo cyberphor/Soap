@@ -1,3 +1,7 @@
+function Read-SoapModule {
+    ise "C:\Program Files\WindowsPowerShell\Modules\soap\soap.psm1"
+}
+
 function Invoke-WinEventParser {
     param(
         [Parameter(Position=0)][string]$ComputerName,
@@ -130,15 +134,19 @@ function Invoke-WinEventParser {
         }
     } 
 
-    Get-WinEvent -ComputerName $ComputerName -LogName $LogName -FilterXPath $FilterXPath |
-    Read-WinEvent |
-    ConvertTo-Csv -NoTypeInformation |
-    Tee-Object -FilePath $Path |
-    ConvertFrom-Csv
+    try {
+        Get-WinEvent -ComputerName $ComputerName -LogName $LogName -FilterXPath $FilterXPath |
+        Read-WinEvent |
+        ConvertTo-Csv -NoTypeInformation |
+        Tee-Object -FilePath $Path |
+        ConvertFrom-Csv
 
-    $Events = Get-Content $Path
-    Remove-Item -Path $Path
-    $Events | ConvertFrom-Csv | Export-Csv -NoTypeInformation -Path $Path
+        $Events = Get-Content $Path
+        Remove-Item -Path $Path
+        $Events | ConvertFrom-Csv | Export-Csv -NoTypeInformation -Path $Path
+    } catch {
+        Write-Output "[x] Error."
+    }
 }
 
 function Get-AssetInventory {
