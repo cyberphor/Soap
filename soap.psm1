@@ -253,3 +253,58 @@ filter ConvertFrom-Base64 {
     $DecodedText = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($EncodedText))
     $DecodedText
 }
+
+function New-IncidentResponse {
+    # New-IncidentResponse -Category "Root-Level Intrusion" 
+ 
+     <# case
+        case-001/ 
+            001-case-checklist.csv
+            001-case-file.csv
+            001-case-journal.csv
+            001-case-summary.txt
+
+        001-case-checklist.csv/
+            | procedures                    | initials | dtg             |   
+            | ----------------------------- | -------- | --------------- |
+            | step 1                        | vf       | 2021-08-28 1130 |
+            | step 2                        | vf       | 2021-08-28 1130 |
+            | step 3                        | vf       | 2021-08-28 1130 |
+
+        001-case-file.csv/tab01-detection
+            | check number | observation | evidence | initials | dtg             | 
+            | ------------ | ----------- | -------- | -------- | --------------- |
+            | 05           |             |          | vf       | 2021-08-28 1130 |
+            | 05           |             |          | vf       | 2021-08-28 1130 |
+            | 05           |             |          | vf       | 2021-08-28 1130 |
+        001-case-file.csv/tab02-analysis
+            | question     | hypothesis | data source | answer | initials | dtg             |
+            | ------------ | ---------- | ----------- | ------ | -------- | --------------- |
+            |              |            |             |        | vf       | 2021-08-28 1130 | 
+            |              |            |             |        | vf       | 2021-08-28 1130 | 
+            |              |            |             |        | vf       | 2021-08-28 1130 | 
+        001-case-file.csv/tab03-containment
+        001-case-file.csv/tab04-eradication
+        001-case-file.csv/tab05-recovery
+        001-case-file.csv/tab06-post-incident-activity
+    
+        001-case-journal.csv/
+            | notes                         | initials | dtg             |   
+            | ----------------------------- | -------- | --------------- |
+            | started exsum                 | vf       | 2021-08-28 1130 |
+            | conducted analysis            | vf       | 2021-08-28 1130 |
+        
+        001-case-summary.txt/
+            | field              | value                | initials | dtg              |   
+            | ------------------ | -------------------- | -------- | ---------------- |
+            | case number        | 001                  | vf       | 2021-08-28 1143  |
+            | description        | odd logins to admin  | vf       | 2021-08-28 1143  | 
+            | incident responder | victor               | vf       | 2021-08-28 1143  |
+            | incident category  | root-level intrusion | vf       | 2021-08-28 1143  | 
+            | operational impact | medium               | vf       | 2021-08-28 1143  | 
+            | technical impact   | medium               | vf       | 2021-08-28 1143  | 
+            | time detected      | 2021-08-28 1130      | vf       | 2021-08-28 1143  |
+            | time contained     | 2021-08-28 1700      | vf       | 2021-08-28 1700  | 
+            | time resolved      | 2021-08-29 0900      | vf       | 2021-08-29 0900  | 
+     #>
+ }
