@@ -1,0 +1,22 @@
+<QueryList>
+  <Query Id="0">
+    <Select Path="Security">
+        *[System[
+            (EventID=4624) and
+            TimeCreated[timediff(@SystemTime) &lt;= 259200000]
+        ]] and 
+        *[EventData[
+            Data[@Name='TargetUserSid'] != 'S-1-5-7' and
+            Data[@Name='TargetUserSid'] != 'S-1-5-18' and
+            Data[@Name='TargetUserSid'] != 'S-1-5-90-0-1' and
+            Data[@Name='TargetUserSid'] != 'S-1-5-96-0-0' and
+            Data[@Name='TargetUserSid'] != 'S-1-5-96-0-1' and
+            (Data[@Name='LogonType'] = '2' or
+            Data[@Name='LogonType'] = '3' or
+            Data[@Name='LogonType'] = '7' or
+            Data[@Name='LogonType'] = '10' or
+            Data[@Name='LogonType'] = '11')
+        ]]
+    </Select>
+  </Query>
+</QueryList>
