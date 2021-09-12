@@ -1,0 +1,10 @@
+<QueryList>
+  <Query Id="0">
+    <Select Path="Security">
+        *[System[
+            (EventID=4625) and
+            TimeCreated[timediff(@SystemTime) &lt;= 86400000]
+        ]]
+    </Select>
+  </Query>
+</QueryList>
