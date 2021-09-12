@@ -1,0 +1,31 @@
+### How to Use PowerShell and XML Filters to Select Specific Windows Events
+**Step 1.** Create a file with your desired XML filter (ex: "Last24Hrs-Security-Logons.xml").
+```xml
+<QueryList>
+  <Query Id="0">
+    <Select Path="Security">
+        *[System[
+            (EventID=4624) and
+            TimeCreated[timediff(@SystemTime) &lt;= 86400000] <!-- LAST 24 HRS -->
+        ]] and 
+        *[EventData[
+            Data[@Name='TargetUserSid'] != 'S-1-5-7' and <!-- ANONYMOUS -->
+            Data[@Name='TargetUserSid'] != 'S-1-5-18' and <!-- SYSTEM -->
+            Data[@Name='TargetUserSid'] != 'S-1-5-90-0-1' and <!-- DESKTOP WINDOWS MANAGER -->
+            Data[@Name='TargetUserSid'] != 'S-1-5-96-0-0' and <!-- USER MODE DRIVER FRAMEWORK -->
+            Data[@Name='TargetUserSid'] != 'S-1-5-96-0-1' and <!-- USER MODE DRIVER FRAMEWORK -->
+            (Data[@Name='LogonType'] = '2' or <!-- LOCAL -->
+            Data[@Name='LogonType'] = '3' or <!-- NETWORK -->
+            Data[@Name='LogonType'] = '7' or <!-- LOCKSCREEN -->
+            Data[@Name='LogonType'] = '10' or <!-- RDP -->
+            Data[@Name='LogonType'] = '11') <!-- CACHED -->
+        ]]
+    </Select>
+  </Query>
+</QueryList>
+```
+
+**Step 2.** Use the `Get-WinEvent` cmdlet to ingest your XML filter. 
+```pwsh
+Get-WinEvent -FilterXml ([xml](gc .\Last24Hrs-Security-Logons.xml))
+```
