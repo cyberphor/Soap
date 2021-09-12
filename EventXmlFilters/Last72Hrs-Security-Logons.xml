@@ -1,9 +1,9 @@
-<QueryList>
+﻿<QueryList>
   <Query Id="0">
     <Select Path="Security">
         *[System[
             (EventID=4624) and
-            TimeCreated[timediff(@SystemTime) &lt;= 259200000]
+            TimeCreated[timediff(@SystemTime) &lt;= 259200000] <!-- LAST 72 HRS -->
         ]] and 
         *[EventData[
             Data[@Name='TargetUserSid'] != 'S-1-5-7' and <!-- ANONYMOUS -->

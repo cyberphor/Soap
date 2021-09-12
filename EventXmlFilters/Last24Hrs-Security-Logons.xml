@@ -1,4 +1,4 @@
-<QueryList>
+﻿<QueryList>
   <Query Id="0">
     <Select Path="Security">
         *[System[
