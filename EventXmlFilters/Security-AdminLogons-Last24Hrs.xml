@@ -1,0 +1,15 @@
+<QueryList>
+  <Query Id="0" Path="Security">
+    <Select Path="Security">
+        *[System[
+            (EventID=4672) and
+            TimeCreated[timediff(@SystemTime) &lt;= 86400000]
+        ]] and 
+        *[EventData[
+            Data[@Name='SubjectUserSid'] != 'S-1-5-18' and <!-- SYSTEM -->
+            Data[@Name='SubjectUserSid'] != 'S-1-5-20' and <!-- NETWORK SERVICE -->
+            Data[@Name='SubjectUserSid'] != 'S-1-5-90-0-2' <!-- DWM-2 -->
+        ]]
+    </Select>
+  </Query>
+</QueryList>
