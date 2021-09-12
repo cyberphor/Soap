@@ -1,6 +1,6 @@
-## SOAP Functions
+### SOAP Functions
 
-SOAP does or will include the functions listed below.
+I have and/or plan to include the functions listed below in the SOAP PowerShell module. 
 - [ ] Start-LogEnrichment
 - [x] Start-ProcessReaper
 - [ ] Invoke-APT1 
