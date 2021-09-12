@@ -3,7 +3,7 @@
     <Select Path="Security">
         *[System[
             (EventID=4672) and
-            TimeCreated[timediff(@SystemTime) &lt;= 86400000]
+            TimeCreated[timediff(@SystemTime) &lt;= 259200000]
         ]] and 
         *[EventData[
             Data[@Name='SubjectUserSid'] != 'S-1-5-18' and <!-- SYSTEM -->
