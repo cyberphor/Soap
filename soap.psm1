@@ -1,3 +1,24 @@
+filter Read-WinEvent {
+    <#
+    .SYNOPSIS
+    Returns all the properties of a given Windows event.
+    #>
+    $Event = New-Object psobject
+    $XmlData = [xml]$_.ToXml()
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
+    $EventData = $XmlData.Event.EventData.Data
+    
+    for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
+        Add-Member -InputObject $Event -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
+    }
+
+    $Event
+}
+
 function Import-SoapModule {
     $Owner = "cyberphor"
     $Repo = "soap"
