@@ -8,7 +8,7 @@
 ```
 SOAP is a PowerShell module with incident handling and penetration testing functions. 
 
-## Installation
+### Installation
 Execute the commands below in PowerShell to automatically download and import SOAP.
 ```pwsh
 $Owner = "cyberphor"
@@ -27,11 +27,31 @@ Move-Item -Path $Repo -Destination $ModulesFolder
 Import-Module $Repo -Force
 ```
 
-## Usage
+### Usage
 Once SOAP is imported, a number of functions will become available. See below for usage examples.
+
+#### Read-WinEvent
+```pwsh
+Get-WinEvent -FilterXml ([xml](Get-Content C:\Users\Victor\Documents\EventXmlFilters\Last24Hrs-Security-Logons.xml)) | 
+Read-WinEvent | 
+Select-Object -Property TimeCreated,Hostname,TargetUserName,LogonType | Format-Table -AutoSize
+```
+```bash
+# output
+TimeCreated          Hostname TargetUserName LogonType
+-----------          -------- -------------- ---------
+9/12/2021 8:23:27 AM Windows  Victor         2        
+9/12/2021 8:23:27 AM Windows  Victor         2        
+9/12/2021 7:49:37 AM Windows  Victor         2        
+9/12/2021 7:49:37 AM Windows  Victor         2
+```
+
+#### Invoke-WinEventParser
 ```pwsh
 Invoke-WinEventParser -ComputerName WindowsEventCollector01 -LogName ForwardedEvents -EventId 4624 -Days 3
-
+```
+```bash
+# output
 TimeCreated          Hostname Username        LogonType
 -----------          -------- --------        ---------
 8/19/2021 5:59:32 AM Windows  SYSTEM          5        
