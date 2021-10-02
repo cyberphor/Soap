@@ -24,6 +24,7 @@ Invoke-Command -ComputerName $Computers -ArgumentList $FilterHashTable -ScriptBl
         DeviceDescription = $XmlData.Event.EventData.Data[5].'#text'
         ClassName = $XmlData.Event.EventData.Data[7].'#text'
     }
+    # if ($Event.ClassName -notmatch '(*print*|*smartcard*)') { return $Event }
     return $Event
   }
 } -ErrorAction Ignore
