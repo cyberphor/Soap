@@ -1,3 +1,6 @@
+## Failed Logons (Domain Admins)
+
+**Step 1.** Setup.
 ```pwsh
 $DomainAdmins = (Get-AdGroupMember -Identity "Domain Admins").SamAccountName
 $Computers = (Get-AdComputer -Filter "ObjectClass -like 'Computer'").Name | Sort-Object
@@ -8,7 +11,10 @@ $FilterHashTable = @{
   StartTime = (Get-Date).AddDays(-$DaysAgo)
   EndTime = Get-Date
 }
+```
 
+**Step 2.** Query.
+```pwsh
 Invoke-Command -ComputerName $Computers -ArgumentList $FilterHashTable,$DomainAdmins -ScriptBlock {
   $FilterHashTable = $args[0]
   $DomainAdmins = $args[1]
