@@ -2,6 +2,10 @@
 
 **Frequency.** Daily. 
 
+**Tactic.** ID - TA002: Execution (https://attack.mitre.org/tactics/TA0002/).
+
+**Technique.** n/a.
+
 **Purpose.** Process creation events must be monitored in order to detect the execution of malicious commands, scripts, and/or binaries. 
 
 **Task.** Search for evidence of suspicious process execution.
