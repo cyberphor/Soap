@@ -25,7 +25,7 @@ Invoke-Command -ComputerName $Computers -ArgumentList $FilterHashTable -ScriptBl
             NewProcessName = $XmlData.Event.EventData.Data[5].'#text'
         }
     
-    if ($Event.NewProcessName -like '*powershell*') { return $Event }
+        if ($Event.NewProcessName -like '*powershell*') { return $Event }
     }
 } -ErrorAction Ignore
 
