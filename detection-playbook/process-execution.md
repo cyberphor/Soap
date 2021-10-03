@@ -6,7 +6,7 @@
 
 **Task.** Search for evidence of suspicious process execution.
 
-**Conditions.** An audit policy has been configured and WinRM is enabled across the network. You are given a list a computer names, domain administrator permissions, access to PowerShell, knowledge of the accepted configuration baseline (ex: STIGs, SHB, etc.), and knowledge of benign process names.  
+**Conditions.** An audit policy has been configured and WinRM is enabled across the network. You are given a list of computer names, domain administrator permissions, access to PowerShell, knowledge of the accepted configuration baseline (ex: STIGs, SHB, etc.), and knowledge of benign process names.  
 
 **Standards.** You were able to query the network for process creation events and determine if suspicious activity has occurred.  
 
