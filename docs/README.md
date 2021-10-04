@@ -1,14 +1,32 @@
 ## How to Enable Specific Event Logs
 ### The Sexy Six
 Event IDs: 4624, 4663, 4688, 5140, 5156, 7040, 7045
-```cmd
+```pwsh
 auditpol /get /category:'*'
+```
+```pwsh
 auditpol /set /subcategory:"Logon" /success:enable /failue:enable
+```
+```pwsh
 auditpol /set /subcategory:"File System" /success:enable
+```
+```pwsh
 auditpol /set /subcategory:"Process Creation" /success:enable
+```
+```pwsh
 auditpol /set /subcategory:"File Share" /success:enable
+```
+```pwsh
 auditpol /set /subcategory:"Registry" /success:enable
+```
+```pwsh
 auditpol /set /subcategory:"Filtering Platform Connection" /success:enable
+```
+
+### Scheduled Tasks
+Event ID 4698
+```pwsh
+auditpol /set /subcategory:"Other Object Access Events" /success:enable
 ```
 
 ### Removable Media
