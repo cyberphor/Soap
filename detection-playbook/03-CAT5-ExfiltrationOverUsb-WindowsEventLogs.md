@@ -12,6 +12,8 @@
 
 **Standards.** You were able to query the network for process creation events and determine if suspicious activity has occurred.
 
+**Incident Category.** CAT 5 - Non-Compliance Activity.
+
 **How Often to Run This Play.** Daily. 
 
 **Tactic ID.** TA002 - Exfiltration (https://attack.mitre.org/tactics/TA0010/).
@@ -19,8 +21,6 @@
 **Technique ID.** T1052 - Exfiltration Over Physical Medium (https://attack.mitre.org/techniques/T1052/).
 
 **Sub-Technique ID.** T1052.001 - Exfiltration over USB (https://attack.mitre.org/techniques/T1052/001/).
-
-**Incident Category.** CAT 5 - Non-Compliance Activity.
 
 ---
 
