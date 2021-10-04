@@ -12,6 +12,8 @@
 
 **Standards.** You were able to query the network for failed logon attempts to Domain Admin accounts and determine if suspicious activity has occurred. 
 
+**Incident Category.** CAT 8 - Investigation.
+
 **How Often to Run This Play.** Daily. 
 
 **Tactic ID.** TA0006 - Credential Access. (https://attack.mitre.org/tactics/TA0006/).
@@ -19,8 +21,6 @@
 **Technique ID.** T1110 - Brute Force. (https://attack.mitre.org/techniques/).
 
 **Sub-Technique ID.** T1110.001 - Password Guessing. (https://attack.mitre.org/techniques/T1110/001/).
-
-**Incident Category.** CAT 8 - Investigation.
 
 ---
 
