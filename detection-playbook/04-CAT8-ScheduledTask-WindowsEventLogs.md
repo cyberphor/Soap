@@ -12,6 +12,8 @@
 
 **Standards.** You were able to query the network for task scheduling events and determine if suspicious activity has occurred. 
 
+**Incident Category.** CAT 8 - Investigation.
+
 **How Often to Run This Play.** Daily. 
 
 **Tactic ID.** TA0003 - Persistence (https://attack.mitre.org/tactics/TA0003/).
@@ -19,8 +21,6 @@
 **Technique ID.** T1053 - Scheduled Task/Job (https://attack.mitre.org/techniques/T1053/).
 
 **Sub-Technique ID.** T1053.005 - Scheduled Task (https://attack.mitre.org/techniques/T1053/005/).
-
-**Incident Category.** CAT 8 - Investigation.
 
 ---
 
