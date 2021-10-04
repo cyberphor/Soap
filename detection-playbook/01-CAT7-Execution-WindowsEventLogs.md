@@ -1,20 +1,28 @@
-## Process Execution
+### Process Execution
 
-**Frequency.** Daily. 
+---
 
-**Tactic.** ID - TA002: Execution (https://attack.mitre.org/tactics/TA0002/).
-
-**Technique.** n/a.
+**Play ID.** 01-CAT7-Execution-WindowsEventLogs.
 
 **Purpose.** Process creation events must be monitored in order to detect the execution of malicious commands, scripts, and/or binaries. 
 
 **Task.** Search for evidence of suspicious process execution.
 
-**Conditions.** An audit policy has been configured and WinRM is enabled across the network. You are given a list of computer names, domain administrator permissions, access to PowerShell, knowledge of the accepted configuration baseline (ex: STIGs, SHB, etc.), and knowledge of benign process names.  
+**Conditions.** An audit policy has been configured and WinRM is enabled across the network. You are given a list of computer names, domain administrator permissions, access to PowerShell, knowledge of the accepted configuration baseline (ex: STIGs, SHB, etc.), and benign process names.
 
-**Standards.** You were able to query the network for process creation events and determine if suspicious activity has occurred.  
+**Standards.** You were able to query the network for process creation events and determine if suspicious activity has occurred. 
 
 **Incident Category.** CAT 7 - Malicious Logic.
+
+**How Often to Run This Play.** Daily. 
+
+**Tactic ID.** TA0002 - Execution (https://attack.mitre.org/tactics/TA0002/).
+
+**Technique ID.** n/a.
+
+**Sub-Technique ID.** n/a.
+
+---
 
 **Step 1.** Declare your variables.
 ```pwsh
