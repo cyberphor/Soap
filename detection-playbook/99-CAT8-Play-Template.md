@@ -2,7 +2,7 @@
 
 ---
 
-**Play ID.** 99-CAT8-Tactic-Technique-DataSource.
+**Play ID.** 99-CAT8-SubTechnique-DataSource.
 
 **Purpose.** The purpose of this play is to detect foo bar.
 
