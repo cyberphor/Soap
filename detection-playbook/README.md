@@ -6,6 +6,7 @@
 | 01 | CAT 7 | Execution | n/a | n/a | Windows Event Logs | 
 | 01 | CAT 7 | Execution | Command and Scripting Interpreter | PowerShell | Windows Event Logs | 
 | 01 | CAT 7 | Execution | Command and Scripting Interpreter | Windows Command Shell | Windows Event Logs | 
+| 01 | CAT 7 | Execution | WMI | n/a | Windows Event Logs | 
 | 02 | CAT 3 | Credential Access | Brute Force | Password Guessing | Windows Event Logs |
 | 03 | CAT 5 | Exfiltration | Exfiltration Over Physical Medium | Exfiltration Over USB | Windows Event Logs | 
 | 04 | CAT 8 | Persistence | Scheduled Task/Job | Scheduled Task | Windows Event Logs | 
