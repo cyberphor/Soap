@@ -1,6 +1,6 @@
 ## Detection Playbook
 
-| ID  | Category | Tactic | Technique | Sub-Technique | Data Source |
+| ID  | Incident Category | Tactic | Technique | Sub-Technique | Data Source |
 | --- | ----------------- | ------ | --------- | ------------- | ----------- |
 | 01 | CAT 7 | Execution | n/a | n/a | Windows Event Logs | 
 | 01 | CAT 7 | Execution | Command and Scripting Interpreter | PowerShell | Windows Event Logs | 
