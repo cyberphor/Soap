@@ -24,7 +24,7 @@
 
 ---
 
-**Step 1.** Setup.
+**Step 1.** Declare your variables.
 ```pwsh
 $Computers = (Get-AdComputer -Filter "ObjectClass -like 'Computer'").Name | Sort-Object
 $DaysAgo = 1
@@ -36,7 +36,7 @@ $FilterHashTable = @{
 }
 ```
 
-**Step 2.** Query.
+**Step 2.** Query the network.
 ```pwsh
 Invoke-Command -ComputerName $Computers -ArgumentList $FilterHashTable -ScriptBlock {
   Get-WinEvent -FilterHashTable $args[0] |
