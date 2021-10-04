@@ -2,7 +2,7 @@
 
 ---
 
-**Play ID.** 04-CAT8-Persistence-ScheduledTask-WindowsEventLogs.
+**Play ID.** 04-CAT8-ScheduledTask-WindowsEventLogs.
 
 **Purpose.** The purpose of this play is to detect threat actors who have gained accessed and are now seeking to maintain access.
 
