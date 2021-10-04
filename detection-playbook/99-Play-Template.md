@@ -12,6 +12,8 @@
 
 **Standards.** You were able to query the network for foo bar events and determine if suspicious activity has occurred. 
 
+**Incident Category.** CAT 8 - Investigation.
+
 **How Often to Run This Play.** Daily. 
 
 **Tactic ID.** TA9999 - Foo (https://attack.mitre.org/tactics/).
@@ -19,8 +21,6 @@
 **Technique ID.** T9999 - Bar. (https://attack.mitre.org/techniques/).
 
 **Sub-Technique ID.** T9999.99 - Foo bar. (https://attack.mitre.org/techniques/).
-
-**Incident Category.** CAT 8 - Investigation.
 
 ---
 
