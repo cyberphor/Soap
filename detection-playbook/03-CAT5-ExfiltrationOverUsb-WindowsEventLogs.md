@@ -1,12 +1,8 @@
-## Removable Media
+### Removable Media
 
-**Tactic.** ID - TA002: Exfiltration (https://attack.mitre.org/tactics/TA0010/).
+---
 
-**Technique.** ID - T1052: Exfiltration Over Physical Medium (https://attack.mitre.org/techniques/T1052/).
-
-**Sub-Technique.** ID - T1052.001: Exfiltration over USB (https://attack.mitre.org/techniques/T1052/001/).
-
-**Frequency.** Daily. 
+**Play ID.** 03-CAT5-ExfiltrationOverUsb-WindowsEventLogs.
 
 **Purpose.** Process creation events must be monitored in order to detect the execution of malicious commands, scripts, and/or binaries. 
 
@@ -14,9 +10,19 @@
 
 **Conditions.** An audit policy has been configured and WinRM is enabled across the network. You are given a list of computer names, domain administrator permissions, access to PowerShell, knowledge of the accepted configuration baseline (ex: STIGs, SHB, etc.), and knowledge of benign process names.  
 
-**Standards.** You were able to query the network for process creation events and determine if suspicious activity has occurred.  
+**Standards.** You were able to query the network for process creation events and determine if suspicious activity has occurred.
+
+**How Often to Run This Play.** Daily. 
+
+**Tactic ID.** TA002 - Exfiltration (https://attack.mitre.org/tactics/TA0010/).
+
+**Technique ID.** T1052 - Exfiltration Over Physical Medium (https://attack.mitre.org/techniques/T1052/).
+
+**Sub-Technique ID.** T1052.001 - Exfiltration over USB (https://attack.mitre.org/techniques/T1052/001/).
 
 **Incident Category.** CAT 5 - Non-Compliance Activity.
+
+---
 
 **Step 1.** Setup.
 ```pwsh
