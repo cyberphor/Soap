@@ -9,7 +9,7 @@ I have and/or plan to include the functions listed below in the SOAP PowerShell 
 - [ ] Get-LogonRights
 - [ ] Get-FilePermissions
 - [ ] Get-IntegrityLevels 
-- [ ] Get-LocalAdmins
+- [x] Get-LocalAdministrators
 - [ ] Get-OpenPorts
 - [ ] Get-Shares
 - [x] Get-WirelessNetAdapter

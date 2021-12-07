@@ -67,10 +67,11 @@ function Get-AssetInventory {
 }
 
 function Get-LocalAdministrators {
-    $Computers = (Get-AdComputer -Filter "ObjectClass -like 'Computer'").Name
-    Invoke-Command -ErrorAction Ignore -ComputerName $Computers -ScriptBlock{
-        (Get-LocalGroupMember -Group "Administrators").Name | 
-        Where-Object { $_ -notmatch '(.*Domain Admins|.*Administrator)' }
+    (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) | 
+    Select-Object -Skip 4 | 
+    Select-String -Pattern "The command completed successfully." -NotMatch | 
+    ForEach-Object {
+        New-Object -TypeName PSObject -Property @{ Name = $_ }
     }
 }
 
