@@ -1,5 +1,31 @@
 ### SOAP Functions
+**Table of Contents**  
+* [Get-LocalAdministrators](#get-localadministrators)
 
+### Get-LocalAdministrators
+```pwsh
+Get-LocalAdministrators
+```
+```pwsh
+# output
+
+Name         
+----         
+Administrator
+Cristal      
+Victor       
+
+
+```
+
+```pwsh
+Invoke-Command -ComputerName "evilcorpdc1","evilcorpwk1","evilcorpwk2" -ScriptBlock ${function:Get-LocalAdministrators}
+```
+```pwsh
+# output
+```
+
+### Planned
 I have and/or plan to include the functions listed below in the SOAP PowerShell module. 
 - [ ] Start-LogEnrichment
 - [ ] Start-ProcessReaper
