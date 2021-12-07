@@ -2,30 +2,30 @@
 
 I have and/or plan to include the functions listed below in the SOAP PowerShell module. 
 - [ ] Start-LogEnrichment
-- [x] Start-ProcessReaper
+- [ ] Start-ProcessReaper
 - [ ] Invoke-APT1 
-- [x] Invoke-AdScrub
-- [x] Invoke-SystemAudit
+- [ ] Invoke-AdScrub
+- [ ] Invoke-SystemAudit
 - [ ] Get-LogonRights
 - [ ] Get-FilePermissions
 - [ ] Get-IntegrityLevels 
-- [x] Get-LocalAdmins
-- [x] Get-OpenPorts
-- [x] Get-Shares
-- [x] Get-WirelessComputers
+- [ ] Get-LocalAdmins
+- [ ] Get-OpenPorts
+- [ ] Get-Shares
+- [x] Get-WirelessNetAdapter
 - [ ] Get-DomainAdmins
 - [ ] Get-Privileges
-- [x] Invoke-CyberEffect
-- [x] Start-RollingReboot
+- [ ] Invoke-CyberEffect
+- [ ] Start-RollingReboot
 - [ ] Start-Scareware
-- [x] Get-SuspiciousFile 
+- [ ] Get-SuspiciousFile 
 - [ ] Start-Panic
-- [x] Stop-EvilProcess
+- [ ] Stop-EvilProcess
 - [x] Block-TrafficToIpAddress
 - [x] Unblock-TrafficToIpAddress
-- [x] Enable-WinRm
-- [x] Get-Asset
+- [ ] Enable-WinRm
+- [ ] Get-Asset
 - [ ] Get-DiskSpace
 - [ ] Move-Logs
 - [ ] Remove-Program
-- [x] Get-IpAddressFromFirewallLog  
+- [ ] Get-IpAddressFromFirewallLog  

@@ -1,29 +1,188 @@
-function Import-SoapModule {
-    $Owner = "cyberphor"
-    $Repo = "soap"
-    $RepoFolder = "$Repo\$Repo-main\"
-    $RepoContents = $RepoFolder + "*"
-    $Download = $Repo + ".zip"
-    $ModulesFolder = "C:\Program Files\WindowsPowerShell\Modules\"
-    $Uri = "https://github.com/$Owner/$Repo/archive/refs/heads/main.zip"
-    $SoapModule = $ModulesFolder + $Repo + "\$Repo.psm1"
-    if (-not (Test-Path -Path $SoapModule)) {
-        Invoke-WebRequest -Uri $Uri -OutFile $Download
-        Expand-Archive -Path $Download -DestinationPath $Repo
-        Move-Item -Path $RepoContents -Destination $Repo
-        Remove-Item $Download 
-        Remove-Item $RepoFolder
-        Move-Item -Path $Repo -Destination $ModulesFolder
+function Block-TrafficToIpAddress {
+    param(
+        [Parameter(Mandatory)][ipaddress]$IpAddress
+    )
+
+    New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
+}
+
+filter ConvertFrom-Base64 {
+    $EncodedText = $_
+    $DecodedText = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($EncodedText))
+    $DecodedText
+}
+
+filter ConvertTo-Base64 {
+    $Text = $_
+    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
+    $EncodedText = [Convert]::ToBase64String($Bytes)
+    $EncodedText 
+}
+
+function Get-AssetInventory {
+    param(
+        [Parameter(Position = 0)]$NetworkId = "10.11.12.",
+        [Parameter(Position = 1)]$NetworkRange = (1..254)
+    )
+
+    $IpAddresses = @()
+    $NetworkRange |
+    ForEach-Object { $IpAddress = $NetworkId + $_ }
+    Get-Event -SourceIdentifier "Ping-*" | Remove-Event -ErrorAction Ignore
+    Get-EventSubscriber -SourceIdentifier "Ping-*" | Unregister-Event -ErrorAction Ignore
+    
+    $IpAddresses |
+    ForEach-Object{
+        $Event = "Ping-" + $_
+        New-Variable -Name $Event -Value (New-Object System.Net.NetworkInformation.Ping)
+        Register-ObjectEvent -InputObject (Get-Variable $Event -ValueOnly) -EventName PingCompleted -SourceIdentifier $Event
+        (Get-Variable $Event -ValueOnly).SendAsync($_,2000,$Event)
+    } 
+
+    while ($Pending -lt $IpAddresses.Count) {
+        Wait-Event -SourceIdentifier "Ping-*" | Out-Null
+        Start-Sleep -Milliseconds 10
+        $Pending = (Get-Event -SourceIdentifier "Ping-*").Count
     }
-    Import-Module $Repo -Force
+
+    $Assets = @()
+    Get-Event -SourceIdentifier "Ping-*" |
+    ForEach-Object {
+        if ($_.SourceEventArgs.Reply.Status -eq "Success") {
+            $Asset = New-Object psobject
+            $IpAddress = $_.SourceEventArgs.Reply.Address.IpAddressToString
+            $Resolved = Resolve-DnsName -Name $IpAddress -Type PTR -DnsOnly -ErrorAction Ignore
+            if ($Resolved) { $Hostname = $Resolved.NameHost }
+            else { $Hostname = "" }
+            Add-Member -InputObject $Asset -MemberType NoteProperty -Name IpAddress -Value $IpAddress
+            Add-Member -InputObject $Asset -MemberType NoteProperty -Name Hostname -Value $Hostname
+            $Assets += $Asset
+        }
+
+        Remove-Event $_.SourceIdentifier
+        Unregister-Event $_.SourceIdentifier
+    }
+
+    $Assets
 }
 
-function Read-SoapModule {
-    ise "C:\Program Files\WindowsPowerShell\Modules\soap\soap.psm1"
+function Get-LocalAdministrators {
+    $Computers = (Get-AdComputer -Filter "ObjectClass -like 'Computer'").Name
+    Invoke-Command -ErrorAction Ignore -ComputerName $Computers -ScriptBlock{
+        (Get-LocalGroupMember -Group "Administrators").Name | 
+        Where-Object { $_ -notmatch '(.*Domain Admins|.*Administrator)' }
+    }
 }
 
-function Remove-SoapModule {
-    Remove-Item -Path "C:\Program Files\WindowsPowerShell\Modules\soap" -Recurse
+function Get-WirelessNetAdapter {
+    param(
+        [string]$ComputerName = $env:COMPUTERNAME
+    )
+
+    Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter | 
+    Where-Object { $_.Name -match 'wi-fi|wireless' }
+}
+
+function New-IncidentResponse {
+    # New-IncidentResponse -Category "Root-Level Intrusion" 
+ 
+     <# case
+        case-001/ 
+            001-case-checklist.csv
+            001-case-file.csv
+            001-case-journal.csv
+            001-case-summary.txt
+
+        001-case-checklist.csv/
+            | procedures                    | initials | dtg             |   
+            | ----------------------------- | -------- | --------------- |
+            | step 1                        | vf       | 2021-08-28 1130 |
+            | step 2                        | vf       | 2021-08-28 1130 |
+            | step 3                        | vf       | 2021-08-28 1130 |
+
+        001-case-file.csv/tab01-detection
+            | check number | observation | evidence | initials | dtg             | 
+            | ------------ | ----------- | -------- | -------- | --------------- |
+            | 05           |             |          | vf       | 2021-08-28 1130 |
+            | 05           |             |          | vf       | 2021-08-28 1130 |
+            | 05           |             |          | vf       | 2021-08-28 1130 |
+        001-case-file.csv/tab02-analysis
+            | question     | hypothesis | data source | answer | initials | dtg             |
+            | ------------ | ---------- | ----------- | ------ | -------- | --------------- |
+            |              |            |             |        | vf       | 2021-08-28 1130 | 
+            |              |            |             |        | vf       | 2021-08-28 1130 | 
+            |              |            |             |        | vf       | 2021-08-28 1130 | 
+        001-case-file.csv/tab03-containment
+        001-case-file.csv/tab04-eradication
+        001-case-file.csv/tab05-recovery
+        001-case-file.csv/tab06-post-incident-activity
+    
+        001-case-journal.csv/
+            | notes                         | initials | dtg             |   
+            | ----------------------------- | -------- | --------------- |
+            | started exsum                 | vf       | 2021-08-28 1130 |
+            | conducted analysis            | vf       | 2021-08-28 1130 |
+        
+        001-case-summary.txt/
+            | field              | value                | initials | dtg              |   
+            | ------------------ | -------------------- | -------- | ---------------- |
+            | case number        | 001                  | vf       | 2021-08-28 1143  |
+            | description        | odd logins to admin  | vf       | 2021-08-28 1143  | 
+            | incident responder | victor               | vf       | 2021-08-28 1143  |
+            | incident category  | root-level intrusion | vf       | 2021-08-28 1143  | 
+            | operational impact | medium               | vf       | 2021-08-28 1143  | 
+            | technical impact   | medium               | vf       | 2021-08-28 1143  | 
+            | time detected      | 2021-08-28 1130      | vf       | 2021-08-28 1143  |
+            | time contained     | 2021-08-28 1700      | vf       | 2021-08-28 1700  | 
+            | time resolved      | 2021-08-29 0900      | vf       | 2021-08-29 0900  | 
+     #>
+ }
+
+filter Read-WinEvent {
+    <#
+    .SYNOPSIS
+    Returns all the properties of a given Windows event.
+    #>
+    $Event = New-Object psobject
+    $XmlData = [xml]$_.ToXml()
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
+    Add-Member -InputObject $Event -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
+    $EventData = $XmlData.Event.EventData.Data
+    
+    for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
+        Add-Member -InputObject $Event -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
+    }
+
+    $Event
+}
+
+function Import-AdUsersFromCsv {
+    $Password = ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force
+
+    Import-Csv -Path .\users.csv |
+    ForEach-Object {
+        $Name = $_.LastName + ', ' + $_.FirstName
+        $SamAccountName = ($_.FirstName + '.' + $_.LastName).ToLower()
+        $UserPrincipalName = $SamAccountName + '@evilcorp.local'
+        $Description = $_.Description
+        $ExpirationDate = Get-Date -Date 'October 31 2022'
+        New-AdUser `
+            -Name $Name `
+            -DisplayName $Name `
+            -GivenName $_.FirstName `
+            -Surname $_.LastName `
+            -SamAccountName $SamAccountName `
+            -UserPrincipalName $UserPrincipalName `
+            -Description $Description `
+            -ChangePasswordAtLogon $true `
+            -AccountExpirationDate $ExpirationDate `
+            -Enabled $true `
+            -Path 'OU=Users,OU=evilcorp,DC=local' `
+            -AccountPassword $Password
+    }
 }
 
 function Invoke-WinEventParser {
@@ -173,53 +332,6 @@ function Invoke-WinEventParser {
     }
 }
 
-function Get-AssetInventory {
-    param(
-        [Parameter(Position = 0)]$NetworkId = "10.11.12.",
-        [Parameter(Position = 1)]$NetworkRange = (1..254)
-    )
-
-    $IpAddresses = @()
-    $NetworkRange |
-    ForEach-Object { $IpAddress = $NetworkId + $_ }
-    Get-Event -SourceIdentifier "Ping-*" | Remove-Event -ErrorAction Ignore
-    Get-EventSubscriber -SourceIdentifier "Ping-*" | Unregister-Event -ErrorAction Ignore
-    
-    $IpAddresses |
-    ForEach-Object{
-        $Event = "Ping-" + $_
-        New-Variable -Name $Event -Value (New-Object System.Net.NetworkInformation.Ping)
-        Register-ObjectEvent -InputObject (Get-Variable $Event -ValueOnly) -EventName PingCompleted -SourceIdentifier $Event
-        (Get-Variable $Event -ValueOnly).SendAsync($_,2000,$Event)
-    } 
-
-    while ($Pending -lt $IpAddresses.Count) {
-        Wait-Event -SourceIdentifier "Ping-*" | Out-Null
-        Start-Sleep -Milliseconds 10
-        $Pending = (Get-Event -SourceIdentifier "Ping-*").Count
-    }
-
-    $Assets = @()
-    Get-Event -SourceIdentifier "Ping-*" |
-    ForEach-Object {
-        if ($_.SourceEventArgs.Reply.Status -eq "Success") {
-            $Asset = New-Object psobject
-            $IpAddress = $_.SourceEventArgs.Reply.Address.IpAddressToString
-            $Resolved = Resolve-DnsName -Name $IpAddress -Type PTR -DnsOnly -ErrorAction Ignore
-            if ($Resolved) { $Hostname = $Resolved.NameHost }
-            else { $Hostname = "" }
-            Add-Member -InputObject $Asset -MemberType NoteProperty -Name IpAddress -Value $IpAddress
-            Add-Member -InputObject $Asset -MemberType NoteProperty -Name Hostname -Value $Hostname
-            $Assets += $Asset
-        }
-
-        Remove-Event $_.SourceIdentifier
-        Unregister-Event $_.SourceIdentifier
-    }
-
-    $Assets
-}
-
 function Test-Port {
     param(
         [Parameter(Mandatory)][ipaddress]$IpAddress,
@@ -233,78 +345,10 @@ function Test-Port {
     }
 }
 
-function Get-LocalAdministrators {
-    $Computers = (Get-AdComputer -Filter "ObjectClass -like 'Computer'").Name
-    Invoke-Command -ErrorAction Ignore -ComputerName $Computers -ScriptBlock{
-        (Get-LocalGroupMember -Group "Administrators").Name | 
-        Where-Object { $_ -notmatch '(.*Domain Admins|.*Administrator)' }
-    }
+function Unblock-TrafficToIpAddress {
+    param(
+        [Parameter(Mandatory)][ipaddress]$IpAddress
+    )
+
+    Remove-NetFirewallRule -DisplayName "Block $IpAddress"
 }
-
-filter ConvertTo-Base64 {
-    $Text = $_
-    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
-    $EncodedText = [Convert]::ToBase64String($Bytes)
-    $EncodedText 
-}
-
-filter ConvertFrom-Base64 {
-    $EncodedText = $_
-    $DecodedText = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($EncodedText))
-    $DecodedText
-}
-
-function New-IncidentResponse {
-    # New-IncidentResponse -Category "Root-Level Intrusion" 
- 
-     <# case
-        case-001/ 
-            001-case-checklist.csv
-            001-case-file.csv
-            001-case-journal.csv
-            001-case-summary.txt
-
-        001-case-checklist.csv/
-            | procedures                    | initials | dtg             |   
-            | ----------------------------- | -------- | --------------- |
-            | step 1                        | vf       | 2021-08-28 1130 |
-            | step 2                        | vf       | 2021-08-28 1130 |
-            | step 3                        | vf       | 2021-08-28 1130 |
-
-        001-case-file.csv/tab01-detection
-            | check number | observation | evidence | initials | dtg             | 
-            | ------------ | ----------- | -------- | -------- | --------------- |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-        001-case-file.csv/tab02-analysis
-            | question     | hypothesis | data source | answer | initials | dtg             |
-            | ------------ | ---------- | ----------- | ------ | -------- | --------------- |
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-        001-case-file.csv/tab03-containment
-        001-case-file.csv/tab04-eradication
-        001-case-file.csv/tab05-recovery
-        001-case-file.csv/tab06-post-incident-activity
-    
-        001-case-journal.csv/
-            | notes                         | initials | dtg             |   
-            | ----------------------------- | -------- | --------------- |
-            | started exsum                 | vf       | 2021-08-28 1130 |
-            | conducted analysis            | vf       | 2021-08-28 1130 |
-        
-        001-case-summary.txt/
-            | field              | value                | initials | dtg              |   
-            | ------------------ | -------------------- | -------- | ---------------- |
-            | case number        | 001                  | vf       | 2021-08-28 1143  |
-            | description        | odd logins to admin  | vf       | 2021-08-28 1143  | 
-            | incident responder | victor               | vf       | 2021-08-28 1143  |
-            | incident category  | root-level intrusion | vf       | 2021-08-28 1143  | 
-            | operational impact | medium               | vf       | 2021-08-28 1143  | 
-            | technical impact   | medium               | vf       | 2021-08-28 1143  | 
-            | time detected      | 2021-08-28 1130      | vf       | 2021-08-28 1143  |
-            | time contained     | 2021-08-28 1700      | vf       | 2021-08-28 1700  | 
-            | time resolved      | 2021-08-29 0900      | vf       | 2021-08-29 0900  | 
-     #>
- }
