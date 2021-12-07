@@ -1,14 +1,7 @@
-```
-   _____   ____     ___      ____ 
-  / ___/  / __ \   /   |    / __ \
-  \__ \  / / / /  / /| |   / /_/ /
- ___/ / / /_/ /  / ___ |  / ____/ 
-/____/  \____/  /_/  |_| /_/      
-   
-```
-SOAP is a PowerShell module with incident handling functions. 
+## Security Operations and Automation via PowerShell (SOAP)
+![GitHub](https://img.shields.io/github/license/cyberphor/soap) ![Github All Releases](https://img.shields.io/github/downloads/cyberphor/soap/total.svg)  
 
-### How to Install the SOAP PowerShell Module
+### How to Install the SOAP Module
 Copy/paste the commands below into an elevated PowerShell session to automatically download and import SOAP.
 ```pwsh
 Invoke-WebRequest -Uri "https://github.com/cyberphor/soap/archive/refs/heads/main.zip" -OutFile "soap.zip"
@@ -19,9 +12,7 @@ Remove-Item ".\soap.zip"
 Remove-Item ".\soap" -Recurse
 ```
 
-### How to Use the SOAP PowerShell Module
-Once SOAP is imported, a number of functions will become available. See below for usage examples.
-
+### How to Use Functions From the SOAP Module
 #### Read-WinEvent
 ```pwsh
 Get-WinEvent -FilterXml ([xml](Get-Content C:\Users\Victor\Documents\EventXmlFilters\Last24Hrs-Security-Logons.xml)) | 
