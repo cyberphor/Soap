@@ -1,0 +1,30 @@
+## Functions
+The SOAP PowerShell module will include the functions listed below. 
+- [x] Block-TrafficToIpAddress
+- [x] Get-LocalAdministrators
+- [x] Get-WirelessNetAdapter
+- [x] Unblock-TrafficToIpAddress
+- [ ] Start-LogEnrichment
+- [ ] Start-ProcessReaper
+- [ ] Invoke-APT1 
+- [ ] Invoke-AdScrub
+- [ ] Invoke-SystemAudit
+- [ ] Get-LogonRights
+- [ ] Get-FilePermissions
+- [ ] Get-IntegrityLevels 
+- [ ] Get-OpenPorts
+- [ ] Get-Shares
+- [ ] Get-DomainAdmins
+- [ ] Get-Privileges
+- [ ] Invoke-CyberEffect
+- [ ] Start-RollingReboot
+- [ ] Start-Scareware
+- [ ] Get-SuspiciousFile 
+- [ ] Start-Panic
+- [ ] Stop-EvilProcess
+- [ ] Enable-WinRm
+- [ ] Get-Asset
+- [ ] Get-DiskSpace
+- [ ] Move-Logs
+- [ ] Remove-Program
+- [ ] Get-IpAddressFromFirewallLog  
