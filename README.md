@@ -2,7 +2,7 @@
 ![GitHub](https://img.shields.io/github/license/cyberphor/soap) ![Github All Releases](https://img.shields.io/github/downloads/cyberphor/soap/total.svg)  
 
 ### How to Install the SOAP Module
-Copy/paste the commands below into an elevated PowerShell session to automatically download and import SOAP.
+Copy/paste the commands below into an elevated PowerShell session to automatically download and import the SOAP module.
 ```pwsh
 Invoke-WebRequest -Uri "https://github.com/cyberphor/soap/archive/refs/heads/main.zip" -OutFile "soap.zip"
 Expand-Archive -Path ".\soap.zip" -DestinationPath ".\soap"
