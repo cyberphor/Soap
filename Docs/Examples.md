@@ -31,7 +31,9 @@ Victor
 ```
 
 ```pwsh
-Invoke-Command -ComputerName "evilcorpdc1","evilcorpwk1","evilcorpwk2" -ScriptBlock ${function:Get-LocalAdministrators}
+$Computers = (Get-AdComputer -Filter *).Name
+Invoke-Command -ComputerName $Computers -ScriptBlock ${function:Get-LocalAdministrators} |
+Select-Object Name,PsComputerName
 ```
 ```pwsh
 # output
