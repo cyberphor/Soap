@@ -1,5 +1,5 @@
 ## Security Operations and Automation via PowerShell (SOAP)
-![GitHub](https://img.shields.io/github/license/cyberphor/soap) ![Github All Releases](https://img.shields.io/github/downloads/cyberphor/soap/total.svg)  
+![GitHub](https://img.shields.io/github/license/cyberphor/soap) ![GitHub all releases](https://img.shields.io/github/downloads/cyberphor/soap/total)
 
 ### How to Install the SOAP Module
 Copy/paste the commands below into an elevated PowerShell session to automatically download and import the SOAP module.
