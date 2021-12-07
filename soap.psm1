@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 function Block-TrafficToIpAddress {
     param(
         [Parameter(Mandatory)][ipaddress]$IpAddress
@@ -184,27 +183,6 @@ function Import-AdUsersFromCsv {
             -Path 'OU=Users,OU=evilcorp,DC=local' `
             -AccountPassword $Password
     }
-=======
-filter Read-WinEvent {
-    <#
-    .SYNOPSIS
-    Returns all the properties of a given Windows event.
-    #>
-    $Event = New-Object psobject
-    $XmlData = [xml]$_.ToXml()
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
-    $EventData = $XmlData.Event.EventData.Data
-    
-    for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
-        Add-Member -InputObject $Event -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
-    }
-
-    $Event
->>>>>>> f2ac2875f998aa7926e7017035fccff0205f3b84
 }
 
 function Invoke-WinEventParser {
@@ -372,71 +350,5 @@ function Unblock-TrafficToIpAddress {
         [Parameter(Mandatory)][ipaddress]$IpAddress
     )
 
-<<<<<<< HEAD
     Remove-NetFirewallRule -DisplayName "Block $IpAddress"
 }
-=======
-        001-case-file.csv/tab01-detection
-            | check number | observation | evidence | initials | dtg             | 
-            | ------------ | ----------- | -------- | -------- | --------------- |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-        001-case-file.csv/tab02-analysis
-            | question     | hypothesis | data source | answer | initials | dtg             |
-            | ------------ | ---------- | ----------- | ------ | -------- | --------------- |
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-        001-case-file.csv/tab03-containment
-        001-case-file.csv/tab04-eradication
-        001-case-file.csv/tab05-recovery
-        001-case-file.csv/tab06-post-incident-activity
-    
-        001-case-journal.csv/
-            | notes                         | initials | dtg             |   
-            | ----------------------------- | -------- | --------------- |
-            | started exsum                 | vf       | 2021-08-28 1130 |
-            | conducted analysis            | vf       | 2021-08-28 1130 |
-        
-        001-case-summary.txt/
-            | field              | value                | initials | dtg              |   
-            | ------------------ | -------------------- | -------- | ---------------- |
-            | case number        | 001                  | vf       | 2021-08-28 1143  |
-            | description        | odd logins to admin  | vf       | 2021-08-28 1143  | 
-            | incident responder | victor               | vf       | 2021-08-28 1143  |
-            | incident category  | root-level intrusion | vf       | 2021-08-28 1143  | 
-            | operational impact | medium               | vf       | 2021-08-28 1143  | 
-            | technical impact   | medium               | vf       | 2021-08-28 1143  | 
-            | time detected      | 2021-08-28 1130      | vf       | 2021-08-28 1143  |
-            | time contained     | 2021-08-28 1700      | vf       | 2021-08-28 1700  | 
-            | time resolved      | 2021-08-29 0900      | vf       | 2021-08-29 0900  | 
-     #>
- }
-
-function Import-AdUsersFromCsv {
-    $Password = ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force
-
-    Import-Csv -Path .\users.csv |
-    ForEach-Object {
-        $Name = $_.LastName + ', ' + $_.FirstName
-        $SamAccountName = ($_.FirstName + '.' + $_.LastName).ToLower()
-        $UserPrincipalName = $SamAccountName + '@evilcorp.local'
-        $Description = $_.Description
-        $ExpirationDate = Get-Date -Date 'October 31 2022'
-        New-AdUser `
-            -Name $Name `
-            -DisplayName $Name `
-            -GivenName $_.FirstName `
-            -Surname $_.LastName `
-            -SamAccountName $SamAccountName `
-            -UserPrincipalName $UserPrincipalName `
-            -Description $Description `
-            -ChangePasswordAtLogon $true `
-            -AccountExpirationDate $ExpirationDate `
-            -Enabled $true `
-            -Path 'OU=Users,OU=evilcorp,DC=local' `
-            -AccountPassword $Password
-    }
-}
->>>>>>> f2ac2875f998aa7926e7017035fccff0205f3b84
