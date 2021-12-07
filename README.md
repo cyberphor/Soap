@@ -6,28 +6,20 @@
 /____/  \____/  /_/  |_| /_/      
    
 ```
-SOAP is a PowerShell module with incident handling and penetration testing functions. 
+SOAP is a PowerShell module with incident handling functions. 
 
-### Installation
-Execute the commands below in PowerShell to automatically download and import SOAP.
+### How to Install the SOAP PowerShell Module
+Copy/paste the commands below into an elevated PowerShell session to automatically download and import SOAP.
 ```pwsh
-$Owner = "cyberphor"
-$Repo = "soap"
-$RepoFolder = "$Repo\$Repo-main\"
-$RepoContents = $RepoFolder + "*"
-$Download = $Repo + ".zip"
-$ModulesFolder = "C:\Program Files\WindowsPowerShell\Modules\"
-$Uri = "https://github.com/$Owner/$Repo/archive/refs/heads/main.zip"
-Invoke-WebRequest -Uri $Uri -OutFile $Download
-Expand-Archive -Path $Download -DestinationPath $Repo
-Move-Item -Path $RepoContents -Destination $Repo
-Remove-Item $Download 
-Remove-Item $RepoFolder
-Move-Item -Path $Repo -Destination $ModulesFolder
-Import-Module $Repo -Force
+Invoke-WebRequest -Uri "https://github.com/cyberphor/soap/archive/refs/heads/main.zip" -OutFile "soap.zip"
+Expand-Archive -Path ".\soap.zip" -DestinationPath ".\soap"
+Move-Item -Path ".\soap\soap-main\*" -Destination "C:\Program Files\WindowsPowerShell\Modules\soap"
+Import-Module -Name "soap" -Force
+Remove-Item ".\soap.zip"
+Remove-Item ".\soap" -Recurse
 ```
 
-### Usage
+### How to Use the SOAP PowerShell Module
 Once SOAP is imported, a number of functions will become available. See below for usage examples.
 
 #### Read-WinEvent
