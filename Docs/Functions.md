@@ -23,9 +23,7 @@ The SOAP PowerShell module will include the functions listed below.
 - [ ] Invoke-CyberEffect
 - [ ] Start-RollingReboot
 - [ ] Start-Scareware
-- [ ] Get-SuspiciousFile 
 - [ ] Start-Panic
-- [ ] Stop-EvilProcess
 - [ ] Enable-WinRm
 - [ ] Get-Asset
 - [ ] Get-DiskSpace
