@@ -67,9 +67,14 @@ function Get-AssetInventory {
 }
 
 function Get-LocalAdministrators {
+    param(
+        [string[]]$Exclude = @("administrator","administrator1","administrator2")
+    )
+
     (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) | 
     Select-Object -Skip 4 | 
     Select-String -Pattern "The command completed successfully." -NotMatch | 
+    Where-Object { $Exclude -notcontains $_ -and $_ -notlike '*Domain Admins' } |
     ForEach-Object {
         New-Object -TypeName PSObject -Property @{ Name = $_ }
     }
