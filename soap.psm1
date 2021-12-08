@@ -6,17 +6,21 @@ function Block-TrafficToIpAddress {
     New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
 }
 
-filter ConvertFrom-Base64 {
-    $EncodedText = $_
-    $DecodedText = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($EncodedText))
-    $DecodedText
+function ConvertFrom-Base64 {
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]$String
+    )
+
+    [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($String))
 }
 
-filter ConvertTo-Base64 {
-    $Text = $_
-    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
-    $EncodedText = [Convert]::ToBase64String($Bytes)
-    $EncodedText 
+function ConvertTo-Base64 {
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]$String
+    )
+
+    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($String)
+    [Convert]::ToBase64String($Bytes) 
 }
 
 function Get-AssetInventory {
@@ -78,14 +82,9 @@ function Get-Indicator {
 }
 
 function Get-LocalAdministrators {
-    param(
-        [string[]]$Exclude = @("administrator","administrator1","administrator2")
-    )
-
     (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) | 
     Select-Object -Skip 4 | 
     Select-String -Pattern "The command completed successfully." -NotMatch | 
-    Where-Object { $Exclude -notcontains $_ -and $_ -notlike '*Domain Admins' } |
     ForEach-Object {
         New-Object -TypeName PSObject -Property @{ Name = $_ }
     }

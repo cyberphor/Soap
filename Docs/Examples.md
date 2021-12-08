@@ -1,6 +1,9 @@
 ## Examples
 ### Table of Contents
 * [Block-TrafficToIpAddress](#block-traffictoipaddress)
+* [ConvertFrom-Base64](#convertfrom-base64)
+* [ConvertTo-Base64](#convertto-base64)
+* [Get-Indicator](#get-indicator)
 * [Get-LocalAdministrators](#get-localadministrators)
 * [Get-WirelessNetAdapter](#get-wirelessnetadapter)
 * [Invoke-WinEventParser](#invoke-wineventparser)
@@ -10,6 +13,33 @@
 ### Block-TrafficToIpAddress
 ```pwsh
 Block-TrafficToIpAddress
+```
+```pwsh
+# output
+
+```
+
+### ConvertFrom-Base64
+```pwsh
+ConvertFrom-Base64
+```
+```pwsh
+# output
+
+```
+
+### ConvertTo-Base64
+```pwsh
+ConvertTo-Base64
+```
+```pwsh
+# output
+
+```
+
+### Get-Indicator
+```pwsh
+Get-Indicator
 ```
 ```pwsh
 # output

@@ -1,6 +1,9 @@
 ## Functions
 The SOAP PowerShell module will include the functions listed below. 
 - [x] Block-TrafficToIpAddress
+- [x] ConvertFrom-Base64
+- [x] ConvertTo-Base64
+- [x] Get-Indicator
 - [x] Get-LocalAdministrators
 - [x] Get-WirelessNetAdapter
 - [x] Unblock-TrafficToIpAddress
