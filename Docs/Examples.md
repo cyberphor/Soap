@@ -7,6 +7,7 @@
 * [Get-LocalAdministrators](#get-localadministrators)
 * [Get-WirelessNetAdapter](#get-wirelessnetadapter)
 * [Invoke-WinEventParser](#invoke-wineventparser)
+* [Kill-Process](#kill-process)
 * [Read-WinEvent](#read-winevent)
 * [Unblock-TrafficToIpAddress](#unblock-traffictoipaddress)
 
@@ -130,6 +131,15 @@ TimeCreated          Hostname Username        LogonType
 8/19/2021 5:58:38 AM Windows  SYSTEM          5        
 8/19/2021 5:58:38 AM Windows  SYSTEM          5        
 8/19/2021 5:58:38 AM Windows  NETWORK SERVICE 5        
+```
+
+### Kill-Process
+```pwsh
+Kill-Process
+```
+```pwsh
+# output
+
 ```
 
 ### Read-WinEvent

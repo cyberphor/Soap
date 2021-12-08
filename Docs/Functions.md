@@ -6,6 +6,7 @@ The SOAP PowerShell module will include the functions listed below.
 - [x] Get-Indicator
 - [x] Get-LocalAdministrators
 - [x] Get-WirelessNetAdapter
+- [x] Kill-Process
 - [x] Unblock-TrafficToIpAddress
 - [ ] Start-LogEnrichment
 - [ ] Start-ProcessReaper

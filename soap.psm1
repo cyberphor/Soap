@@ -99,6 +99,15 @@ function Get-WirelessNetAdapter {
     Where-Object { $_.Name -match 'wi-fi|wireless' }
 }
 
+function Kill-Process {
+    param(
+        [Parameter(Mandatory)]$Name
+    )
+
+    $Process = Get-Process | Where-Object { $_.Name -like $Name }
+    $Process.Kill()
+}
+
 function New-IncidentResponse {
     # New-IncidentResponse -Category "Root-Level Intrusion" 
  
