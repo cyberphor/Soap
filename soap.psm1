@@ -66,6 +66,17 @@ function Get-AssetInventory {
     $Assets
 }
 
+function Get-Indicator {
+    param(
+        [string]$Path = "C:\Users",
+        [Parameter(Mandatory)][string]$FileName
+    )
+    
+    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore | 
+    Where-Object { $_.Name -like $FileName } |
+    Select-Object -ExpandProperty FullName
+}
+
 function Get-LocalAdministrators {
     param(
         [string[]]$Exclude = @("administrator","administrator1","administrator2")
