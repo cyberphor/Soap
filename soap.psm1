@@ -371,7 +371,8 @@ function Start-AdBackup {
         if (Test-Path $Target) { Remove-Item -Path $Target -Recurse -Force }
         New-Item -ItemType Directory -Path $Target -Force
         $Expression = "wbadmin START BACKUP -systemState -vssFull -backupTarget:$Target -noVerify -quiet"
-        Invoke-Expression $Expression
+    	$LogFile = "C:\BackupLogs\$Prefix-$Date"
+        Invoke-Expression $Expression | Out-File -Append -FilePath "C:\BackupLogs\$Prefix-$Date"
     } else {
         Write-Output "[!] The Windows-Server-Backup feature is not installed. Use the command below to install it."
         Write-Output " Install-WindowsFeature -Name Windows-Server-Backup"
