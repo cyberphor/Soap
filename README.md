@@ -1,5 +1,6 @@
-## Security Operations and Automation via PowerShell (SOAP)
-![GitHub](https://img.shields.io/github/license/cyberphor/soap) ![GitHub all releases](https://img.shields.io/github/downloads/cyberphor/soap/total)
+# SOAP
+![GitHub](https://img.shields.io/github/license/cyberphor/soap)  
+SOAP is a PowerShell module with cyber-security functions. The acronym stands for "Security Operations and Automation via PowerShell."  
 
 ### How to Install the SOAP Module
 Copy/paste the commands below into an elevated PowerShell session to automatically download and import the SOAP module.
@@ -11,3 +12,5 @@ Import-Module -Name "soap" -Force
 Remove-Item ".\soap.zip"
 Remove-Item ".\soap" -Recurse
 ```
+
+ 
