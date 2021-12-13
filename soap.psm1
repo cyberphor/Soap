@@ -217,17 +217,14 @@ function Start-AdBackup {
     }
 }
 
-function Test-Port {
+function Test-TcpPort {
     param(
         [Parameter(Mandatory)][ipaddress]$IpAddress,
-        [Parameter(Mandatory)][int]$Port,
-        [ValidateSet("TCP","UDP")][string]$Protocol = "TCP"
+        [Parameter(Mandatory)][int]$Port
     )
 
-    if ($Protocol -eq "TCP") {
-        $TcpClient = New-Object System.Net.Sockets.TcpClient
-        $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
-    }
+    $TcpClient = New-Object System.Net.Sockets.TcpClient
+    $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
 }
 
 function Unblock-TrafficToIpAddress {
