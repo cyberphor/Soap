@@ -6,64 +6,67 @@ function Block-TrafficToIpAddress {
     New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
 }
 
-filter ConvertFrom-Base64 {
-    $EncodedText = $_
-    $DecodedText = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($EncodedText))
-    $DecodedText
-}
-
-filter ConvertTo-Base64 {
-    $Text = $_
-    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
-    $EncodedText = [Convert]::ToBase64String($Bytes)
-    $EncodedText 
-}
-
-function Get-AssetInventory {
+function ConvertFrom-Base64 {
     param(
-        [Parameter(Position = 0)]$NetworkId = "10.11.12.",
-        [Parameter(Position = 1)]$NetworkRange = (1..254)
+        [Parameter(Mandatory, ValueFromPipeline)]$String
     )
 
-    $IpAddresses = @()
-    $NetworkRange |
-    ForEach-Object { $IpAddress = $NetworkId + $_ }
-    Get-Event -SourceIdentifier "Ping-*" | Remove-Event -ErrorAction Ignore
-    Get-EventSubscriber -SourceIdentifier "Ping-*" | Unregister-Event -ErrorAction Ignore
+    [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($String))
+}
+
+function ConvertTo-Base64 {
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]$String
+    )
+
+    $Bytes = [System.Text.Encoding]::Unicode.GetBytes($String)
+    [Convert]::ToBase64String($Bytes) 
+}
+
+function Enable-WinRm {
+    param(
+        [Parameter(Mandatory)]$ComputerName
+    )
+
+    $Expression = "wmic /node:$ComputerName process call create 'winrm quickconfig'"
+    Invoke-Expression $Expression
+    #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
+}
+
+function Get-Asset {
+    param(
+        [switch]$Verbose
+    )
+
+    $NetworkAdapterConfiguration = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = 'True'"
+    $IpAddress = $NetworkAdapterConfiguration.IpAddress[0]
+    $MacAddress = $NetworkAdapterConfiguration.MACAddress[0]
+    $SystemInfo = Get-ComputerInfo
+    $Asset = [pscustomobject] @{
+        "Hostname" = $env:COMPUTERNAME
+        "IpAddress" = $IpAddress
+        "MacAddress" = $MacAddress
+        "SerialNumber" = $SystemInfo.BiosSeralNumber
+        "Make" = $SystemInfo.CsManufacturer
+        "Model" = $SystemInfo.CsModel
+        "OperatingSystem" = $SystemInfo.OsName
+        "Architecture" = $SystemInfo.OsArchitecture
+        "Version" = $SystemInfo.OsVersion
+    }
+    if ($Verbose) { $Asset }
+    else { $Asset | Select-Object -Property HostName,IpAddress,MacAddress,SerialNumber}
+}
+
+
+function Get-Indicator {
+    param(
+        [string]$Path = "C:\Users",
+        [Parameter(Mandatory)][string]$FileName
+    )
     
-    $IpAddresses |
-    ForEach-Object{
-        $Event = "Ping-" + $_
-        New-Variable -Name $Event -Value (New-Object System.Net.NetworkInformation.Ping)
-        Register-ObjectEvent -InputObject (Get-Variable $Event -ValueOnly) -EventName PingCompleted -SourceIdentifier $Event
-        (Get-Variable $Event -ValueOnly).SendAsync($_,2000,$Event)
-    } 
-
-    while ($Pending -lt $IpAddresses.Count) {
-        Wait-Event -SourceIdentifier "Ping-*" | Out-Null
-        Start-Sleep -Milliseconds 10
-        $Pending = (Get-Event -SourceIdentifier "Ping-*").Count
-    }
-
-    $Assets = @()
-    Get-Event -SourceIdentifier "Ping-*" |
-    ForEach-Object {
-        if ($_.SourceEventArgs.Reply.Status -eq "Success") {
-            $Asset = New-Object psobject
-            $IpAddress = $_.SourceEventArgs.Reply.Address.IpAddressToString
-            $Resolved = Resolve-DnsName -Name $IpAddress -Type PTR -DnsOnly -ErrorAction Ignore
-            if ($Resolved) { $Hostname = $Resolved.NameHost }
-            else { $Hostname = "" }
-            Add-Member -InputObject $Asset -MemberType NoteProperty -Name IpAddress -Value $IpAddress
-            Add-Member -InputObject $Asset -MemberType NoteProperty -Name Hostname -Value $Hostname
-            $Assets += $Asset
-        }
-
-        Remove-Event $_.SourceIdentifier
-        Unregister-Event $_.SourceIdentifier
-    }
-
-    $Assets
+    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore | 
+    Where-Object { $_.Name -like $FileName } |
+    Select-Object -ExpandProperty FullName
 }
 
 function Get-LocalAdministrators {
@@ -82,82 +85,6 @@ function Get-WirelessNetAdapter {
 
     Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter | 
     Where-Object { $_.Name -match 'wi-fi|wireless' }
-}
-
-function New-IncidentResponse {
-    # New-IncidentResponse -Category "Root-Level Intrusion" 
- 
-     <# case
-        case-001/ 
-            001-case-checklist.csv
-            001-case-file.csv
-            001-case-journal.csv
-            001-case-summary.txt
-
-        001-case-checklist.csv/
-            | procedures                    | initials | dtg             |   
-            | ----------------------------- | -------- | --------------- |
-            | step 1                        | vf       | 2021-08-28 1130 |
-            | step 2                        | vf       | 2021-08-28 1130 |
-            | step 3                        | vf       | 2021-08-28 1130 |
-
-        001-case-file.csv/tab01-detection
-            | check number | observation | evidence | initials | dtg             | 
-            | ------------ | ----------- | -------- | -------- | --------------- |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-            | 05           |             |          | vf       | 2021-08-28 1130 |
-        001-case-file.csv/tab02-analysis
-            | question     | hypothesis | data source | answer | initials | dtg             |
-            | ------------ | ---------- | ----------- | ------ | -------- | --------------- |
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-            |              |            |             |        | vf       | 2021-08-28 1130 | 
-        001-case-file.csv/tab03-containment
-        001-case-file.csv/tab04-eradication
-        001-case-file.csv/tab05-recovery
-        001-case-file.csv/tab06-post-incident-activity
-    
-        001-case-journal.csv/
-            | notes                         | initials | dtg             |   
-            | ----------------------------- | -------- | --------------- |
-            | started exsum                 | vf       | 2021-08-28 1130 |
-            | conducted analysis            | vf       | 2021-08-28 1130 |
-        
-        001-case-summary.txt/
-            | field              | value                | initials | dtg              |   
-            | ------------------ | -------------------- | -------- | ---------------- |
-            | case number        | 001                  | vf       | 2021-08-28 1143  |
-            | description        | odd logins to admin  | vf       | 2021-08-28 1143  | 
-            | incident responder | victor               | vf       | 2021-08-28 1143  |
-            | incident category  | root-level intrusion | vf       | 2021-08-28 1143  | 
-            | operational impact | medium               | vf       | 2021-08-28 1143  | 
-            | technical impact   | medium               | vf       | 2021-08-28 1143  | 
-            | time detected      | 2021-08-28 1130      | vf       | 2021-08-28 1143  |
-            | time contained     | 2021-08-28 1700      | vf       | 2021-08-28 1700  | 
-            | time resolved      | 2021-08-29 0900      | vf       | 2021-08-29 0900  | 
-     #>
- }
-
-filter Read-WinEvent {
-    <#
-    .SYNOPSIS
-    Returns all the properties of a given Windows event.
-    #>
-    $Event = New-Object psobject
-    $XmlData = [xml]$_.ToXml()
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
-    Add-Member -InputObject $Event -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
-    $EventData = $XmlData.Event.EventData.Data
-    
-    for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
-        Add-Member -InputObject $Event -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
-    }
-
-    $Event
 }
 
 function Import-AdUsersFromCsv {
@@ -189,147 +116,80 @@ function Import-AdUsersFromCsv {
 function Invoke-WinEventParser {
     param(
         [Parameter(Position=0)][string]$ComputerName,
-        [ValidateSet("Application","Security","System","ForwardedEvents")][Parameter(Position=1)][string]$LogName,
-        [ValidateSet("4624","4625","4688","5156","6416")][Parameter(Position=2)]$EventId,
-        [Parameter(Position=3)][int]$Days=1
+        [ValidateSet("Application","Security","System","ForwardedEvents","Microsoft-Windows-PowerShell/Operational")][Parameter(Position=1)][string]$LogName,
+        [ValidateSet("4104","4624","4625","4663","4672","4688","4697","5140","5156","6416")][Parameter(Position=2)]$EventId,
+        [Parameter(Position=3)][int]$DaysAgo=1,
+        [Parameter(Position=4)][switch]$TurnOffOutputFilter
     )
 
-    $Date = (Get-Date -Format yyyy-MM-dd-HHmm)
-    $Path = "C:\EventId-$EventId-$Date.csv"
-
-    if ($EventId -eq "4624") {
-        $FilterXPath = "*[
-            System[
-                (EventId=4624)
-            ] and
-            EventData[
-                Data[@Name='TargetUserSid'] != 'S-1-5-18' and
-                Data[@Name='LogonType'] = '2' or
-                Data[@Name='LogonType'] = '3' or
-                Data[@Name='LogonType'] = '7' or
-                Data[@Name='LogonType'] = '10' or
-                Data[@Name='LogonType'] = '11'
-            ]
-        ]"
-
-        filter Read-WinEvent {
-            $TimeCreated = $_.TimeCreated
-            $XmlData = [xml]$_.ToXml()
-            $Hostname = $XmlData.Event.System.Computer
-            $Username = $XmlData.Event.EventData.Data[5].'#text'
-            $LogonType = $XmlData.Event.EventData.Data[8].'#text'
-            $Event = New-Object psobject
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
-            if ($Event.Username -notmatch '(.*\$$|DWM-|ANONYMOUS*)') { $Event }
+    filter Read-WinEvent {
+        $XmlData = [xml]$_.ToXml()
+        $Event = New-Object -TypeName PSObject
+        $Event = New-Object -TypeName PSObject
+        $Event | Add-Member -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
+        $Event | Add-Member -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
+        $Event | Add-Member -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
+        $Event | Add-Member -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
+        $Event | Add-Member -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
+        if ($XmlData.Event.System.Security.UserId) {
+            $Event | Add-Member -MemberType NoteProperty -Name SecurityUserId -Value $XmlData.Event.System.Security.UserId
+        } 
+        $EventData = $XmlData.Event.EventData.Data
+        for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
+            $Event | Add-Member -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
         }
-    } elseif ($EventId -eq "4625") {
-        $FilterXPath = "*[
-            System[
-                (EventId=4625)
-            ] and
-            EventData[
-                Data[@Name='TargetUserName'] != '-'
-            ]
-        ]"
+        return $Event
+    }
 
-        filter Read-WinEvent {
-            $TimeCreated = $_.TimeCreated
-            $XmlData = [xml]$_.ToXml()
-            $Hostname = $XmlData.Event.System.Computer
-            $Username = $XmlData.Event.EventData.Data[5].'#text'
-            $LogonType = $XmlData.Event.EventData.Data[10].'#text'
-            $Event = New-Object psobject
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name LogonType -Value $LogonType
-            $Event
-        }
-    } elseif ($EventId -eq "4688") {
-        $FilterXPath = "*[
-            System[
-                (EventId=4688)
-            ] and
-            EventData[
-                Data[@Name='TargetUserName'] != '-' and
-                Data[@Name='TargetUserName'] != 'LOCAL SERVICE'
-            ]
-        ]"
+    if ($TurnOffOutputFilter) {
+        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } | 
+        Read-WinEvent
+    } else {
+        if ($EventId -eq "4104") { $Properties = "TimeCreated","SecurityUserId","ScriptBlockText" }
+        elseif ($EventId -eq "4624") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
+        elseif ($EventId -eq "4625") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
+        elseif ($EventId -eq "4663") { $Properties = "*" }
+        elseif ($EventId -eq "4672") { $Properties = "TimeCreated","SubjectUserSid","SubjectUserName" }
+        elseif ($EventId -eq "4688") { $Properties = "TimeCreated","TargetUserName","NewProcessName","CommandLine" }
+        elseif ($EventId -eq "4697") { $Properties = "*" }
+        elseif ($EventId -eq "5140") { $Properties = "*" }
+        elseif ($EventId -eq "5156") { $Properties = "TimeCreated","SourceAddress","DestAddress","DestPort" }
+        elseif ($EventId -eq "6416") { $Properties = "TimeCreated","SubjectUserName","ClassName","DeviceDescription" }
+        else { $Properties = "*" }
+        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } | 
+        Read-WinEvent | 
+        Select-Object -Property $Properties
+    }
+}
 
-        filter Read-WinEvent {
-            $TimeCreated = $_.TimeCreated
-            $XmlData = [xml]$_.ToXml()
-            $Hostname = $XmlData.Event.System.Computer
-            $Username = $XmlData.Event.EventData.Data[8].'#text'
-            $CommandLine = $XmlData.Event.EventData.Data[10].'#text'
-            $Event = New-Object psobject
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Username -Value $Username
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name CommandLine -Value $CommandLine
-            if ($Event.Username -notmatch '(.*\$$|DWM-)') { $Event }
-        }
-    } elseif ($EventId -eq "5156") {
-        $FilterXPath = "*[
-            System[
-                (EventId=4688)
-            ] and
-            EventData[
-                Data[@Name='DestAddress'] != '127.0.0.1' and
-                Data[@Name='DestAddress'] != '::1'
-            ]
-        ]"
+function Get-ProcessToKill {
+    param(
+        [Parameter(Mandatory)]$Name
+    )
 
-        filter Read-WinEvent {
-            $TimeCreated = $_.TimeCreated
-            $XmlData = [xml]$_.ToXml()
-            $Hostname = $XmlData.Event.System.Computer
-            $DestAddress = $XmlData.Event.EventData.Data[5].'#text'
-            $DestPort = $XmlData.Event.EventData.Data[6].'#text'
-            $Event = New-Object psobject
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name DestinationAddress -Value $DestAddress
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name DestinationPort -Value $DestPort
-            $Event
-        }
-    } elseif ($EventId -eq "6416") {
-        $FilterXPath = "*[
-            System[
-                (EventId=6416)
-            ] 
-        ]"
+    $Process = Get-Process | Where-Object { $_.Name -like $Name }
+    $Process.Kill()
+}
 
-        filter Read-WinEvent {
-            $TimeCreated = $_.TimeCreated
-            $XmlData = [xml]$_.ToXml()
-            $Hostname = $XmlData.Event.System.Computer
-            $DeviceDescription = $XmlData.Event.EventData.Data[5].'#text'
-            $ClassName = $XmlData.Event.EventData.Data[7].'#text'
-            $Event = New-Object psobject
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name TimeCreated -Value $TimeCreated
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name Hostname -Value $Hostname
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name ClassName -Value $ClassName
-            Add-Member -InputObject $Event -MemberType NoteProperty -Name DeviceDescription -Value $DeviceDescription
-            $Event
-        }
-    } 
+function Start-AdBackup {
+    param(
+        [Parameter(Mandatory)][string]$ComputerName,
+        [string]$Share = "Backups",
+        [string]$Prefix = "AdBackup"
+    )
 
-    try {
-        Get-WinEvent -ComputerName $ComputerName -LogName $LogName -FilterXPath $FilterXPath |
-        Read-WinEvent |
-        ConvertTo-Csv -NoTypeInformation |
-        Tee-Object -FilePath $Path |
-        ConvertFrom-Csv
-
-        $Events = Get-Content $Path
-        Remove-Item -Path $Path
-        $Events | ConvertFrom-Csv | Export-Csv -NoTypeInformation -Path $Path
-    } catch {
-        Write-Output "[x] Error."
+    $BackupFeature = (Install-WindowsFeature -Name Windows-Server-Backup).InstallState
+    if ($BackupFeature -eq "Installed") {
+        $Date = Get-Date -Format "yyyy-MM-dd"
+        $Target = "\\$ComputerName\$Share\$Prefix-$Date"
+        if (Test-Path $Target) { Remove-Item -Path $Target -Recurse -Force }
+        New-Item -ItemType Directory -Path $Target -Force
+        $Expression = "wbadmin START BACKUP -systemState -vssFull -backupTarget:$Target -noVerify -quiet"
+    	$LogFile = "C:\BackupLogs\$Prefix-$Date"
+        Invoke-Expression $Expression | Out-File -Append -FilePath "C:\BackupLogs\$Prefix-$Date"
+    } else {
+        Write-Output "[!] The Windows-Server-Backup feature is not installed. Use the command below to install it."
+        Write-Output " Install-WindowsFeature -Name Windows-Server-Backup"
     }
 }
 

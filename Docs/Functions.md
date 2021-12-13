@@ -1,6 +1,12 @@
-### SOAP Functions
-
-I have and/or plan to include the functions listed below in the SOAP PowerShell module. 
+## Functions
+The SOAP PowerShell module will include the functions listed below. 
+- [x] Block-TrafficToIpAddress
+- [x] ConvertFrom-Base64
+- [x] ConvertTo-Base64
+- [x] Get-Indicator
+- [x] Get-LocalAdministrators
+- [x] Get-WirelessNetAdapter
+- [x] Unblock-TrafficToIpAddress
 - [ ] Start-LogEnrichment
 - [ ] Start-ProcessReaper
 - [ ] Invoke-APT1 
@@ -9,10 +15,8 @@ I have and/or plan to include the functions listed below in the SOAP PowerShell 
 - [ ] Get-LogonRights
 - [ ] Get-FilePermissions
 - [ ] Get-IntegrityLevels 
-- [x] Get-LocalAdministrators
 - [ ] Get-OpenPorts
 - [ ] Get-Shares
-- [x] Get-WirelessNetAdapter
 - [ ] Get-DomainAdmins
 - [ ] Get-Privileges
 - [ ] Invoke-CyberEffect
@@ -21,8 +25,6 @@ I have and/or plan to include the functions listed below in the SOAP PowerShell 
 - [ ] Get-SuspiciousFile 
 - [ ] Start-Panic
 - [ ] Stop-EvilProcess
-- [x] Block-TrafficToIpAddress
-- [x] Unblock-TrafficToIpAddress
 - [ ] Enable-WinRm
 - [ ] Get-Asset
 - [ ] Get-DiskSpace
