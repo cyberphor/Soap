@@ -20,7 +20,7 @@ function ConvertTo-Base64 {
     )
 
     $Bytes = [System.Text.Encoding]::Unicode.GetBytes($String)
-    [Convert]::ToBase64String($Bytes) 
+    [Convert]::ToBase64String($Bytes)
 }
 
 function Enable-WinRm {
@@ -63,16 +63,27 @@ function Get-Indicator {
         [string]$Path = "C:\Users",
         [Parameter(Mandatory)][string]$FileName
     )
-    
-    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore | 
+
+    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
+    Where-Object { $_.Name -like $FileName } |
+    Select-Object -ExpandProperty FullName
+}
+
+function Get-Indicator {
+    param(
+        [string]$Path = "C:\Users",
+        [Parameter(Mandatory)][string]$FileName
+    )
+
+    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
     Where-Object { $_.Name -like $FileName } |
     Select-Object -ExpandProperty FullName
 }
 
 function Get-LocalAdministrators {
-    (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) | 
-    Select-Object -Skip 4 | 
-    Select-String -Pattern "The command completed successfully." -NotMatch | 
+    (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) |
+    Select-Object -Skip 4 |
+    Select-String -Pattern "The command completed successfully." -NotMatch |
     ForEach-Object {
         New-Object -TypeName PSObject -Property @{ Name = $_ }
     }
@@ -83,7 +94,7 @@ function Get-WirelessNetAdapter {
         [string]$ComputerName = $env:COMPUTERNAME
     )
 
-    Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter | 
+    Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter |
     Where-Object { $_.Name -match 'wi-fi|wireless' }
 }
 
@@ -133,7 +144,7 @@ function Invoke-WinEventParser {
         $Event | Add-Member -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
         if ($XmlData.Event.System.Security.UserId) {
             $Event | Add-Member -MemberType NoteProperty -Name SecurityUserId -Value $XmlData.Event.System.Security.UserId
-        } 
+        }
         $EventData = $XmlData.Event.EventData.Data
         for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
             $Event | Add-Member -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
@@ -142,7 +153,7 @@ function Invoke-WinEventParser {
     }
 
     if ($TurnOffOutputFilter) {
-        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } | 
+        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
         Read-WinEvent
     } else {
         if ($EventId -eq "4104") { $Properties = "TimeCreated","SecurityUserId","ScriptBlockText" }
@@ -156,8 +167,8 @@ function Invoke-WinEventParser {
         elseif ($EventId -eq "5156") { $Properties = "TimeCreated","SourceAddress","DestAddress","DestPort" }
         elseif ($EventId -eq "6416") { $Properties = "TimeCreated","SubjectUserName","ClassName","DeviceDescription" }
         else { $Properties = "*" }
-        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } | 
-        Read-WinEvent | 
+        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
+        Read-WinEvent |
         Select-Object -Property $Properties
     }
 }
