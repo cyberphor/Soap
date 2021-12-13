@@ -89,6 +89,30 @@ function Get-LocalAdministrators {
     }
 }
 
+function Get-Permissions {
+    param(
+        [string]$File = $pwd,
+        [int]$Depth = 1
+    )
+
+    if (Test-Path -Path $File) {
+        Get-ChildItem -Path $File -Recurse -Depth $Depth |
+        ForEach-Object {
+            $Object = New-Object -TypeName PSObject
+            $Object | Add-Member -MemberType NoteProperty -Name Name -Value $_.PsChildName
+
+            $Acl = Get-Acl -Path $_.FullName | Select-Object -ExpandProperty Access
+            $AclAccount = $Acl.IdentityReference
+            $AclRight = ($Acl.FileSystemRights -split ',').Trim()
+
+            for ($Ace = 0; $Ace -lt $AclAccount.Count; $Ace++) {
+                $Object | Add-Member -MemberType NoteProperty -Name $AclAccount[$Ace] -Value $AclRight[$Ace]
+            }
+            return $Object
+        }
+    }
+}
+
 function Get-TcpPorts {
     Get-NetTCPConnection | 
     Select-Object @{ "Name" = "ProcessId"; "Expression" = { $_.OwningProcess }},LocalPort,@{ "Name" = "ProcessName"; "Expression" = { (Get-Process -Id $_.OwningProcess).Name }},RemoteAddress |
