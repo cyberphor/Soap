@@ -69,17 +69,6 @@ function Get-Indicator {
     Select-Object -ExpandProperty FullName
 }
 
-function Get-Indicator {
-    param(
-        [string]$Path = "C:\Users",
-        [Parameter(Mandatory)][string]$FileName
-    )
-
-    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
-    Where-Object { $_.Name -like $FileName } |
-    Select-Object -ExpandProperty FullName
-}
-
 function Get-LocalAdministrators {
     (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) |
     Select-Object -Skip 4 |
@@ -117,6 +106,15 @@ function Get-TcpPorts {
     Get-NetTCPConnection | 
     Select-Object @{ "Name" = "ProcessId"; "Expression" = { $_.OwningProcess }},LocalPort,@{ "Name" = "ProcessName"; "Expression" = { (Get-Process -Id $_.OwningProcess).Name }},RemoteAddress |
     Sort-Object -Property ProcessId -Descending
+}
+
+function Get-WinRmClientCount {
+    param(
+        [string]$ComputerName = $(Get-AdComputer -Filter *).Name
+    )
+
+    $Count = (Invoke-Command -ComputerName -ScriptBlock { Get-Date }).Count
+    Write-Output "[+] Number of WinRM Clients Online: $ComputerName"
 }
 
 function Get-WirelessNetAdapter {
