@@ -57,6 +57,11 @@ function Get-Asset {
     else { $Asset | Select-Object -Property HostName,IpAddress,MacAddress,SerialNumber}
 }
 
+function Get-DomainAdministrators {
+    Get-AdGroupMember -Identity "Domain Admins" |
+    Select-Object -Property Name,SamAccountName,Sid |
+    Format-Table -AutoSize
+}
 
 function Get-Indicator {
     param(
