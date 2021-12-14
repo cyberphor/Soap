@@ -113,13 +113,9 @@ function Get-TcpPorts {
     Sort-Object -Property ProcessId -Descending
 }
 
-function Get-WinRmClientCount {
-    param(
-        [string]$ComputerName = $(Get-AdComputer -Filter *).Name
-    )
-
-    $Count = (Invoke-Command -ComputerName -ScriptBlock { Get-Date }).Count
-    Write-Output "[+] Number of WinRM Clients Online: $ComputerName"
+function Get-WinRmClients {
+    $ComputerNames = $(Get-AdComputer -Filter *).Name
+    Invoke-Command -ComputerName $ComputerNames -ScriptBlock { $env:HOSTNAME } -ErrorAction Ignore
 }
 
 function Get-WirelessNetAdapter {
