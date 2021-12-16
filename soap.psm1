@@ -23,6 +23,21 @@ function ConvertTo-Base64 {
     [Convert]::ToBase64String($Bytes)
 }
 
+function ConvertTo-BinaryString {
+    Param([IPAddress]$IpAddress)
+    $Integer = $IpAddress.Address
+    $ReverseIpAddress = [IPAddress][String]$Integer
+    $BinaryString = [Convert]::toString($ReverseIpAddress.Address,2)
+    return $BinaryString
+}
+
+function ConvertTo-IpAddress {
+    Param($BinaryString)
+    $Integer = [System.Convert]::ToInt64($BinaryString,2).ToString()
+    $IpAddress = ([System.Net.IPAddress]$Integer).IpAddressToString
+    return $IpAddress
+}
+
 function Enable-WinRm {
     param(
         [Parameter(Mandatory)]$ComputerName
@@ -72,6 +87,39 @@ function Get-Indicator {
     Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
     Where-Object { $_.Name -like $FileName } |
     Select-Object -ExpandProperty FullName
+}
+
+function Get-IpAddressRange {
+    Param([Parameter(Mandatory)][string[]]$Network)
+    $IpAddressRange = @()
+    $Network |
+    foreach {
+        if ($_.Contains('/')) {
+            $NetworkId = $_.Split('/')[0]
+            $SubnetMask = $_.Split('/')[1]
+            if ([ipaddress]$NetworkId -and ($SubnetMask -eq 32)) {
+                $IpAddressRange += $NetworkId          
+            } elseif ([ipaddress]$NetworkId -and ($SubnetMask -le 32)) {
+                $Wildcard = 32 - $SubnetMask
+                $NetworkIdBinary = ConvertTo-BinaryString $NetworkId
+                $NetworkIdIpAddressBinary = $NetworkIdBinary.SubString(0,$SubnetMask) + ('0' * $Wildcard)
+                $BroadcastIpAddressBinary = $NetworkIdBinary.SubString(0,$SubnetMask) + ('1' * $Wildcard)
+                $NetworkIdIpAddress = ConvertTo-IpAddress $NetworkIdIpAddressBinary
+                $BroadcastIpAddress = ConvertTo-IpAddress $BroadcastIpAddressBinary
+                $NetworkIdInt32 = [convert]::ToInt32($NetworkIdIpAddressBinary,2)
+                $BroadcastIdInt32 = [convert]::ToInt32($BroadcastIpAddressBinary,2)
+                $NetworkIdInt32..$BroadcastIdInt32 | 
+                foreach {
+                    $BinaryString = [convert]::ToString($_,2)
+                    $Address = ConvertTo-IpAddress $BinaryString
+                    #if ($Address -ne $NetworkIdIpAddress -and $Address -ne $BroadcastIpAddress) {
+                       $IpAddressRange += $Address
+                    #}
+                }            
+            }
+        }
+    }
+    return $IpAddressRange
 }
 
 function Get-LocalAdministrators {
