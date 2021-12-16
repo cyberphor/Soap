@@ -298,6 +298,40 @@ function Start-AdBackup {
     }
 }
 
+function Start-Coffee {
+    while ($true) { (New-Object -ComObject Wscript.Shell).Sendkeys(' '); sleep 60 }
+}
+
+function Test-Connections ([string[]]$IpAddressRange) {
+    Get-Event -SourceIdentifier "Ping-*" | Remove-Event -ErrorAction Ignore
+    Get-EventSubscriber -SourceIdentifier "Ping-*" | Unregister-Event -ErrorAction Ignore
+
+    $IpAddressRange | 
+    foreach {
+        [string]$Event = "Ping-" + $_
+        New-Variable -Name $Event -Value (New-Object System.Net.NetworkInformation.Ping)
+        Register-ObjectEvent -InputObject (Get-Variable $Event -ValueOnly) -EventName PingCompleted -SourceIdentifier $Event
+        (Get-Variable $Event -ValueOnly).SendAsync($_,2000,$Event)
+        Remove-Variable $Event
+    }
+
+    while ($Pending -lt $IpAddressRange.Count) {
+        Wait-Event -SourceIdentifier "Ping-*" | Out-Null
+        Start-Sleep -Milliseconds 10
+        $Pending = (Get-Event -SourceIdentifier "Ping-*").Count
+    }
+
+    Get-Event -SourceIdentifier "Ping-*" | 
+    foreach {
+        $IpAddress = $_.SourceEventArgs.Reply
+        if ($IpAddress.Status -eq 'Success') {
+            $IpAddress.Address.IpAddressToString
+            Remove-Event $_.SourceIdentifier
+            Unregister-Event $_.SourceIdentifier
+        }
+    }
+}
+
 function Test-TcpPort {
     param(
         [Parameter(Mandatory)][ipaddress]$IpAddress,
