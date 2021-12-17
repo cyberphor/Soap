@@ -48,6 +48,15 @@ function Enable-WinRm {
     #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
 }
 
+function Get-App {
+    param([string]$Name)
+
+    $Apps = @()
+    $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+    $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
+    return $Apps | Where-Object { $_.DisplayName -like "*$Name*"}
+}
+
 function Get-Asset {
     param(
         [switch]$Verbose
@@ -268,6 +277,19 @@ function Get-ProcessToKill {
     $Process = Get-Process | Where-Object { $_.Name -like $Name }
     $Process.Kill()
 }
+
+function Remove-App {
+    param(
+        [Parameter(Mandatory,ValueFromPipelineByPropertyName)][string]$UninstallString
+    )
+    
+    if ($UninstallString -contains "msiexec") {
+        $App = ($UninstallString -Replace "msiexec.exe","" -Replace "/I","" -Replace "/X","").Trim()
+        Start-Process "msiexec.exe" -ArgumentList "/X $App /qb" -NoNewWindow
+    } else {
+        Start-Process $UninstallString -NoNewWindow
+    }
+}  
 
 function Start-AdBackup {
     param(
