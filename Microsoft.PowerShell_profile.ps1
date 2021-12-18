@@ -1,1 +1,0 @@
-﻿Set-Location -Path "$env:USERPROFILE\Desktop"
