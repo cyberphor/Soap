@@ -12,7 +12,7 @@
 RootModule = 'soap.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0'
+ModuleVersion = '4.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -24,13 +24,13 @@ GUID = '1616eee9-d20f-4489-81dc-6db8c85db253'
 Author = 'Victor Fernandez III'
 
 # Company or vendor of this module
-CompanyName = 'Unknown'
+CompanyName = 'cyberphor'
 
 # Copyright statement for this module
 Copyright = '(c) 2021 Victor Fernandez III. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'Security Operations and Automation via PowerShell (SOAP)'
+Description = 'Security Operations and Automation via PowerShell'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -66,7 +66,7 @@ Description = 'Security Operations and Automation via PowerShell (SOAP)'
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-# NestedModules = @()
+NestedModules = @('SOAP-01-Identify.psm1','SOAP-02-Protect.psm1','SOAP-03-Detect.psm1','SOAP-04-Respond.psm1','SOAP-05-Recover.psm1','SOAP-99-Fun.psm1','SOAP-99-Work-in-Progress.psm1')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = '*'
