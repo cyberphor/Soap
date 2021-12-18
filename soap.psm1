@@ -1,24 +1,15 @@
 function Block-TrafficToIpAddress {
-    param(
-        [Parameter(Mandatory)][ipaddress]$IpAddress
-    )
-
+    param([Parameter(Mandatory)][ipaddress]$IpAddress)
     New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
 }
 
 function ConvertFrom-Base64 {
-    param(
-        [Parameter(Mandatory, ValueFromPipeline)]$String
-    )
-
+    param([Parameter(Mandatory, ValueFromPipeline)]$String)
     [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($String))
 }
 
 function ConvertTo-Base64 {
-    param(
-        [Parameter(Mandatory, ValueFromPipeline)]$String
-    )
-
+    param([Parameter(Mandatory, ValueFromPipeline)]$String)
     $Bytes = [System.Text.Encoding]::Unicode.GetBytes($String)
     [Convert]::ToBase64String($Bytes)
 }
@@ -39,10 +30,7 @@ function ConvertTo-IpAddress {
 }
 
 function Enable-WinRm {
-    param(
-        [Parameter(Mandatory)]$ComputerName
-    )
-
+    param([Parameter(Mandatory)]$ComputerName)
     $Expression = "wmic /node:$ComputerName process call create 'winrm quickconfig'"
     Invoke-Expression $Expression
     #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
@@ -50,7 +38,6 @@ function Enable-WinRm {
 
 function Get-App {
     param([string]$Name)
-
     $Apps = @()
     $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
     $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
@@ -58,10 +45,7 @@ function Get-App {
 }
 
 function Get-Asset {
-    param(
-        [switch]$Verbose
-    )
-
+    param([switch]$Verbose)
     $NetworkAdapterConfiguration = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = 'True'"
     $IpAddress = $NetworkAdapterConfiguration.IpAddress[0]
     $MacAddress = $NetworkAdapterConfiguration.MACAddress[0]
@@ -92,14 +76,13 @@ function Get-Indicator {
         [string]$Path = "C:\Users",
         [Parameter(Mandatory)][string]$FileName
     )
-
     Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
     Where-Object { $_.Name -like $FileName } |
     Select-Object -ExpandProperty FullName
 }
 
 function Get-IpAddressRange {
-    Param([Parameter(Mandatory)][string[]]$Network)
+    param([Parameter(Mandatory)][string[]]$Network)
     $IpAddressRange = @()
     $Network |
     foreach {
@@ -145,17 +128,14 @@ function Get-Permissions {
         [string]$File = $pwd,
         [int]$Depth = 1
     )
-
     if (Test-Path -Path $File) {
         Get-ChildItem -Path $File -Recurse -Depth $Depth |
         ForEach-Object {
             $Object = New-Object -TypeName PSObject
             $Object | Add-Member -MemberType NoteProperty -Name Name -Value $_.PsChildName
-
             $Acl = Get-Acl -Path $_.FullName | Select-Object -ExpandProperty Access
             $AclAccount = $Acl.IdentityReference
             $AclRight = ($Acl.FileSystemRights -split ',').Trim()
-
             for ($Ace = 0; $Ace -lt $AclAccount.Count; $Ace++) {
                 $Object | Add-Member -MemberType NoteProperty -Name $AclAccount[$Ace] -Value $AclRight[$Ace]
             }
@@ -164,11 +144,14 @@ function Get-Permissions {
     }
 }
 
-function Get-Shares {
-    param(
-        [string[]]$Whitelist = @("ADMIN$","C$","IPC$")
-    )
+function Get-ProcessToKill {
+    param([Parameter(Mandatory)]$Name)
+    $Process = Get-Process | Where-Object { $_.Name -like $Name }
+    $Process.Kill()
+}
 
+function Get-Shares {
+    param([string[]]$Whitelist = @("ADMIN$","C$","IPC$"))
     Get-SmbShare | 
     Where-Object { $Whitelist -notcontains $_.Name } |
     Select-Object -Property Name, Path, Description
@@ -186,17 +169,13 @@ function Get-WinRmClients {
 }
 
 function Get-WirelessNetAdapter {
-    param(
-        [string]$ComputerName = $env:COMPUTERNAME
-    )
-
+    param([string]$ComputerName = $env:COMPUTERNAME)
     Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter |
     Where-Object { $_.Name -match 'wi-fi|wireless' }
 }
 
 function Import-AdUsersFromCsv {
     $Password = ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force
-
     Import-Csv -Path .\users.csv |
     ForEach-Object {
         $Name = $_.LastName + ', ' + $_.FirstName
@@ -228,7 +207,6 @@ function Invoke-WinEventParser {
         [Parameter(Position=3)][int]$DaysAgo=1,
         [Parameter(Position=4)][switch]$TurnOffOutputFilter
     )
-
     filter Read-WinEvent {
         $XmlData = [xml]$_.ToXml()
         $Event = New-Object -TypeName PSObject
@@ -247,7 +225,6 @@ function Invoke-WinEventParser {
         }
         return $Event
     }
-
     if ($TurnOffOutputFilter) {
         Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
         Read-WinEvent
@@ -269,20 +246,8 @@ function Invoke-WinEventParser {
     }
 }
 
-function Get-ProcessToKill {
-    param(
-        [Parameter(Mandatory)]$Name
-    )
-
-    $Process = Get-Process | Where-Object { $_.Name -like $Name }
-    $Process.Kill()
-}
-
 function Remove-App {
-    param(
-        [Parameter(Mandatory,ValueFromPipelineByPropertyName)][string]$UninstallString
-    )
-    
+    param([Parameter(Mandatory,ValueFromPipelineByPropertyName)][string]$UninstallString)
     if ($UninstallString -contains "msiexec") {
         $App = ($UninstallString -Replace "msiexec.exe","" -Replace "/I","" -Replace "/X","").Trim()
         Start-Process "msiexec.exe" -ArgumentList "/X $App /qb" -NoNewWindow
@@ -297,7 +262,6 @@ function Start-AdBackup {
         [string]$Share = "Backups",
         [string]$Prefix = "AdBackup"
     )
-
     $BackupFeature = (Install-WindowsFeature -Name Windows-Server-Backup).InstallState
     $BackupServerIsOnline = Test-Connection -ComputerName $ComputerName -Count 2 -Quiet
     if ($BackupFeature -eq "Installed") {
@@ -324,10 +288,22 @@ function Start-Coffee {
     while ($true) { (New-Object -ComObject Wscript.Shell).Sendkeys(' '); sleep 60 }
 }
 
+function Start-RollingReboot {
+    param(
+        [int]$Interval = 4,
+        [int]$Duration = 60
+    )
+    $TaskName = "Rolling Reboot"
+    $Action= New-ScheduledTaskAction -Execute "shutdown.exe" -Argument "/r /t 0" 
+    $Trigger= New-ScheduledTaskTrigger -At $(Get-Date) -Once -RepetitionInterval $(New-TimeSpan -Minutes $Interval) -RepetitionDuration $(New-TimeSpan -Minutes $Duration)
+    $User= "NT AUTHORITY\SYSTEM" 
+    Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -User $User -RunLevel Highest –Force
+    Start-ScheduledTask -TaskName $TaskName
+}
+
 function Test-Connections ([string[]]$IpAddressRange) {
     Get-Event -SourceIdentifier "Ping-*" | Remove-Event -ErrorAction Ignore
     Get-EventSubscriber -SourceIdentifier "Ping-*" | Unregister-Event -ErrorAction Ignore
-
     $IpAddressRange | 
     foreach {
         [string]$Event = "Ping-" + $_
@@ -336,13 +312,11 @@ function Test-Connections ([string[]]$IpAddressRange) {
         (Get-Variable $Event -ValueOnly).SendAsync($_,2000,$Event)
         Remove-Variable $Event
     }
-
     while ($Pending -lt $IpAddressRange.Count) {
         Wait-Event -SourceIdentifier "Ping-*" | Out-Null
         Start-Sleep -Milliseconds 10
         $Pending = (Get-Event -SourceIdentifier "Ping-*").Count
     }
-
     Get-Event -SourceIdentifier "Ping-*" | 
     foreach {
         $IpAddress = $_.SourceEventArgs.Reply
@@ -359,15 +333,11 @@ function Test-TcpPort {
         [Parameter(Mandatory)][ipaddress]$IpAddress,
         [Parameter(Mandatory)][int]$Port
     )
-
     $TcpClient = New-Object System.Net.Sockets.TcpClient
     $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
 }
 
 function Unblock-TrafficToIpAddress {
-    param(
-        [Parameter(Mandatory)][ipaddress]$IpAddress
-    )
-
+    param([Parameter(Mandatory)][ipaddress]$IpAddress)
     Remove-NetFirewallRule -DisplayName "Block $IpAddress"
 }
