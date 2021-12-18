@@ -1,2 +1,2 @@
-Import-Module SOAP-Module
+Import-Module SOAP-Modules
 Set-Location "C:\Users\Victor\Desktop"
