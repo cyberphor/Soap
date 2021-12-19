@@ -1,10 +1,6 @@
-## PowerShell XPath Filters
-### How to Use Filters with Get-WinEvent
-```pwsh
-Get-WinEvent -LogName Security -FilterXPath $FilterXPath
-```
+## XPath Filters
 
-### FilterXPath Examples
+### Example XPath Filters
 ```pwsh
 # Event ID: 4624
 # Exclude: S-1-5-18 (SYSTEM)
@@ -19,4 +15,9 @@ $FilterXPath = "
     Data[@Name='LogonType'] = '2' or Data[@Name='LogonType'] = '3'
   ]
 "
+```
+
+### How to Use XPath Filters with Powershell and the Get-WinEvent Cmdlet
+```pwsh
+Get-WinEvent -LogName Security -FilterXPath $FilterXPath
 ```
