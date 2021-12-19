@@ -1,5 +1,11 @@
-### How to Use PowerShell and XML Filters to Select Specific Windows Events
-**Step 1.** Create a file with your desired XML filter (ex: "Last24Hrs-Security-Logons.xml").
+### How to Use XML Filters with PowerShell and the Get-WinEvent Cmdlet
+**Step 1.** Create and open a file to house your XMl filter. 
+```pwsh
+New-Item -ItemType File -Name "Last24Hrs-Security-Logons.xml" | Out-Null
+powershell_ise.exe "Last24Hrs-Security-Logons.xml"
+```
+
+**Step 2.** Add your desired XMl filter to the open file. For example, copy/paste the code below to query the "Security" log for events in the last 24 hours that meet specific SID and logon type criteria. 
 ```xml
 <QueryList>
   <Query Id="0">
@@ -25,7 +31,7 @@
 </QueryList>
 ```
 
-**Step 2.** Use the `Get-WinEvent` cmdlet to ingest your XML filter. 
+**Step 3.** Copy/paste the command sentence below into a PowerShell session. 
 ```pwsh
-Get-WinEvent -FilterXml ([xml](gc .\Last24Hrs-Security-Logons.xml))
+Get-WinEvent -FilterXml ([xml](Get-Content Last24Hrs-Security-Logons.xml))
 ```
