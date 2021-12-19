@@ -1,2 +1,2 @@
 Import-Module SOAP-Modules
-Set-Location "C:\Users\Victor\Desktop"
+Set-Location -Path "$env:USERPROFILE\Desktop"
