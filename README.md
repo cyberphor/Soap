@@ -10,5 +10,5 @@ Expand-Archive -Path "SOAP-Modules.zip"
 Move-Item -Path "SOAP-Modules\SOAP-Modules-main" -Destination "C:\Program Files\WindowsPowerShell\Modules\SOAP-Modules"
 Remove-Item -Path "SOAP-Modules.zip"
 Remove-Item -Path "SOAP-Modules"
-Import-Module SOAP-Modules
+Import-Module -Name SOAP-Modules
 ```
