@@ -20,4 +20,5 @@ $FilterXPath = "
 ### How to Use XPath Filters with Powershell and the Get-WinEvent Cmdlet
 ```pwsh
 Get-WinEvent -LogName Security -FilterXPath $FilterXPath
+# Get-WinEvent -LogName Security -FilterXPath $(Get-Content .\XPath-Filter.txt | Out-String)
 ```
