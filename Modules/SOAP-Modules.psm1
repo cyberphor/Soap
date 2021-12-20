@@ -15,6 +15,16 @@ function Get-CustomModule {
     Where-Object { $_.Path -like "C:\Program Files\WindowsPowerShell\Modules\*$Name*" }
 }
 
+function Import-CustomViews {
+    param([string]$Path = "C:\Program Files\WindowsPowerShell\Modules\SOAP-Modules\Custom-Views")
+    $CustomViewsFolder = "C:\ProgramData\Microsoft\Event Viewer\Views"
+    $CustomViews = Get-ChildItem -Recurse $CustomViewsFolder
+    Get-ChildItem -Recurse "$Path\*.xml" |
+    Where-Object { $_.Name -notin $CustomViews } | 
+    Copy-Item -Destination $CustomViewsFolder
+}
+
+
 function New-CustomModule {
     param(
         [Parameter(Mandatory,Position=0)][string]$Name,
