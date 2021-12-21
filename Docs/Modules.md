@@ -2,11 +2,14 @@
 ### Identify
 The "Identity" module contains functions to measure and map assets, vulnerabilities, threats, and compliance.
 - [x] Get-DiskSpace
+- [x] Get-EnterpriseVisbility
+- [x] Get-EventForwarders
 - [x] Get-IpAddressRange
 - [x] Get-WinRmClients
 - [x] Get-WirelessNetAdapter
 - [x] Start-AdScrub
 - [ ] Start-LogEnrichment
+- [x] Test-Connections
 - [x] Test-TcpPort
 
 ### Protect
