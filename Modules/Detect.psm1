@@ -24,6 +24,13 @@ function ConvertTo-IpAddress {
     return $IpAddress
 }
 
+function Enable-WinRm {
+    param([Parameter(Mandatory)]$ComputerName)
+    $Expression = "wmic /node:$ComputerName process call create 'winrm quickconfig'"
+    Invoke-Expression $Expression
+    #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
+}
+
 function Get-App {
     param([string]$Name)
     $Apps = @()
@@ -107,7 +114,7 @@ function Get-Shares {
     Select-Object -Property Name, Path, Description
 }
 
-function Get-TcpPorts {
+function Get-TcpPort {
     Get-NetTCPConnection | 
     Select-Object @{ "Name" = "ProcessId"; "Expression" = { $_.OwningProcess }},LocalPort,@{ "Name" = "ProcessName"; "Expression" = { (Get-Process -Id $_.OwningProcess).Name }},RemoteAddress |
     Sort-Object -Property ProcessId -Descending
