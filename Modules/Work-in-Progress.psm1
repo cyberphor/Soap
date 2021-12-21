@@ -1,12 +1,16 @@
-function Get-EventForwarders {
+function Get-EnterpriseVisbility {
     param(
-      [string]$ComputerName,
-      [string]$Subscription = "Forwarded Events"
+        [Parameter(Mandatory)][string]$Network,
+        [Parameter(Mandatory)][string]$EventCollector
     )
-    Invoke-Command -ComputerName $ComputerName -ArgumentList $Subscription -ScriptBlock {
-        $Subscription = $args[0]
-        $Key = "HKLM:\Software\Microsoft\Windows\CurrentVersion\EventCollector\Subscriptions\$Subscription\EventSources"
-        $EventForwarders = (Get-ChildItem $Key).Name | ForEach-Object { $_.Split("\")[9] }
-        return $EventForwarders
-    }
+    $ActiveIps = Get-IpAddressRange -Network $Network | Test-Connections
+    $AdObjects = (Get-AdComputer -Filter "*").Name
+    $EventForwarders = Get-EventForwarders -ComputerName $EventCollector
+    $WinRmclients = Get-WinRmClients
+    $Visbility = New-Object -TypeName psobject
+    $Visbility | Add-Member -MemberType NoteProperty -Name ActiveIps -Value $ActiveIps.Count
+    $Visbility | Add-Member -MemberType NoteProperty -Name AdObjects -Value $AdObjects.Count
+    $Visbility | Add-Member -MemberType NoteProperty -Name EventForwarders -Value $EventForwarders.Count
+    $Visbility | Add-Member -MemberType NoteProperty -Name WinRmClients -Value $WinRmclients.Count
+    return $Visbility
 }
