@@ -17,7 +17,7 @@ The "Protect" module contains functions to configure access and application cont
 - [x] Get-Privileges
 
 ### Detect
-The "Detect"ù module contains functions to collect, triage, and investigate events. 
+The "Detect" module contains functions to collect, triage, and investigate events. 
 - [x] ConvertFrom-Base64
 - [x] ConvertTo-Base64
 - [x] Enable-WinRm
