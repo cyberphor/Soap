@@ -9,6 +9,7 @@
 * [Invoke-WinEventParser](#invoke-wineventparser)
 * [Read-WinEvent](#read-winevent)
 * [Unblock-TrafficToIpAddress](#unblock-traffictoipaddress)
+* [Update-GitHubRepo](#update-githubrepo)
 
 ### Block-TrafficToIpAddress
 ```pwsh
@@ -156,4 +157,13 @@ Unblock-TrafficToIpAddress
 ```pwsh
 # output
 
+```
+
+### Update-GitHubRepo
+```pwsh
+Update-GitHubRepo -Author "cyberphor" -Repo "SOAP-Modules" -Branch "main" -Path "C:\Users\cyberphor\Documents\GitHub\SOAP-Modules"
+```
+```pwsh
+# output
+[!] Updating the local branch of scripts.
 ```
