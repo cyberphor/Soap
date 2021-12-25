@@ -128,24 +128,6 @@ function Invoke-WinEventParser {
         [Parameter(Position=3)][int]$DaysAgo=1,
         [Parameter(Position=4)][switch]$TurnOffOutputFilter
     )
-    filter Read-WinEvent {
-        $XmlData = [xml]$_.ToXml()
-        $Event = New-Object -TypeName PSObject
-        $Event = New-Object -TypeName PSObject
-        $Event | Add-Member -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
-        $Event | Add-Member -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
-        $Event | Add-Member -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
-        $Event | Add-Member -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
-        $Event | Add-Member -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
-        if ($XmlData.Event.System.Security.UserId) {
-            $Event | Add-Member -MemberType NoteProperty -Name SecurityUserId -Value $XmlData.Event.System.Security.UserId
-        }
-        $EventData = $XmlData.Event.EventData.Data
-        for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
-            $Event | Add-Member -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
-        }
-        return $Event
-    }
     if ($TurnOffOutputFilter) {
         Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
         Read-WinEvent
@@ -165,4 +147,23 @@ function Invoke-WinEventParser {
         Read-WinEvent |
         Select-Object -Property $Properties
     }
+}
+
+filter Read-WinEvent {
+    $XmlData = [xml]$_.ToXml()
+    $Event = New-Object -TypeName PSObject
+    $Event = New-Object -TypeName PSObject
+    $Event | Add-Member -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
+    $Event | Add-Member -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
+    $Event | Add-Member -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
+    $Event | Add-Member -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
+    $Event | Add-Member -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
+    if ($XmlData.Event.System.Security.UserId) {
+        $Event | Add-Member -MemberType NoteProperty -Name SecurityUserId -Value $XmlData.Event.System.Security.UserId
+    }
+    $EventData = $XmlData.Event.EventData.Data
+    for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
+        $Event | Add-Member -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
+    }
+    return $Event
 }
