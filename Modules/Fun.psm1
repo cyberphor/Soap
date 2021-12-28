@@ -1,3 +1,10 @@
+function Get-CallSign {
+    $Adjectives = @("Bastard","Brass","Cannibal","Dark","Liquid","Solid")
+    $Animals = @("Bison","Beetle","Cobra","Snake","Mantis","Fox")
+    $CallSign = $($Adjectives | Get-Random -Count 1) + ' ' + $($Animals | Get-Random -Count 1)
+    return $CallSign
+}
+
 function Start-ImperialMarch {
     [console]::beep(440,500)      
     [console]::beep(440,500)
