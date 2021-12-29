@@ -66,7 +66,23 @@ Description = 'Security Operations and Automation via PowerShell (SOAP) Modules'
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @('Modules\Identify.psm1','Modules\Protect.psm1','Modules\Detect.psm1','Modules\Respond.psm1','Modules\Recover.psm1','Modules\Fun.psm1','Modules\Work-in-Progress.psm1')
+NestedModules = @(
+	'Modules\Identify\AssetManagement.psm1',
+	'Modules\Identify\RiskAssessment.psm1',
+	'Modules\Protect\AccessControl.psm1',
+	'Modules\Protect\DataSecurity.psm1',
+	'Modules\Protect\InformationProtection.psm1',
+	'Modules\Protect\Maintenance.psm1',
+	'Modules\Protect\ProtectiveTechnology.psm1',
+	'Modules\Detect\AnomaliesAndEvents.psm1',
+	'Modules\Detect\ContinuousMonitoring.psm1',
+	'Modules\Detect\DetectionProcesses.psm1',
+	'Modules\Respond\Analysis.psm1',
+	'Modules\Respond\Mitigation.psm1',
+	'Modules\Recover\RecoveryPlanning.psm1',
+	'Modules\Misc\Fun.psm1',
+	'Modules\Misc\Work-in-Progress.psm1'
+)
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = '*'
