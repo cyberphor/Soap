@@ -31,41 +31,6 @@ function Enable-WinRm {
     #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
 }
 
-function Get-App {
-    param([string]$Name)
-    $Apps = @()
-    $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-    $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
-    return $Apps | Where-Object { $_.DisplayName -like "*$Name*"}
-}
-
-function Get-Asset {
-    param([switch]$Verbose)
-    $NetworkAdapterConfiguration = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = 'True'"
-    $IpAddress = $NetworkAdapterConfiguration.IpAddress[0]
-    $MacAddress = $NetworkAdapterConfiguration.MACAddress[0]
-    $SystemInfo = Get-ComputerInfo
-    $Asset = [pscustomobject] @{
-        "Hostname" = $env:COMPUTERNAME
-        "IpAddress" = $IpAddress
-        "MacAddress" = $MacAddress
-        "SerialNumber" = $SystemInfo.BiosSeralNumber
-        "Make" = $SystemInfo.CsManufacturer
-        "Model" = $SystemInfo.CsModel
-        "OperatingSystem" = $SystemInfo.OsName
-        "Architecture" = $SystemInfo.OsArchitecture
-        "Version" = $SystemInfo.OsVersion
-    }
-    if ($Verbose) { $Asset }
-    else { $Asset | Select-Object -Property HostName,IpAddress,MacAddress,SerialNumber}
-}
-
-function Get-DomainAdministrators {
-    Get-AdGroupMember -Identity "Domain Admins" |
-    Select-Object -Property Name,SamAccountName,Sid |
-    Format-Table -AutoSize
-}
-
 function Get-Indicator {
     param(
         [string]$Path = "C:\Users",
@@ -74,16 +39,6 @@ function Get-Indicator {
     Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
     Where-Object { $_.Name -like $FileName } |
     Select-Object -ExpandProperty FullName
-}
-
-
-function Get-LocalAdministrators {
-    (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) |
-    Select-Object -Skip 4 |
-    Select-String -Pattern "The command completed successfully." -NotMatch |
-    ForEach-Object {
-        New-Object -TypeName PSObject -Property @{ Name = $_ }
-    }
 }
 
 function Get-Permissions {
