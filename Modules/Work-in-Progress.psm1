@@ -1,6 +1,6 @@
 function ConvertFrom-CsvToMarkdownTable {
     <# .EXAMPLE 
-    ConvertFrom-CsvToMarkdownTable -Path .\CyberFunctions.csv
+    ConvertFrom-CsvToMarkdownTable -Path .\Report.csv
     #>
     param([Parameter(Mandatory)][string]$Path)
     if (Test-Path -Path $Path) {
