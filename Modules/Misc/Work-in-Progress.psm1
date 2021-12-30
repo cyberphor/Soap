@@ -39,4 +39,3 @@ filter Read-WinEvent {
 function Update-AdDescriptionWithLastLogon {
     
 }
-

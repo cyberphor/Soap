@@ -9,6 +9,12 @@ function Get-ProcessToKill {
     $Process.Kill()
 }
 
+function Start-Panic {
+    param([string]$ComputerName = 'localhost')
+    #shutdown /r /f /m ComputerName /d P:0:1 /c "Your comment"
+    Stop-Computer -ComputerName $ComputerName
+}
+
 function Unblock-TrafficToIpAddress {
     param([Parameter(Mandatory)][ipaddress]$IpAddress)
     Remove-NetFirewallRule -DisplayName "Block $IpAddress"
