@@ -25,20 +25,29 @@ function ConvertTo-IpAddress {
 }
 
 filter Read-WinEvent {
-    $XmlData = [xml]$_.ToXml()
-    $Event = New-Object -TypeName PSObject
-    $Event = New-Object -TypeName PSObject
-    $Event | Add-Member -MemberType NoteProperty -Name LogName -Value $XmlData.Event.System.Channel
-    $Event | Add-Member -MemberType NoteProperty -Name EventId -Value $XmlData.Event.System.EventId
-    $Event | Add-Member -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
-    $Event | Add-Member -MemberType NoteProperty -Name Hostname -Value $XmlData.Event.System.Computer
-    $Event | Add-Member -MemberType NoteProperty -Name RecordId -Value $XmlData.Event.System.EventRecordId
-    if ($XmlData.Event.System.Security.UserId) {
-        $Event | Add-Member -MemberType NoteProperty -Name SecurityUserId -Value $XmlData.Event.System.Security.UserId
+    if ($_ -and $_.GetType().Name -eq 'EventLogRecord') {
+        $XmlData = [xml]$_.ToXml()
+        $Event = New-Object -TypeName PSObject
+        $SystemData = $XmlData.Event.System
+        ($SystemData | Get-Member -MemberType Properties).Name |
+        ForEach-Object {
+            $ParentProperty = $_
+            if ($SystemData[$ParentProperty].'#text') {
+                $Event | Add-Member -MemberType NoteProperty -Name $ParentProperty -Value $SystemData[$ParentProperty].'#text' 
+            } else {
+                $SystemData[$ParentProperty] | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name |
+                ForEach-Object {
+                    $ChildProperty = $ParentProperty + $_ 
+                    $Event | Add-Member -MemberType NoteProperty -Name $ChildProperty -Value $SystemData[$ParentProperty].$_ 
+                }
+            }
+        }
+        $EventData = $XmlData.Event.EventData.Data
+        for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
+            $Event | Add-Member -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
+        }
+        return $Event
+    } else {
+        Write-Error -Message "The input object type must EventLogRecord."
     }
-    $EventData = $XmlData.Event.EventData.Data
-    for ($Property = 0; $Property -lt $EventData.Count; $Property++) {
-        $Event | Add-Member -MemberType NoteProperty -Name $EventData[$Property].Name -Value $EventData[$Property].'#text'
-    }
-    return $Event
 }
