@@ -4,6 +4,14 @@ The "Identity" module contains functions to help focus and prioritize risk manag
 **Asset Management**  
 Inventory hardware and software.  
 - [x] Get-App
+- [x] Get-Asset
+- [x] Get-EnterpriseVisbility
+- [x] Get-EventForwarders
+- [x] Get-IpAddressRange
+- [x] Get-WinRmClients
+- [x] Get-WirelessNetAdapter
+- [x] Test-Connections
+- [x] Test-TcpPort
 
 **Risk Assessment**  
 Identify asset vulnerabilities, receive cyber threat intelligence, identify internal threats, and identify external threats.  
@@ -16,11 +24,13 @@ The "Protect" module contains functions to prevent cyber-security events.
 Manage identities, manage physical access, manage remote access, manage permissions, and implement network segmentation. 
 - [x] Get-DomainAdmins
 - [x] Get-LocalAdministrators
-- [x] Get-Privileges
+- [ ] Get-Permissions
+- [ ] Get-Privileges
 - [x] Start-AdScrub
 
 **Data Security**  
 Protect data-at-rest, protect data-in-transit, maintain capacity, and implement integrity checking mechanisms to verify software and information. 
+- [x] Get-DiskSpace
 - [ ] Import-IPSecGPO
 
 **Information Protection**  
@@ -42,6 +52,8 @@ The “Detect” module contains functions to enable the discovery of cyber-security
 
 **Anomalies and Events**  
 Analyze events, collect events from multiple sources, and establish alert thresholds. 
+- [x] Get-Indicator
+- [ ] Invoke-WinEventParser
 - [ ] Move-ForwardedEventsLog
 
 **Continuous Monitoring**  

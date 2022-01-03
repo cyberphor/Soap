@@ -116,5 +116,13 @@ function Test-TcpPort {
         [Parameter(Mandatory)][int]$Port
     )
     $TcpClient = New-Object System.Net.Sockets.TcpClient
-    $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
+    $State = $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
+    if ($State -eq 'True') { $State = 'Open' }
+    else { $State = 'Closed' }
+    $TcpPort = [pscustomobject] @{
+        'IpAddress' = $IpAddress
+        'Port'      = $Port
+        'State'    = $State
+    }
+    return $TcpPort
 }

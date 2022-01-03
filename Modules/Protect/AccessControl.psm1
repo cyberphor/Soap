@@ -14,6 +14,27 @@ function Get-LocalAdministrators {
     }
 }
 
+function Get-Permissions {
+    param(
+        [string]$File = $pwd,
+        [int]$Depth = 1
+    )
+    if (Test-Path -Path $File) {
+        Get-ChildItem -Path $File -Recurse -Depth $Depth |
+        ForEach-Object {
+            $Object = New-Object -TypeName PSObject
+            $Object | Add-Member -MemberType NoteProperty -Name Name -Value $_.PsChildName
+            $Acl = Get-Acl -Path $_.FullName | Select-Object -ExpandProperty Access
+            $AclAccount = $Acl.IdentityReference
+            $AclRight = ($Acl.FileSystemRights -split ',').Trim()
+            for ($Ace = 0; $Ace -lt $AclAccount.Count; $Ace++) {
+                $Object | Add-Member -MemberType NoteProperty -Name $AclAccount[$Ace] -Value $AclRight[$Ace]
+            }
+            return $Object
+        }
+    }
+}
+
 function Get-Privileges {
     # powershell.exe "whoami /priv | findstr Enabled | % { $_.Split(" ")[0] } > C:\Users\Public\privileges-$env:USERNAME.txt"
     # create a scheduled task and run this command...using the Users group
@@ -57,16 +78,6 @@ function Get-Privileges {
             Add-Member -InputObject $Output -MemberType NoteProperty -Name Username -Value $Username
             $Output
         }
-    }
-}
-
-function Remove-App {
-    param([Parameter(Mandatory,ValueFromPipelineByPropertyName)][string]$UninstallString)
-    if ($UninstallString -contains "msiexec") {
-        $App = ($UninstallString -Replace "msiexec.exe","" -Replace "/I","" -Replace "/X","").Trim()
-        Start-Process "msiexec.exe" -ArgumentList "/X $App /qb" -NoNewWindow
-    } else {
-        Start-Process $UninstallString -NoNewWindow
     }
 }
 
