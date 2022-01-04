@@ -1,6 +1,6 @@
 # SOAP Modules
 ![GitHub](https://img.shields.io/github/license/cyberphor/soap-modules)  
-Security Operations and Automation via PowerShell (SOAP) Modules
+A collection of security-focused PowerShell modules, scripts, and documents.
 
 ### Installation
 Copy/paste the commands below into an elevated PowerShell session to automatically download, install, and import the SOAP modules.
