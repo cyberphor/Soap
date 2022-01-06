@@ -1,5 +1,6 @@
 # soap
 ![GitHub](https://img.shields.io/github/license/cyberphor/soap)  
+soap is a PowerShell module with cyber-security functions.
 
 ### Installation
 Copy/paste the commands below into an elevated PowerShell session to automatically download, install, and import the soap PowerShell module.
