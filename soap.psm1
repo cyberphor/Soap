@@ -1,97 +1,6 @@
-function Edit-CustomModule {
-    param([string]$Name)
-    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name\$Name.psm1"
-    $Expression = 'powershell_ise.exe "$Module"'
-    if (Test-Path -Path $Module) {
-        Invoke-Expression $Expression
-    } else {
-        Write-Output "[x] The $Name module does not exist."
-    }
-}
-
-function Get-CustomModule {
-    param([string]$Name)
-    Get-Module -ListAvailable | 
-    Where-Object { $_.Path -like "C:\Program Files\WindowsPowerShell\Modules\*$Name*" }
-}
-
-function Import-CustomViews {
-    param([string]$Path = "C:\Program Files\WindowsPowerShell\Modules\SOAP-Modules\Custom-Views")
-    $CustomViewsFolder = "C:\ProgramData\Microsoft\Event Viewer\Views"
-    $CustomViews = Get-ChildItem -Recurse $CustomViewsFolder
-    Get-ChildItem -Recurse "$Path\*.xml" |
-    Where-Object { $_.Name -notin $CustomViews } | 
-    Copy-Item -Destination $CustomViewsFolder
-}
-
-function New-CustomModule {
-    param(
-        [Parameter(Mandatory,Position=0)][string]$Name,
-        [Parameter(Mandatory,Position=1)][string]$Author,
-        [Parameter(Mandatory,Position=2)][string]$Description
-    )
-    $Directory = "C:\Program Files\WindowsPowerShell\Modules\$Name"
-    $Module = "$Directory\$Name.psm1"
-    $Manifest = "$Directory\$Name.psd1"
-    if (Test-Path -Path $Directory) {
-        Write-Output "[x] The $Name module already exists."
-    } else { 
-        New-Item -ItemType Directory -Path $Directory | Out-Null
-        New-Item -ItemType File -Path $Module | Out-Null
-        New-ModuleManifest -Path $Manifest `
-            -Author $Author `
-            -RootModule "$Name.psm1" `
-            -Description $Description
-        if (Test-Path -Path $Module) {
-            Write-Output "[+] Created the $Name module."
-        }
-    }
-}
-
-function Remove-CustomModule {
-    param([Parameter(Mandatory)][string]$Name)
-    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name"
-    if (Test-Path -Path $Module) {
-        Remove-Item -Path $Module -Recurse -Force
-        if (-not (Test-Path -Path $Module)) {
-            Write-Output "[+] Deleted the $Name module."
-        }
-    } else {
-        Write-Output "[x] The $Name module does not exist."
-    }
-}
-
-function Update-GitHubRepo {
-    param(
-        [string]$Author,
-        [string]$Repo,
-        [string]$Branch,
-        [string]$Path
-    )
-    $RepoToUpdate = "https://github.com/$Author/$Repo"
-    $Response = Invoke-WebRequest -Uri "$RepoToUpdate/commits"
-    if ($Response.StatusCode -eq '200') {
-        $LastCommit = ($Response.Links.href | Where-Object { $_ -like "/$Author/$Repo/commit/*" } | Select-Object -First 1).Split("/")[4].Substring(0,7)
-        $Git = "$Path\.git\"
-        $FETCH_HEAD = "$Git\FETCH_HEAD"
-        $LastCommitDownloaded = $null
-        if ((Test-Path -Path $Path) -and (Test-Path -Path $Git)) {
-            $LastCommitDownloaded = (Get-Content -Path $FETCH_HEAD).SubString(0,7)
-        }
-        if ($LastCommitDownloaded -ne $LastCommit) {
-            Write-Output "[!] Updating the local branch of $Repo."
-            Invoke-WebRequest -Uri "$RepoToUpdate/archive/refs/heads/$Branch.zip" -OutFile "$Repo.zip"
-            Expand-Archive -Path "$Repo.zip"
-            Move-Item -Path "$Repo\$Repo-$Branch" -Destination $Path
-            New-Item -Path $FETCH_HEAD -Force | Out-Null
-            (Get-Item -Path $Git).Attributes += "Hidden"
-            Add-Content -Path $FETCH_HEAD -Value $LastCommit -Force
-            Remove-Item -Path "$Repo.zip"
-            Remove-Item -Path "$Repo" -Recurse
-        } else {
-            Write-Output "[+] Nothing to update for the local branch of $Repo."
-        }
-    }
+function Block-TrafficToIpAddress {
+    param([Parameter(Mandatory)][ipaddress]$IpAddress)
+    New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
 }
 
 function ConvertFrom-Base64 {
@@ -120,71 +29,37 @@ function ConvertTo-IpAddress {
     return $IpAddress
 }
 
-function Get-Indicator {
-    param(
-        [string]$Path = "C:\Users",
-        [Parameter(Mandatory)][string]$FileName
-    )
-    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
-    Where-Object { $_.Name -like $FileName } |
-    Select-Object -ExpandProperty FullName
-}
-
-function Invoke-WinEventParser {
-    param(
-        [Parameter(Position=0)][string]$ComputerName,
-        [ValidateSet("Application","Security","System","ForwardedEvents","Microsoft-Windows-PowerShell/Operational")][Parameter(Position=1)][string]$LogName,
-        [ValidateSet("4104","4624","4625","4663","4672","4688","4697","5140","5156","6416")][Parameter(Position=2)]$EventId,
-        [Parameter(Position=3)][int]$DaysAgo=1,
-        [Parameter(Position=4)][switch]$TurnOffOutputFilter
-    )
-    if ($TurnOffOutputFilter) {
-        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
-        Read-WinEvent
-    } else {
-        if ($EventId -eq "4104") { $Properties = "TimeCreated","SecurityUserId","ScriptBlockText" }
-        elseif ($EventId -eq "4624") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
-        elseif ($EventId -eq "4625") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
-        elseif ($EventId -eq "4663") { $Properties = "*" }
-        elseif ($EventId -eq "4672") { $Properties = "TimeCreated","SubjectUserSid","SubjectUserName" }
-        elseif ($EventId -eq "4688") { $Properties = "TimeCreated","TargetUserName","NewProcessName","CommandLine" }
-        elseif ($EventId -eq "4697") { $Properties = "*" }
-        elseif ($EventId -eq "5140") { $Properties = "*" }
-        elseif ($EventId -eq "5156") { $Properties = "TimeCreated","SourceAddress","DestAddress","DestPort" }
-        elseif ($EventId -eq "6416") { $Properties = "TimeCreated","SubjectUserName","ClassName","DeviceDescription" }
-        else { $Properties = "*" }
-        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
-        Read-WinEvent |
-        Select-Object -Property $Properties
+function ConvertFrom-CsvToMarkdownTable {
+    <# .EXAMPLE 
+    ConvertFrom-CsvToMarkdownTable -Path .\Report.csv
+    #>
+    param([Parameter(Mandatory)][string]$Path)
+    if (Test-Path -Path $Path) {
+        $Csv = Get-Content $Path
+        $Headers = $Csv | Select-Object -First 1
+        $NumberOfHeaders = ($Headers.ToCharArray() | Where-Object { $_ -eq ',' }).Count + 1
+        $MarkdownTable = $Csv | ForEach-Object { '| ' + $_.Replace(',',' | ') + ' |' }
+        $MarkdownTable[0] += "`r`n" + ('| --- ' * $NumberOfHeaders) + '|'
+        return $MarkdownTable 
     }
 }
 
-filter Read-WinEvent {
-        $WinEvent = [ordered]@{} 
-        $XmlData = [xml]$_.ToXml()
-        $SystemData = $XmlData.Event.System
-        $SystemData | 
-        Get-Member -MemberType Properties | 
-        Select-Object -ExpandProperty Name |
-        ForEach-Object {
-            $Field = $_
-            if ($SystemData[$Field].'#text') {
-                $WinEvent.$Field = $SystemData[$Field].'#text'
-            } else {
-                $SystemData[$Field]  | 
-                Get-Member -MemberType Properties | 
-                Select-Object -ExpandProperty Name |
-                ForEach-Object { 
-                    $WinEvent.$Field = @{}
-                    $WinEvent.$Field.$_ = $SystemData[$Field].$_
-                }
-            }
-        }
-        $XmlData.Event.EventData.Data |
-        ForEach-Object { 
-            $WinEvent.$($_.Name) = $_.'#text'
-        }
-        return New-Object -TypeName PSObject -Property $WinEvent
+function Edit-CustomModule {
+    param([string]$Name)
+    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name\$Name.psm1"
+    $Expression = 'powershell_ise.exe "$Module"'
+    if (Test-Path -Path $Module) {
+        Invoke-Expression $Expression
+    } else {
+        Write-Output "[x] The $Name module does not exist."
+    }
+}
+
+function Enable-WinRm {
+    param([Parameter(Mandatory)]$ComputerName)
+    $Expression = "wmic /node:$ComputerName process call create 'winrm quickconfig'"
+    Invoke-Expression $Expression
+    #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
 }
 
 function Get-App {
@@ -216,6 +91,42 @@ function Get-Asset {
     else { $Asset | Select-Object -Property HostName,IpAddress,MacAddress,SerialNumber}
 }
 
+function Get-CallSign {
+    $Adjectives = @("Bastard","Brass","Cannibal","Dark","Liquid","Solid")
+    $Animals = @("Bison","Beetle","Cobra","Snake","Mantis","Fox")
+    $CallSign = $($Adjectives | Get-Random -Count 1) + ' ' + $($Animals | Get-Random -Count 1)
+    return $CallSign
+}
+
+function Get-CustomModule {
+    param([string]$Name)
+    Get-Module -ListAvailable | 
+    Where-Object { $_.Path -like "C:\Program Files\WindowsPowerShell\Modules\*$Name*" }
+}
+
+function Get-DiskSpace {
+    Get-CimInstance -Class Win32_LogicalDisk |
+    Select-Object -Property @{
+        Label = 'DriveLetter'
+        Expression = { $_.Name }
+    },@{
+        Label = 'FreeSpace (GB)'
+        Expression = { ($_.FreeSpace / 1GB).ToString('F2') }
+    },@{
+        Label = 'TotalSpace (GB)'
+        Expression = { ($_.Size / 1GB).ToString('F2') }
+    },@{
+        Label = 'SerialNumber'
+        Expression = { $_.VolumeSerialNumber }
+    }
+}
+
+function Get-DomainAdministrators {
+    Get-AdGroupMember -Identity "Domain Admins" |
+    Select-Object -Property Name,SamAccountName,Sid |
+    Format-Table -AutoSize
+}
+
 function Get-EnterpriseVisbility {
     param(
         [Parameter(Mandatory)][string]$Network,
@@ -244,6 +155,16 @@ function Get-EventForwarders {
         $EventForwarders = (Get-ChildItem $Key).Name | ForEach-Object { $_.Split("\")[9] }
         return $EventForwarders
     }
+}
+
+function Get-Indicator {
+    param(
+        [string]$Path = "C:\Users",
+        [Parameter(Mandatory)][string]$FileName
+    )
+    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
+    Where-Object { $_.Name -like $FileName } |
+    Select-Object -ExpandProperty FullName
 }
 
 function Get-IpAddressRange {
@@ -277,76 +198,6 @@ function Get-IpAddressRange {
     return $IpAddressRange
 }
 
-function Get-WinRmClients {
-    $ComputerNames = $(Get-AdComputer -Filter *).Name
-    Invoke-Command -ComputerName $ComputerNames -ScriptBlock { $env:HOSTNAME } -ErrorAction Ignore
-}
-
-function Get-WirelessNetAdapter {
-    param([string]$ComputerName = $env:COMPUTERNAME)
-    Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter |
-    Where-Object { $_.Name -match 'wi-fi|wireless' }
-}
-
-function Test-Connections {
-    param([Parameter(ValueFromPipeline)][string]$IpAddress)
-    Begin{ $IpAddressRange = @() }
-    Process{ $IpAddressRange += $IpAddress }
-    End{ 
-        $Test = $IpAddressRange | ForEach-Object { (New-Object Net.NetworkInformation.Ping).SendPingAsync($_,2000) }
-        [Threading.Tasks.Task]::WaitAll($Test)
-        $Test.Result | Where-Object { $_.Status -eq 'Success' } | Select-Object @{ Label = 'ActiveIp'; Expression = { $_.Address } }
-    }
-}
-
-function Test-TcpPort {
-    param(
-        [Parameter(Mandatory)][ipaddress]$IpAddress,
-        [Parameter(Mandatory)][int]$Port
-    )
-    $TcpClient = New-Object System.Net.Sockets.TcpClient
-    $State = $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
-    if ($State -eq 'True') { $State = 'Open' }
-    else { $State = 'Closed' }
-    $TcpPort = [pscustomobject] @{
-        'IpAddress' = $IpAddress
-        'Port'      = $Port
-        'State'    = $State
-    }
-    return $TcpPort
-}
-
-function Enable-WinRm {
-    param([Parameter(Mandatory)]$ComputerName)
-    $Expression = "wmic /node:$ComputerName process call create 'winrm quickconfig'"
-    Invoke-Expression $Expression
-    #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
-}
-
-function Get-DiskSpace {
-    Get-CimInstance -Class Win32_LogicalDisk |
-    Select-Object -Property @{
-        Label = 'DriveLetter'
-        Expression = { $_.Name }
-    },@{
-        Label = 'FreeSpace (GB)'
-        Expression = { ($_.FreeSpace / 1GB).ToString('F2') }
-    },@{
-        Label = 'TotalSpace (GB)'
-        Expression = { ($_.Size / 1GB).ToString('F2') }
-    },@{
-        Label = 'SerialNumber'
-        Expression = { $_.VolumeSerialNumber }
-    }
-}
-
-function Get-DomainAdministrators {
-    Get-AdGroupMember -Identity "Domain Admins" |
-    Select-Object -Property Name,SamAccountName,Sid |
-    Format-Table -AutoSize
-}
-
-
 function Get-LocalAdministrators {
     (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) |
     Select-Object -Skip 4 |
@@ -354,6 +205,11 @@ function Get-LocalAdministrators {
     ForEach-Object {
         New-Object -TypeName PSObject -Property @{ Name = $_ }
     }
+}
+
+function Get-ModuleFunctions {
+    param([string]$Module)
+    (Get-Module $Module | Select-Object -Property ExportedCommands).ExportedCommands.Keys 
 }
 
 function Get-Permissions {
@@ -423,6 +279,12 @@ function Get-Privileges {
     }
 }
 
+function Get-ProcessToKill {
+    param([Parameter(Mandatory)]$Name)
+    $Process = Get-Process | Where-Object { $_.Name -like $Name }
+    $Process.Kill()
+}
+
 function Get-Shares {
     param([string[]]$Whitelist = @("ADMIN$","C$","IPC$"))
     Get-SmbShare | 
@@ -436,6 +298,107 @@ function Get-TcpPort {
     Sort-Object -Property ProcessId -Descending
 }
 
+function Get-WinRmClients {
+    $ComputerNames = $(Get-AdComputer -Filter *).Name
+    Invoke-Command -ComputerName $ComputerNames -ScriptBlock { $env:HOSTNAME } -ErrorAction Ignore
+}
+
+function Get-WirelessNetAdapter {
+    param([string]$ComputerName = $env:COMPUTERNAME)
+    Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter |
+    Where-Object { $_.Name -match 'wi-fi|wireless' }
+}
+
+function Import-CustomViews {
+    param([string]$Path = "C:\Program Files\WindowsPowerShell\Modules\SOAP-Modules\Custom-Views")
+    $CustomViewsFolder = "C:\ProgramData\Microsoft\Event Viewer\Views"
+    $CustomViews = Get-ChildItem -Recurse $CustomViewsFolder
+    Get-ChildItem -Recurse "$Path\*.xml" |
+    Where-Object { $_.Name -notin $CustomViews } | 
+    Copy-Item -Destination $CustomViewsFolder
+}
+
+function Invoke-WinEventParser {
+    param(
+        [Parameter(Position=0)][string]$ComputerName,
+        [ValidateSet("Application","Security","System","ForwardedEvents","Microsoft-Windows-PowerShell/Operational")][Parameter(Position=1)][string]$LogName,
+        [ValidateSet("4104","4624","4625","4663","4672","4688","4697","5140","5156","6416")][Parameter(Position=2)]$EventId,
+        [Parameter(Position=3)][int]$DaysAgo=1,
+        [Parameter(Position=4)][switch]$TurnOffOutputFilter
+    )
+    if ($TurnOffOutputFilter) {
+        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
+        Read-WinEvent
+    } else {
+        if ($EventId -eq "4104") { $Properties = "TimeCreated","SecurityUserId","ScriptBlockText" }
+        elseif ($EventId -eq "4624") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
+        elseif ($EventId -eq "4625") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
+        elseif ($EventId -eq "4663") { $Properties = "*" }
+        elseif ($EventId -eq "4672") { $Properties = "TimeCreated","SubjectUserSid","SubjectUserName" }
+        elseif ($EventId -eq "4688") { $Properties = "TimeCreated","TargetUserName","NewProcessName","CommandLine" }
+        elseif ($EventId -eq "4697") { $Properties = "*" }
+        elseif ($EventId -eq "5140") { $Properties = "*" }
+        elseif ($EventId -eq "5156") { $Properties = "TimeCreated","SourceAddress","DestAddress","DestPort" }
+        elseif ($EventId -eq "6416") { $Properties = "TimeCreated","SubjectUserName","ClassName","DeviceDescription" }
+        else { $Properties = "*" }
+        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
+        Read-WinEvent |
+        Select-Object -Property $Properties
+    }
+}
+
+function New-CustomModule {
+    param(
+        [Parameter(Mandatory,Position=0)][string]$Name,
+        [Parameter(Mandatory,Position=1)][string]$Author,
+        [Parameter(Mandatory,Position=2)][string]$Description
+    )
+    $Directory = "C:\Program Files\WindowsPowerShell\Modules\$Name"
+    $Module = "$Directory\$Name.psm1"
+    $Manifest = "$Directory\$Name.psd1"
+    if (Test-Path -Path $Directory) {
+        Write-Output "[x] The $Name module already exists."
+    } else { 
+        New-Item -ItemType Directory -Path $Directory | Out-Null
+        New-Item -ItemType File -Path $Module | Out-Null
+        New-ModuleManifest -Path $Manifest `
+            -Author $Author `
+            -RootModule "$Name.psm1" `
+            -Description $Description
+        if (Test-Path -Path $Module) {
+            Write-Output "[+] Created the $Name module."
+        }
+    }
+}
+
+filter Read-WinEvent {
+        $WinEvent = [ordered]@{} 
+        $XmlData = [xml]$_.ToXml()
+        $SystemData = $XmlData.Event.System
+        $SystemData | 
+        Get-Member -MemberType Properties | 
+        Select-Object -ExpandProperty Name |
+        ForEach-Object {
+            $Field = $_
+            if ($SystemData[$Field].'#text') {
+                $WinEvent.$Field = $SystemData[$Field].'#text'
+            } else {
+                $SystemData[$Field]  | 
+                Get-Member -MemberType Properties | 
+                Select-Object -ExpandProperty Name |
+                ForEach-Object { 
+                    $WinEvent.$Field = @{}
+                    $WinEvent.$Field.$_ = $SystemData[$Field].$_
+                }
+            }
+        }
+        $XmlData.Event.EventData.Data |
+        ForEach-Object { 
+            $WinEvent.$($_.Name) = $_.'#text'
+        }
+        return New-Object -TypeName PSObject -Property $WinEvent
+}
+
 function Remove-App {
     param([Parameter(Mandatory,ValueFromPipelineByPropertyName)][string]$UninstallString)
     if ($UninstallString -contains "msiexec") {
@@ -443,6 +406,19 @@ function Remove-App {
         Start-Process "msiexec.exe" -ArgumentList "/X $App /qb" -NoNewWindow
     } else {
         Start-Process $UninstallString -NoNewWindow
+    }
+}
+
+function Remove-CustomModule {
+    param([Parameter(Mandatory)][string]$Name)
+    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name"
+    if (Test-Path -Path $Module) {
+        Remove-Item -Path $Module -Recurse -Force
+        if (-not (Test-Path -Path $Module)) {
+            Write-Output "[+] Deleted the $Name module."
+        }
+    } else {
+        Write-Output "[x] The $Name module does not exist."
     }
 }
 
@@ -504,17 +480,6 @@ function Start-AdScrub {
     }
 }
 
-function Block-TrafficToIpAddress {
-    param([Parameter(Mandatory)][ipaddress]$IpAddress)
-    New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
-}
-
-function Get-ProcessToKill {
-    param([Parameter(Mandatory)]$Name)
-    $Process = Get-Process | Where-Object { $_.Name -like $Name }
-    $Process.Kill()
-}
-
 function Import-AdUsersFromCsv {
     $Password = ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force
     Import-Csv -Path .\users.csv |
@@ -538,12 +503,6 @@ function Import-AdUsersFromCsv {
             -Path 'OU=Users,OU=evilcorp,DC=local' `
             -AccountPassword $Password
     }
-}
-
-function Start-Panic {
-    param([string]$ComputerName = 'localhost')
-    #shutdown /r /f /m ComputerName /d P:0:1 /c "Your comment"
-    Stop-Computer -ComputerName $ComputerName
 }
 
 function Start-AdBackup {
@@ -574,31 +533,10 @@ function Start-AdBackup {
     }
 }
 
-function Unblock-TrafficToIpAddress {
-    param([Parameter(Mandatory)][ipaddress]$IpAddress)
-    Remove-NetFirewallRule -DisplayName "Block $IpAddress"
-}
-
-function ConvertFrom-CsvToMarkdownTable {
-    <# .EXAMPLE 
-    ConvertFrom-CsvToMarkdownTable -Path .\Report.csv
-    #>
-    param([Parameter(Mandatory)][string]$Path)
-    if (Test-Path -Path $Path) {
-        $Csv = Get-Content $Path
-        $Headers = $Csv | Select-Object -First 1
-        $NumberOfHeaders = ($Headers.ToCharArray() | Where-Object { $_ -eq ',' }).Count + 1
-        $MarkdownTable = $Csv | ForEach-Object { '| ' + $_.Replace(',',' | ') + ' |' }
-        $MarkdownTable[0] += "`r`n" + ('| --- ' * $NumberOfHeaders) + '|'
-        return $MarkdownTable 
+function Start-Coffee {
+    while ($true) {
+        (New-Object -ComObject Wscript.Shell).Sendkeys(' '); sleep 60
     }
-}
-
-function Get-CallSign {
-    $Adjectives = @("Bastard","Brass","Cannibal","Dark","Liquid","Solid")
-    $Animals = @("Bison","Beetle","Cobra","Snake","Mantis","Fox")
-    $CallSign = $($Adjectives | Get-Random -Count 1) + ' ' + $($Animals | Get-Random -Count 1)
-    return $CallSign
 }
 
 function Start-ImperialMarch {
@@ -622,6 +560,12 @@ function Start-ImperialMarch {
     [console]::beep(440,1000)
 }
 
+function Start-Panic {
+    param([string]$ComputerName = 'localhost')
+    #shutdown /r /f /m ComputerName /d P:0:1 /c "Your comment"
+    Stop-Computer -ComputerName $ComputerName
+}
+
 function Start-RollingReboot {
     param(
         [int]$Interval = 4,
@@ -635,14 +579,72 @@ function Start-RollingReboot {
     Start-ScheduledTask -TaskName $TaskName
 }
 
-function Start-Coffee {
-    while ($true) {
-        (New-Object -ComObject Wscript.Shell).Sendkeys(' '); sleep 60
+function Test-Connections {
+    param([Parameter(ValueFromPipeline)][string]$IpAddress)
+    Begin{ $IpAddressRange = @() }
+    Process{ $IpAddressRange += $IpAddress }
+    End{ 
+        $Test = $IpAddressRange | ForEach-Object { (New-Object Net.NetworkInformation.Ping).SendPingAsync($_,2000) }
+        [Threading.Tasks.Task]::WaitAll($Test)
+        $Test.Result | Where-Object { $_.Status -eq 'Success' } | Select-Object @{ Label = 'ActiveIp'; Expression = { $_.Address } }
     }
 }
 
-
+function Test-TcpPort {
+    param(
+        [Parameter(Mandatory)][ipaddress]$IpAddress,
+        [Parameter(Mandatory)][int]$Port
+    )
+    $TcpClient = New-Object System.Net.Sockets.TcpClient
+    $State = $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
+    if ($State -eq 'True') { $State = 'Open' }
+    else { $State = 'Closed' }
+    $TcpPort = [pscustomobject] @{
+        'IpAddress' = $IpAddress
+        'Port'      = $Port
+        'State'    = $State
+    }
+    return $TcpPort
+}
 
 function Update-AdDescriptionWithLastLogon {
     
+}
+
+function Update-GitHubRepo {
+    param(
+        [string]$Author,
+        [string]$Repo,
+        [string]$Branch,
+        [string]$Path
+    )
+    $RepoToUpdate = "https://github.com/$Author/$Repo"
+    $Response = Invoke-WebRequest -Uri "$RepoToUpdate/commits"
+    if ($Response.StatusCode -eq '200') {
+        $LastCommit = ($Response.Links.href | Where-Object { $_ -like "/$Author/$Repo/commit/*" } | Select-Object -First 1).Split("/")[4].Substring(0,7)
+        $Git = "$Path\.git\"
+        $FETCH_HEAD = "$Git\FETCH_HEAD"
+        $LastCommitDownloaded = $null
+        if ((Test-Path -Path $Path) -and (Test-Path -Path $Git)) {
+            $LastCommitDownloaded = (Get-Content -Path $FETCH_HEAD).SubString(0,7)
+        }
+        if ($LastCommitDownloaded -ne $LastCommit) {
+            Write-Output "[!] Updating the local branch of $Repo."
+            Invoke-WebRequest -Uri "$RepoToUpdate/archive/refs/heads/$Branch.zip" -OutFile "$Repo.zip"
+            Expand-Archive -Path "$Repo.zip"
+            Move-Item -Path "$Repo\$Repo-$Branch" -Destination $Path
+            New-Item -Path $FETCH_HEAD -Force | Out-Null
+            (Get-Item -Path $Git).Attributes += "Hidden"
+            Add-Content -Path $FETCH_HEAD -Value $LastCommit -Force
+            Remove-Item -Path "$Repo.zip"
+            Remove-Item -Path "$Repo" -Recurse
+        } else {
+            Write-Output "[+] Nothing to update for the local branch of $Repo."
+        }
+    }
+}
+
+function Unblock-TrafficToIpAddress {
+    param([Parameter(Mandatory)][ipaddress]$IpAddress)
+    Remove-NetFirewallRule -DisplayName "Block $IpAddress"
 }
