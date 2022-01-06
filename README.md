@@ -16,48 +16,48 @@ Import-Module -Name "soap"
 ```
 
 ### Functions
-Block-TrafficToIpAddress
-ConvertFrom-Base64
-ConvertFrom-CsvToMarkdownTable
-ConvertTo-Base64
-ConvertTo-BinaryString
-ConvertTo-IpAddress
-Edit-CustomModule
-Enable-WinRm
-Get-App
-Get-Asset
-Get-CallSign
-Get-CustomModule
-Get-DiskSpace
-Get-DomainAdministrators
-Get-EnterpriseVisbility
-Get-EventForwarders
-Get-Indicator
-Get-IpAddressRange
-Get-LocalAdministrators
-Get-ModuleFunctions
-Get-Permissions
-Get-Privileges
-Get-ProcessToKill
-Get-Shares
-Get-TcpPort
-Get-WinRmClients
-Get-WirelessNetAdapter
-Import-AdUsersFromCsv
-Import-CustomViews
-Invoke-WinEventParser
-New-CustomModule
-Read-WinEvent
-Remove-App
-Remove-CustomModule
-Start-AdBackup
-Start-AdScrub
-Start-Coffee
-Start-ImperialMarch
-Start-Panic
-Start-RollingReboot
-Test-Connections
-Test-TcpPort
-Unblock-TrafficToIpAddress
-Update-AdDescriptionWithLastLogon
-Update-GitHubRepo
+- [x] Block-TrafficToIpAddress
+- [x] ConvertFrom-Base64
+- [x] ConvertFrom-CsvToMarkdownTable
+- [x] ConvertTo-Base64
+- [x] ConvertTo-BinaryString
+- [x] ConvertTo-IpAddress
+- [x] Edit-CustomModule
+- [x] Enable-WinRm
+- [x] Get-App
+- [x] Get-Asset
+- [x] Get-CallSign
+- [x] Get-CustomModule
+- [x] Get-DiskSpace
+- [x] Get-DomainAdministrators
+- [x] Get-EnterpriseVisbility
+- [x] Get-EventForwarders
+- [x] Get-Indicator
+- [x] Get-IpAddressRange
+- [x] Get-LocalAdministrators
+- [x] Get-ModuleFunctions
+- [x] Get-Permissions
+- [x] Get-Privileges
+- [x] Get-ProcessToKill
+- [x] Get-Shares
+- [x] Get-TcpPort
+- [x] Get-WinRmClients
+- [x] Get-WirelessNetAdapter
+- [x] Import-AdUsersFromCsv
+- [x] Import-CustomViews
+- [x] Invoke-WinEventParser
+- [x] New-CustomModule
+- [x] Read-WinEvent
+- [x] Remove-App
+- [x] Remove-CustomModule
+- [x] Start-AdBackup
+- [x] Start-AdScrub
+- [x] Start-Coffee
+- [x] Start-ImperialMarch
+- [ ] Start-Panic
+- [x] Start-RollingReboot
+- [x] Test-Connections
+- [x] Test-TcpPort
+- [x] Unblock-TrafficToIpAddress
+- [ ] Update-AdDescriptionWithLastLogon
+- [x] Update-GitHubRepo
