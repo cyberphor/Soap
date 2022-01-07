@@ -92,8 +92,8 @@ function Get-Asset {
 }
 
 function Get-CallSign {
-    $Adjectives = @("Bastard","Brass","Cannibal","Dark","Liquid","Solid")
-    $Animals = @("Bison","Beetle","Cobra","Snake","Mantis","Fox")
+    $Adjectives = @("Bastard","Brass","Cannibal","Dark","Liquid","Solid","Doom","Gray","Silent","Steel","Stone")
+    $Animals = @("Bat","Bear","Bison","Beetle","Cat","Cobra","Fox","Snake","Mantis","Mustang","Tiger")
     $CallSign = $($Adjectives | Get-Random -Count 1) + ' ' + $($Animals | Get-Random -Count 1)
     return $CallSign
 }
