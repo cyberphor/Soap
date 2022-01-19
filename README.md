@@ -43,6 +43,7 @@ Import-Module -Name "soap"
 - [x] Get-TcpPort
 - [x] Get-WinRmClients
 - [x] Get-WirelessNetAdapter
+- [x] Get-WordWheelQuery
 - [x] Import-AdUsersFromCsv
 - [x] Import-CustomViews
 - [x] Invoke-WinEventParser
