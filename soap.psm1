@@ -674,6 +674,17 @@ Format-Table -AutoSize
 #>
 
 <#
+Get-NetTcpConnection -State Listen | 
+Select-Object -Property `
+    OwningProcess,`
+    @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
+    @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
+    LocalPort |
+Sort-Object -Property Path,LocalPort |
+Format-Table -AutoSize
+#>
+
+<#
 function Block-TrafficToRemotePort {
     param([Parameter(Mandatory)][int]$Port)
     New-NetFirewallRule -DisplayName "Block Outbound Port $Port" -Direction Outbound -Protocol TCP -RemotePort $Port -Action Block
