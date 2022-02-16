@@ -587,7 +587,7 @@ function Start-RollingReboot {
     $Action= New-ScheduledTaskAction -Execute "shutdown.exe" -Argument "/r /t 0" 
     $Trigger= New-ScheduledTaskTrigger -At $(Get-Date) -Once -RepetitionInterval $(New-TimeSpan -Minutes $Interval) -RepetitionDuration $(New-TimeSpan -Minutes $Duration)
     $User= "NT AUTHORITY\SYSTEM" 
-    Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -User $User -RunLevel Highest –Force
+    Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -User $User -RunLevel Highest Â–Force
     Start-ScheduledTask -TaskName $TaskName
 }
 
@@ -660,3 +660,22 @@ function Unblock-TrafficToIpAddress {
     param([Parameter(Mandatory)][ipaddress]$IpAddress)
     Remove-NetFirewallRule -DisplayName "Block $IpAddress"
 }
+
+<#
+Get-NetTcpConnection -State Established | 
+Select-Object -Property `
+    OwningProcess,`
+    @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
+    @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
+    RemoteAddress,`
+    RemotePort -Unique | 
+Sort-Object -Property Path,RemotePort |
+Format-Table -AutoSize
+#>
+
+<#
+function Block-TrafficToRemotePort {
+    param([Parameter(Mandatory)][int]$Port)
+    New-NetFirewallRule -DisplayName "Block Outbound Port $Port" -Direction Outbound -Protocol TCP -RemotePort $Port -Action Block
+}
+#>
