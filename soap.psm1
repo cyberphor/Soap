@@ -3,6 +3,11 @@ function Block-TrafficToIpAddress {
     New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
 }
 
+function Block-TrafficToRemotePort {
+    param([Parameter(Mandatory)][int]$Port)
+    New-NetFirewallRule -DisplayName "Block Outbound Port $Port" -Direction Outbound -Protocol TCP -RemotePort $Port -Action Block
+}
+
 function ConvertFrom-Base64 {
     param([Parameter(Mandatory, ValueFromPipeline)]$String)
     [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String($String))
@@ -89,6 +94,35 @@ function Get-Asset {
     }
     if ($Verbose) { $Asset }
     else { $Asset | Select-Object -Property HostName,IpAddress,MacAddress,SerialNumber}
+}
+
+function Get-BaselineConnections {
+    Get-NetTcpConnection -State Established | 
+    Select-Object -Property `
+        OwningProcess,`
+        @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
+        @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
+        RemoteAddress,`
+        RemotePort -Unique | 
+    Sort-Object -Property Path,RemotePort |
+    Format-Table -AutoSize
+}
+
+function Get-BaselinePorts {
+    Get-NetTcpConnection -State Listen | 
+    Select-Object -Property `
+        OwningProcess,`
+        @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
+        @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
+        LocalPort |
+    Sort-Object -Property Path,LocalPort |
+    Format-Table -AutoSize
+}
+
+function Get-BaselineProcesses {
+    Get-Process | 
+    Select-Object -Property ProcessName,Path -Unique | 
+    Sort-Object -Property Path
 }
 
 function Get-CallSign {
@@ -660,33 +694,3 @@ function Unblock-TrafficToIpAddress {
     param([Parameter(Mandatory)][ipaddress]$IpAddress)
     Remove-NetFirewallRule -DisplayName "Block $IpAddress"
 }
-
-<#
-Get-NetTcpConnection -State Established | 
-Select-Object -Property `
-    OwningProcess,`
-    @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
-    @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
-    RemoteAddress,`
-    RemotePort -Unique | 
-Sort-Object -Property Path,RemotePort |
-Format-Table -AutoSize
-#>
-
-<#
-Get-NetTcpConnection -State Listen | 
-Select-Object -Property `
-    OwningProcess,`
-    @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
-    @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
-    LocalPort |
-Sort-Object -Property Path,LocalPort |
-Format-Table -AutoSize
-#>
-
-<#
-function Block-TrafficToRemotePort {
-    param([Parameter(Mandatory)][int]$Port)
-    New-NetFirewallRule -DisplayName "Block Outbound Port $Port" -Direction Outbound -Protocol TCP -RemotePort $Port -Action Block
-}
-#>
