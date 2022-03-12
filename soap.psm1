@@ -426,7 +426,9 @@ filter Read-WinEvent {
         Select-Object -ExpandProperty Name |
         ForEach-Object {
             $Field = $_
-            if ($SystemData[$Field].'#text') {
+            if ($Field -eq 'TimeCreated') {
+                $WinEvent.$Field = Get-Date -Format 'yyyy-MM-dd hh:mm:ss' $SystemData[$Field].SystemTime
+            } elseif ($SystemData[$Field].'#text') {
                 $WinEvent.$Field = $SystemData[$Field].'#text'
             } else {
                 $SystemData[$Field]  | 
