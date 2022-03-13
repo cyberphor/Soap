@@ -332,6 +332,25 @@ function Get-TcpPort {
     Sort-Object -Property ProcessId -Descending
 }
 
+function Get-WhoIs {
+    $FilterHashTable = @{
+        LogName = 'Microsoft-Windows-Sysmon/Operational' 
+        Id = 3
+    }
+    Get-WinEvent -FilterHashtable $FilterHashTable |
+    Read-WinEvent |
+    Select-Object SourceIp,DestinationIp,DestinationPort | 
+    Sort-Object -Property DestinationIp -Unique | 
+    ForEach-Object {
+        $Header = @{"Accept" = "application/xml"}
+        $Response = Invoke-Restmethod -Uri $("http://whois.arin.net/rest/ip/" + $_.DestinationIp) -Headers $Header -ErrorAction Ignore
+        $Organization = $Response.net.orgRef.name
+        if ($Organization -ne 'Microsoft Corporation') {
+            return New-Object -TypeName psobject -Property @{SourceIp = $_.SourceIp; DestinationIp = $_.DestinationIp; DestinationPort = $_.DestinationPort; Organization = $Organization}
+        } 
+    }
+}
+
 function Get-WinRmClients {
     $ComputerNames = $(Get-AdComputer -Filter *).Name
     Invoke-Command -ComputerName $ComputerNames -ScriptBlock { $env:HOSTNAME } -ErrorAction Ignore
