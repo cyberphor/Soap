@@ -64,7 +64,7 @@ Import-Module -Name "soap"
 - [x] Update-GitHubRepo
 
 ### Get-EventViewer.ps1
-Get-EventViewer.ps1 is a PowerShell script that parses your local Windows Event logs and adds events that meet specific criteria to an Excel spreadsheet. I developed this tool to make it easy for me to review successful logons, process creation, and PowerShell events on my personal computer. Below are screenshots of the end-result.
+Get-EventViewer.ps1 is a PowerShell script that parses your local Windows Event logs and adds events to an Excel workbook, organizing the data into different tabs. I developed this tool to make it easy for me to review successful logons, process creation, and PowerShell events on my personal computer. Below are screenshots of the end-result.
 
 **Screenshot #1**
 ![Screenshot1](/Screenshots/Screenshot1.PNG)
