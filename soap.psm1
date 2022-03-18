@@ -178,6 +178,29 @@ function Get-EnterpriseVisbility {
     return $Visbility
 }
 
+function Get-EventFieldNumber {
+    param(
+        [parameter(Mandatory)][int]$EventId,
+        [parameter(Mandatory)][string]$Field
+    )
+    $LookupTable = "fields.json"
+    if (Test-Path $LookupTable) {
+        $FieldNumber = $(Get-Content $LookupTable | ConvertFrom-Json) |
+            Where-Object { $_.Id -eq $EventId } |
+            Select-Object -ExpandProperty Fields |
+            Select-Object -ExpandProperty $Field -ErrorAction Ignore
+        if ($FieldNumber -eq $null) {
+            Write-Error "Event ID $EventId does not have a field called $Field."
+            break
+        } else {
+            return $FieldNumber
+        }
+    } else {
+        Write-Error "File not found: $LookupTable"
+        break
+    }
+}
+
 function Get-EventForwarders {
     param(
       [string]$ComputerName,
