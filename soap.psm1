@@ -183,7 +183,7 @@ function Get-EventFieldNumber {
         [parameter(Mandatory)][int]$EventId,
         [parameter(Mandatory)][string]$Field
     )
-    $LookupTable = "fields.json"
+    $LookupTable = "windows-event-fields.json"
     if (Test-Path $LookupTable) {
         $FieldNumber = $(Get-Content $LookupTable | ConvertFrom-Json) |
             Where-Object { $_.Id -eq $EventId } |
