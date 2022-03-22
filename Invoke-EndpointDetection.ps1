@@ -30,6 +30,40 @@ filter Read-WinEvent {
         return New-Object -TypeName PSObject -Property $WinEvent
 }
 
+function Send-Alert {
+    Param(
+        [Parameter(Mandatory, Position = 0)][ValidateSet("Log","Email")][string]$AlertMethod,
+        [Parameter(Mandatory, Position = 1)]$Subject,
+        [Parameter(Mandatory, Position = 2)]$Body,
+        [Parameter(ParameterSetName = "Log")][string]$LogName,
+        [Parameter(ParameterSetName = "Log")][string]$LogSource,
+        [Parameter(ParameterSetName = "Log")][ValidateSet("Information","Warning")]$LogEntryType = "Warning",
+        [Parameter(ParameterSetName = "Log")][int]$LogEventId = 1,
+        [Parameter(ParameterSetName = "Email")][string]$EmailServer,
+        [Parameter(ParameterSetName = "Email")][string]$EmailServerPort,
+        [Parameter(ParameterSetName = "Email")][string]$EmailAddressSource,
+        [Parameter(ParameterSetName = "Email")][string]$EmailPassword,
+        [Parameter(ParameterSetName = "Email")][string]$EmailAddressDestination
+    )
+    if ($AlertMethod -eq "Log") {
+        $LogExists = Get-EventLog -LogName $LogName -Source $LogSource -ErrorAction Ignore -Newest 1
+        if (-not $LogExists) {
+            New-EventLog -LogName $LogName -Source $LogSource -ErrorAction Ignore
+        }
+        Write-EventLog `
+            -LogName $LogName `
+            -Source $LogSource `
+            -EntryType $LogEntryType `
+            -EventId $LogEventId `
+            -Message $Body
+    } elseif ($AlertMethod -eq "Email") {
+        $EmailClient = New-Object Net.Mail.SmtpClient($EmailServer, $EmailServerPort)
+        $EmailClient.EnableSsl = $true
+        $EmailClient.Credentials = New-Object System.Net.NetworkCredential($EmailAddressSource, $EmailPassword)
+        $EmailClient.Send($EmailAddressSource, $EmailAddressDestination, $Subject, $Body)
+    }
+}
+
 function Get-Hash {
     param([parameter(Mandatory)]$Object)
     $Stream = ([System.IO.MemoryStream]::New([System.Text.Encoding]::ASCII.GetBytes($Object)))
@@ -69,7 +103,15 @@ function Invoke-EventFrequencyAnalysis {
             $Alert.Events += $Properties 
         }
         $Alert.Hash = Get-Hash $Events
-        $Alert | ConvertTo-Json
+        $Body = $Alert | ConvertTo-Json
+        Send-Alert `
+            -AlertMethod Log `
+            -Subject $Rule.Name `
+            -Body $Body `
+            -LogName "Endpoint-Detection" `
+            -LogSource "Endpoint-Detection" `
+            -LogEntryType Warning `
+            -LogEventId 1337
     }
 }
 
