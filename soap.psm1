@@ -125,6 +125,20 @@ function Get-BaselineProcesses {
     Sort-Object -Property Path
 }
 
+function Get-Bat {
+    $Bat = "
+        =/\                 /\=
+        / \'._   (\_/)   _.'/ \
+       / .''._'--(o.o)--'_.''. \
+      /.' _/ |``'=/ `" \='``| \_ ``.\
+     /`` .' ``\;-,'\___/',-;/`` '. '\
+    /.-'       ``\(-V-)/``       ``-.\
+    ``            `"   `"            ``
+    "
+
+    Write-Output $Bat
+}
+
 function Get-CallSign {
     $Adjectives = @("Bastard","Brass","Cannibal","Dark","Liquid","Solid","Doom","Gray","Silent","Steel","Stone")
     $Animals = @("Bat","Bear","Bison","Beetle","Cat","Cobra","Fox","Snake","Mantis","Mustang","Tiger")
