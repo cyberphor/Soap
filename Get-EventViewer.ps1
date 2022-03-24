@@ -56,7 +56,7 @@ function Get-SuccessfulLogonEvents {
     $FilterHashTable = @{
         LogName = "Security"
         Id = 4624
-        StartTime = $(Get-Date).AddDays(-3)
+        StartTime = (Get-Date).AddDays(-1)
     }
 
     # cycle through the Windows Events that match the criteria above
@@ -91,27 +91,28 @@ function Get-ProcessCreationEvents {
     $Workbook.Worksheets.Item("ProcessCreation").Cells.Item(1,2) = "RecordId"
     $Workbook.Worksheets.Item("ProcessCreation").Cells.Item(1,3) = "UserName"
     $Workbook.Worksheets.Item("ProcessCreation").Cells.Item(1,4) = "ParentProcessName"
-    $Workbook.Worksheets.Item("ProcessCreation").Cells.Item(1,5) = "CommandLine"
+    $Workbook.Worksheets.Item("ProcessCreation").Cells.Item(1,5) = "NewProcessName"
+    $Workbook.Worksheets.Item("ProcessCreation").Cells.Item(1,6) = "CommandLine"
     
     # define where to begin adding data (by row and column)
     $rTimeCreated, $cTimeCreated = 2,1
     $rRecordId, $cRecordId = 2,2
     $rUserName, $cUserName = 2,3
     $rParentProcessName, $cParentProcessName = 2,4
-    $rCommandLine, $cCommandLine = 2,5
+    $rNewProcessName, $cNewProcessName = 2,5
+    $rCommandLine, $cCommandLine = 2,6
 
     # define what Windows Event criteria must match 
     $FilterHashTable = @{
         LogName = "Security"
         Id = 4688
-        StartTime = $(Get-Date).AddDays(-3)
+        StartTime = (Get-Date).AddDays(-1)
 
     }
-
     # cycle through the Windows Events that match the criteria above
     Get-WinEvent -FilterHashtable $FilterHashTable |
     Read-WinEvent |
-    Select-Object -Property TimeCreated,EventRecordId,TargetUserName,ParentProcessName,CommandLine |
+    Select-Object -Property TimeCreated,EventRecordId,TargetUserName,ParentProcessName,NewProcessName,CommandLine |
     Where-Object { 
         ($_.TargetUserName -ne "-") -and `
         ($_.TargetUserName -notlike "*$") -and `
@@ -124,6 +125,7 @@ function Get-ProcessCreationEvents {
         $Workbook.Worksheets.Item("ProcessCreation").Cells.Item($rRecordId, $cRecordId) = $_.EventRecordId
         $Workbook.Worksheets.Item("ProcessCreation").Cells.Item($rUserName, $cUserName) = $_.TargetUserName
         $Workbook.Worksheets.Item("ProcessCreation").Cells.Item($rParentProcessName, $cParentProcessName) = $_.ParentProcessName
+        $Workbook.Worksheets.Item("ProcessCreation").Cells.Item($rNewProcessName, $cNewProcessName) = $_.NewProcessName
         $Workbook.Worksheets.Item("ProcessCreation").Cells.Item($rCommandLine, $cCommandLine) = $_.CommandLine
 
         # move-on to the next row
@@ -131,6 +133,7 @@ function Get-ProcessCreationEvents {
         $rRecordId++
         $rUserName++
         $rParentProcessName++
+        $rNewProcessName++
         $rCommandLine++
     }
 }
@@ -155,7 +158,7 @@ function Get-PowerShellEvents {
     $FilterHashTable = @{
         LogName = "Microsoft-Windows-PowerShell/Operational"
         Id = 4104
-        StartTime = $(Get-Date).AddDays(-3)
+        StartTime = (Get-Date).AddDays(-1)
     }
 
     # cycle through the Windows Events that match the criteria above
@@ -182,18 +185,18 @@ function Get-PowerShellEvents {
     }
 }
 
-$Path = "C:\Users\Victor\Desktop\Events-" + $(Get-Date -Format yyyy-MM-dd_hhmm) +".xlsx"
-
-Get-SuccessfulLogonEvents
-$Workbook.Worksheets.Item("SuccessfulLogon").UsedRange.Columns.Autofit()
+$Path = $env:USERPROFILE + "\Desktop\Events-" + $(Get-Date -Format yyyy-MM-dd_hhmm) +".xlsx"
 $Workbook.SaveAs($Path,51)
 
+Get-SuccessfulLogonEvents
+$Workbook.Worksheets.Item("SuccessfulLogon").UsedRange.Columns.Autofit() | Out-Null
+
 Get-ProcessCreationEvents
-$Workbook.Worksheets.Item("ProcessCreation").UsedRange.Columns.Autofit()
+$Workbook.Worksheets.Item("ProcessCreation").UsedRange.Columns.Autofit() | Out-Null
 $Workbook.Save()
 
 Get-PowerShellEvents
-$Workbook.Worksheets.Item("PowerShell").UsedRange.Columns.Autofit()
+$Workbook.Worksheets.Item("PowerShell").UsedRange.Columns.Autofit() | Out-Null
 $Workbook.Save()
 
 $Excel.Quit()
