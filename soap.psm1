@@ -197,7 +197,7 @@ function ConvertFrom-CsvToMarkdownTable {
     }
 }
 
-function Edit-CustomModule {
+function Edit-PowerShellModule {
     param([string]$Name)
     $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name\$Name.psm1"
     $Expression = 'powershell_ise.exe "$Module"'
@@ -294,7 +294,7 @@ function Get-CallSign {
     return $CallSign
 }
 
-function Get-CustomModule {
+function Get-PowerShellModule {
     param([string]$Name)
     Get-Module -ListAvailable | 
     Where-Object { $_.Path -like "C:\Program Files\WindowsPowerShell\Modules\*$Name*" }
@@ -426,7 +426,7 @@ function Get-LocalAdministrators {
     }
 }
 
-function Get-ModuleFunctions {
+function Get-PowerShellModuleFunctions {
     param([string]$Module)
     (Get-Module $Module | Select-Object -Property ExportedCommands).ExportedCommands.Keys 
 }
@@ -597,7 +597,7 @@ function Invoke-WinEventParser {
     }
 }
 
-function New-CustomModule {
+function New-PowerShellModule {
     param(
         [Parameter(Mandatory,Position=0)][string]$Name,
         [Parameter(Mandatory,Position=1)][string]$Author,
@@ -661,7 +661,7 @@ function Remove-App {
     }
 }
 
-function Remove-CustomModule {
+function Remove-PowerShellModule {
     param([Parameter(Mandatory)][string]$Name)
     $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name"
     if (Test-Path -Path $Module) {
