@@ -126,6 +126,13 @@ function Get-BaselineProcesses {
 }
 
 function Get-Bat {
+    <#
+        .SYNOPSIS
+        Prints an image of a bat using ASCII characters. 
+
+        .LINK
+        https://www.asciiart.eu/animals/bats
+    #>
     $Bat = "
         =/\                 /\=
         / \'._   (\_/)   _.'/ \
