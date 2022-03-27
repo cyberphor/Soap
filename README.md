@@ -1,9 +1,9 @@
 # soap
 ![GitHub](https://img.shields.io/github/license/cyberphor/soap)  
-soap is a PowerShell module with functions relating to cyber-security.
+soap is a PowerShell module with functions relating to cyber-security. This repository also contains a few PowerShell scripts. I may or may not merge these scripts into the main "soap" module in the future. 
 
 ### Installation
-Copy and paste the commands into a PowerShell session below to download, install, and import the "soap" PowerShell module.
+Copy and paste the commands below into a PowerShell session to download, install, and import the "soap" PowerShell module.
 ```pwsh
 $Uri = "https://github.com/cyberphor/soap/archive/refs/heads/main.zip"
 $Destination = "C:\Program Files\WindowsPowerShell\Modules\soap"
@@ -16,54 +16,7 @@ Import-Module -Name "soap"
 ```
 
 ### Functions
-- [x] Block-TrafficToIpAddress
-- [x] ConvertFrom-Base64
-- [x] ConvertFrom-CsvToMarkdownTable
-- [x] ConvertTo-Base64
-- [x] ConvertTo-BinaryString
-- [x] ConvertTo-IpAddress
-- [x] Edit-CustomModule
-- [x] Enable-WinRm
-- [x] Get-App
-- [x] Get-Asset
-- [x] Get-AuditPolicy
-- [x] Get-Bat
-- [x] Get-CallSign
-- [x] Get-CustomModule
-- [x] Get-DiskSpace
-- [x] Get-DomainAdministrators
-- [x] Get-EnterpriseVisbility
-- [x] Get-EventForwarders
-- [x] Get-Indicator
-- [x] Get-IpAddressRange
-- [x] Get-LocalAdministrators
-- [x] Get-ModuleFunctions
-- [x] Get-Permissions
-- [x] Get-Privileges
-- [x] Get-ProcessToKill
-- [x] Get-Shares
-- [x] Get-TcpPort
-- [x] Get-WinRmClients
-- [x] Get-WirelessNetAdapter
-- [x] Get-WordWheelQuery
-- [x] Import-AdUsersFromCsv
-- [x] Import-CustomViews
-- [x] Invoke-WinEventParser
-- [x] New-CustomModule
-- [x] Read-WinEvent
-- [x] Remove-App
-- [x] Remove-CustomModule
-- [x] Start-AdBackup
-- [x] Start-AdScrub
-- [x] Start-Coffee
-- [x] Start-ImperialMarch
-- [ ] Start-Panic
-- [x] Start-RollingReboot
-- [x] Test-Connections
-- [x] Test-TcpPort
-- [x] Unblock-TrafficToIpAddress
-- [ ] Update-AdDescriptionWithLastLogon
-- [x] Update-GitHubRepo
+For a list of the functions included in the "soap" PowerShell module, [read the doc](/docs/Functions.md).
 
 ### Get-EventViewer.ps1
 Get-EventViewer.ps1 is a PowerShell script that parses your local Windows Event logs and adds events to an Excel workbook, organizing the data into different tabs. I developed this tool to make it easier for me to review successful logons, process creation, and PowerShell events on my personal computer. Below are screenshots of the end-result.
