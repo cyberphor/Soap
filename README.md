@@ -16,7 +16,7 @@ Import-Module -Name "soap"
 ```
 
 ### Functions
-For a list of the functions included in the "soap" PowerShell module, [read the doc](/docs/Functions.md).
+For a list of the functions included in the "soap" PowerShell module, [read the doc](/Docs/Functions.md).
 
 ### Get-EventViewer.ps1
 Get-EventViewer.ps1 is a PowerShell script that parses your local Windows Event logs and adds events to an Excel workbook, organizing the data into different tabs. I developed this tool to make it easier for me to review successful logons, process creation, and PowerShell events on my personal computer. Below are screenshots of the end-result.
