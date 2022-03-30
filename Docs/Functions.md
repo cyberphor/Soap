@@ -1,5 +1,5 @@
-# Functions
-The "as of" date of the information below is 26 MAR 22.
+## Functions
+The "soap" PowerShell module includes the functions listed below (as of 26 MAR 22).
 - [x] Block-TrafficToIpAddress
 - [x] ConvertFrom-Base64
 - [x] ConvertFrom-CsvToMarkdownTable

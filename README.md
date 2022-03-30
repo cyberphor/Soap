@@ -1,8 +1,15 @@
-# soap
+## soap
 ![GitHub](https://img.shields.io/github/license/cyberphor/soap)  
 soap is a PowerShell module with functions relating to cyber-security. This repository also contains a few PowerShell scripts. I may or may not merge these scripts into the main "soap" module in the future. 
 
-### Installation
+### Table of Contents
+* [How to Install the "soap" PowerShell Module](#how-to-install-the-soap-powershell-module)
+* [Functions Included in the "soap" PowerShell Module](#functions-included-in-the-soap-powershell-module)
+* [Scripts](#scripts)
+  * [Get-EventViewer.ps1](#get-eventviewer-ps1)
+* [References](#references)
+
+### How to Install the "soap" PowerShell Module
 Copy and paste the commands below into a PowerShell session to download, install, and import the "soap" PowerShell module.
 ```pwsh
 $Uri = "https://github.com/cyberphor/soap/archive/refs/heads/main.zip"
@@ -15,10 +22,11 @@ Remove-Item -Path "soap"
 Import-Module -Name "soap"
 ```
 
-### Functions
+### Functions Included in the "soap" PowerShell Module
 For a list of the functions included in the "soap" PowerShell module, [read the doc](/Docs/Functions.md).
 
-### Get-EventViewer.ps1
+### Scripts
+#### Get-EventViewer.ps1
 Get-EventViewer.ps1 is a PowerShell script that parses your local Windows Event logs and adds events to an Excel workbook, organizing the data into different tabs. I developed this tool to make it easier for me to review successful logons, process creation, and PowerShell events on my personal computer. Below are screenshots of the end-result.
 
 **Screenshot #1**
@@ -29,3 +37,11 @@ Get-EventViewer.ps1 is a PowerShell script that parses your local Windows Event 
 
 **Screenshot #3**
 ![Screenshot3](/Screenshots/Screenshot3.PNG)
+
+### References
+* [https://powershell.org/2019/08/a-better-way-to-search-events/](https://powershell.org/2019/08/a-better-way-to-search-events/)
+* [https://powershell.one/powershell-internals/scriptblocks/support-pipeline](https://powershell.one/powershell-internals/scriptblocks/support-pipeline)
+* [https://regexone.com/](https://regexone.com/)
+* [https://docs.microsoft.com/en-us/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7.1](https://docs.microsoft.com/en-us/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands?view=powershell-7.1)
+* [https://devblogs.microsoft.com/scripting/understanding-xml-and-xpath/](https://devblogs.microsoft.com/scripting/understanding-xml-and-xpath/)
+* [https://www.sapien.com/blog/2019/05/13/advanced-powershell-functions-begin-to-process-to-end/](https://www.sapien.com/blog/2019/05/13/advanced-powershell-functions-begin-to-process-to-end/)
