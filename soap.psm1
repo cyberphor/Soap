@@ -49,6 +49,34 @@ function ConvertFrom-CsvToMarkdownTable {
     }
 }
 
+function Copy-FileToRemotePublicFolder {
+	<#
+		.SYNOPSIS
+		Copies a file to the "Public" folder of one or more remote computers.
+	#>
+	Param(
+		[string]$Computers,
+		[string]$File
+	)
+
+	$Computers |
+	ForEach-Object {
+		# for each computer
+		$Computer = $_
+		# if it is online
+		If (Test-Connection -ComputerName $Computer -Count 2 -Quiet) {
+			# try and copy the file to the public folder
+			Try {
+				Copy-Item -Path $File -Destination "\\$_\C`$\Users\Public\"
+                Write-Output "Copied $File to $Computer."
+			} Catch { 
+				"Failed to copy $File to $Computer."
+			}
+		} Else { 
+			Write-Output "$Computer appears to be offline."
+		}
+	}
+}
 function Edit-PowerShellModule {
     param([string]$Name)
     $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name\$Name.psm1"
@@ -65,6 +93,45 @@ function Enable-WinRm {
     $Expression = "wmic /node:$ComputerName process call create 'winrm quickconfig'"
     Invoke-Expression $Expression
     #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
+}
+
+function Format-Color {
+    Param(
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline)]$Input,
+        [Parameter(Mandatory = $true, Position = 1)][string]$Value,
+        [Parameter(Mandatory = $true, Position = 2)][string]$BackgroundColor,
+        [Parameter(Mandatory = $true, Position = 3)][string]$ForegroundColor
+    )
+    <#
+        .SYNOPSIS
+        Hightlights strings of text if they contain a specified value. 
+        .PARAMETER Value
+        Specifies the value to color if found. 
+        .PARAMETER BackgroundColor
+        Specifies the background color to use. 
+        .PARAMETER ForegroundColor
+        Specifies the foreground color to use. 
+        .INPUTS
+        Format-Color accepts pipeline objects. 
+        .OUTPUTS
+        Format-Color returns highlighted strings.  
+        .EXAMPLE
+        Get-ChildItem | Format-Color -Value foo.txt -BackgroundColor Red -ForegroundColor White
+        .LINK
+        https://www.bgreco.net/powershell/format-color/
+        https://www.github.com/cyberphor/scripts/PowerShell/Format-Color.ps1
+    #>
+    
+    $Lines = ($Input | Format-Table -AutoSize | Out-String) -replace "`r", "" -split "`n"
+    foreach ($Line in $Lines) {
+    	foreach ($Pattern in $Value) { 
+            if ($Line -match $Value) { $LineMatchesValue = $true } 
+            else { $LineMatchesValue = $false }
+
+            if ($LineMatchesValue) { Write-Host $Line -BackgroundColor $BackgroundColor -ForegroundColor $ForegroundColor } 
+            else { Write-Host $Line }
+	}
+    }
 }
 
 function Get-App {
@@ -218,6 +285,49 @@ function Get-DiskSpace {
     },@{
         Label = 'SerialNumber'
         Expression = { $_.VolumeSerialNumber }
+    }
+}
+
+function Get-DnsLogs {
+    <#
+        .SYNOPSIS
+        Prints DNS logs in a human-readable format.
+
+        .NOTES
+        HOW TO ENABLE DNS LOGGING
+        wevtutil sl Microsoft-Windows-DNS-Client/Operational /e:true
+
+        HOW TO DISABLE DNS LOGGING
+        wevtutil sl Microsoft-Windows-DNS-Client/Operational /e:false
+
+        .LINK
+        https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732848(v=ws.10)?redirectedfrom=MSDN
+        https://www.powershellmagazine.com/2013/07/15/pstip-how-to-enable-event-logs-using-windows-powershell/
+        https://www.reddit.com/r/sysadmin/comments/7wgxsg/dns_log_on_windows_10_pro/du0bjds/
+    #>
+    $LoggingIsEnabled = (Get-WinEvent -ListLog Microsoft-Windows-DNS-Client/Operational).IsEnabled
+    if ($LoggingIsEnabled) {
+        $SearchCriteria = @{
+            LogName = 'Microsoft-Windows-DNS-Client/Operational';
+            StartTime = (Get-Date).AddDays(-7);
+            EndTime = (Get-Date);
+            Id = 3006;
+        }
+        Get-WinEvent -FilterHashtable $SearchCriteria |
+        foreach {
+            $XmlData = [xml]$_.ToXml()
+            $ProcessId = $XmlData.Event.System.Execution.ProcessID
+            $DnsQuery = $XmlData.Event.EventData.Data[0].'#text'
+            $Sid = $XmlData.Event.System.Security.UserID      
+            $Event = New-Object -TypeName psobject
+            $Event | Add-Member -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
+            $Event | Add-Member -MemberType NoteProperty -Name ProcessId -Value $ProcessId
+            $Event | Add-Member -MemberType NoteProperty -Name DnsQuery -Value $DnsQuery
+            $Event | Add-Member -MemberType NoteProperty -Name Sid -Value $Sid
+            $Event
+        }
+    } else {
+        Write-Host 'DNS logging is not enabled.'
     }
 }
 
