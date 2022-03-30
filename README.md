@@ -6,7 +6,7 @@ soap is a PowerShell module with functions relating to cyber-security. This repo
 * [How to Install the "soap" PowerShell Module](#how-to-install-the-soap-powershell-module)
 * [Functions Included in the "soap" PowerShell Module](#functions-included-in-the-soap-powershell-module)
 * [Scripts](#scripts)
-  * [Get-EventViewer.ps1](#get-eventviewer-ps1)
+  * [Get-EventViewer.ps1](#get-eventviewerps1)
 * [References](#references)
 
 ### How to Install the "soap" PowerShell Module
