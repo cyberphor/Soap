@@ -4,39 +4,14 @@ Param(
     [SecureString]$DirectoryServicesRestoreModePassword = $(ConvertTo-SecureString -AsPlainText -Force "1qaz2wsx!QAZ@WSX"),
     [String]$DomainAdminFirstName = 'Elliot',
     [String]$DomainAdminLastName = 'Alderson',
-    [String]$DomainAdminFullName = $DomainAdminLastName + ', ' + $DomainAdminFirstName,
-    [String]$DomainAdminAccountName = $DomainAdminFirstName.ToLower() + '.' + $DomainAdminLastName.ToLower(),
-    [String]$DomainAdminUserPrincipalName = $DomainAdminSamAccountName + '@' + $DomainName,
     [SecureString]$DomainAdminPassword = $(ConvertTo-SecureString -AsPlainText -Force "1qaz2wsx!QAZ@WSX"),
     [String]$DomainAdminDescription = 'Domain Administrator',
-    [String]$DomainAdminGroup = 'Domain Admins'
+    [String]$DomainAdminGroup = 'Domain Admins',
+    [Switch]$DomainAdminOnly,
+    [String]$DomainAdminFullName = $DomainAdminLastName + ', ' + $DomainAdminFirstName,
+    [String]$DomainAdminAccountName = $DomainAdminFirstName.ToLower() + '.' + $DomainAdminLastName.ToLower(),
+    [String]$DomainAdminUserPrincipalName = $DomainAdminSamAccountName + '@' + $DomainName
 )
-
-function Install-RequiredFeatures {
-    $AdDomainServices = (Get-WindowsFeature AD-Domain-Services).InstallState
-    $Dns = (Get-WindowsFeature DNS).InstallState
-
-    if ($AdDomainServices -ne 'Installed') {
-        (Install-WindowsFeature AD-Domain-Services -IncludeManagementTools).ExitCode
-    } 
-
-    if ($Dns -ne 'Installed') {
-        (Install-WindowsFeature DNS -IncludeManagementTools).ExitCode
-    }
-}
-
-function Rename-DomainController {
-    if ($env:COMPUTERNAME -ne $DomainController) { 
-        Rename-Computer -NewName $DomainController -Force
-    }
-}
-
-function Install-AdForest {
-    $ActiveDirectoryWebServices = (Get-Service -Name ADWS).Status
-    if ($ActiveDirectoryWebServices -ne 'Running') {
-        Install-ADDSForest -DomainName $DomainName -InstallDns -SafeModeAdministratorPassword $DirectoryServicesRestoreModePassword -NoRebootOnCompletion -Force
-    }
-}
 
 function New-AdDomainAdmin {
     $AdDomainServices = (Get-WindowsFeature AD-Domain-Services).InstallState
@@ -56,11 +31,34 @@ function New-AdDomainAdmin {
             Add-ADGroupMember -Identity $DomainAdminGroup -Members $DomainAdminSamAccountName
         }
     }
+}
 
+function Install-RequiredFeatures {
+    $AdDomainServices = (Get-WindowsFeature AD-Domain-Services).InstallState
+    $Dns = (Get-WindowsFeature DNS).InstallState
+
+    if ($AdDomainServices -ne 'Installed') {
+        (Install-WindowsFeature AD-Domain-Services -IncludeManagementTools).ExitCode
+    } 
+
+    if ($Dns -ne 'Installed') {
+        (Install-WindowsFeature DNS -IncludeManagementTools).ExitCode
+    }
+}
+
+function Install-AdForest {
+    $ActiveDirectoryWebServices = (Get-Service -Name ADWS).Status
+    if ($ActiveDirectoryWebServices -ne 'Running') {
+        Install-ADDSForest -DomainName $DomainName -InstallDns -SafeModeAdministratorPassword $DirectoryServicesRestoreModePassword -NoRebootOnCompletion -Force
+    }
+
+    $ScriptFilePath = $(Get-Location).Path + '\' + $MyInvocation.MyCommand.Name
+    $ScriptFilePath
     $TaskName = "Create the first Domain Admin account"
-    $TaskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-File C:\Scripts\New-AdForest.ps1'
+    $TaskAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "$ScriptFilePath -DomainAdminOnly"
     $TaskTrigger = New-ScheduledTaskTrigger -AtLogOn
     $TaskDescription = "Creates the first Domain Admin account for this Active Directory forest."
+    Unregister-ScheduledTask -TaskName $TaskName -ErrorAction Ignore
     Register-ScheduledTask `
         -TaskName $TaskName `
         -Action $TaskAction `
@@ -68,7 +66,17 @@ function New-AdDomainAdmin {
         -Description $TaskDescription
 }
 
-Install-RequiredFeatures
-Install-AdForest
-Rename-DomainController
-New-AdDomainAdmin
+function Rename-DomainController {
+    if ($env:COMPUTERNAME -ne $DomainController) { 
+        Rename-Computer -NewName $DomainController -Force
+    }
+}
+
+if ($DomainAdminOnly) {
+    New-AdDomainAdmin
+} else {
+    Install-RequiredFeatures
+    Install-AdForest
+    Rename-DomainController
+    Restart-Computer
+}
