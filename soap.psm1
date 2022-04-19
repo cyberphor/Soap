@@ -1141,6 +1141,10 @@ function Start-RollingReboot {
     Start-ScheduledTask -TaskName $TaskName
 }
 
+function Stop-Razer {
+    Get-Process "Razer*" | Stop-Process -Force
+}
+
 function Test-Connections {
     param([Parameter(ValueFromPipeline)][string]$IpAddress)
     Begin{ $IpAddressRange = @() }
