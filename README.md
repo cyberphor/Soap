@@ -3,13 +3,19 @@
 soap is a PowerShell module with functions relating to cyber-security. This repository also contains a few PowerShell scripts. I may or may not merge these scripts into the main "soap" module in the future. 
 
 ### Table of Contents
-* [How to Install the "soap" PowerShell Module](#how-to-install-the-soap-powershell-module)
-* [Functions Included in the "soap" PowerShell Module](#functions-included-in-the-soap-powershell-module)
+* [How to Install soap Using Git](#how-to-install-soap-using-git)
+* [How to Install soap Using PowerShell](#how-to-install-soap-using-powershell)
+* [soap Functions](#soap-functions)
 * [Scripts](#scripts)
   * [Get-EventViewer.ps1](#get-eventviewerps1)
 * [References](#references)
 
-### How to Install the "soap" PowerShell Module
+### How to Install soap Using git
+```bash
+git clone https:///github.com/cyberphor/soap
+```
+
+### How to Install soap Using PowerShell
 Copy and paste the commands below into a PowerShell session to download, install, and import the "soap" PowerShell module.
 ```pwsh
 $Uri = "https://github.com/cyberphor/soap/archive/refs/heads/main.zip"
@@ -22,7 +28,7 @@ Remove-Item -Path "soap"
 Import-Module -Name "soap"
 ```
 
-### Functions Included in the "soap" PowerShell Module
+### soap Functions
 For a list of the functions included in the "soap" PowerShell module, [read the doc](/Docs/Functions.md).
 
 ### Scripts
