@@ -1067,6 +1067,17 @@ function Set-FirewallPolicy {
     }
 }
 
+function Set-Wallpaper {
+    Param(
+        [parameter(Mandatory)]$Path
+    )
+
+    if (Test-Path $Path) {
+        Set-ItemProperty -Path "HKCU:Control Panel\Desktop\" -name WallPaper -value $Path
+        rundll32.exe user32.dll, UpdatePerUserSystemParameters
+    }
+}
+
 function Start-AdBackup {
     param(
         [Parameter(Mandatory)][string]$ComputerName,
