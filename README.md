@@ -12,7 +12,7 @@ soap is a PowerShell module with functions relating to cyber-security. This repo
 
 ### How to Install soap Using git
 ```bash
-git clone https:///github.com/cyberphor/soap
+git clone https://github.com/cyberphor/soap
 ```
 
 ### How to Install soap Using PowerShell
