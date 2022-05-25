@@ -97,6 +97,22 @@ function Enable-WinRm {
     #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
 }
 
+function Find-IpAddressInWindowsEventLog {
+    param(
+        [string]$IpAddress
+    )
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = 5156
+    }
+    Get-WinEvent -FilterHashtable $FilterHashTable | 
+    Read-WinEvent  | 
+    Where-Object { 
+        ($_.DestAddress -eq $IpAddress) -or 
+        ($_.SourceAddress -eq $IpAddress) } | 
+    Select-Object TimeCreated, EventRecordId, SourceAddress, DestAddress
+}
+
 function Format-Color {
     Param(
         [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline)]$Input,
