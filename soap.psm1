@@ -417,6 +417,18 @@ function Get-EventForwarders {
     }
 }
 
+function Get-FailedLogons {
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = 4625
+    }
+
+    Get-WinEvent -FilterHashtable $FilterHashTable |
+    Read-WinEvent |
+    Group-Object -Property TargetUserName -NoElement |
+    Sort-Object -Property Count -Descending
+}
+
 function Get-Indicator {
     param(
         [string]$Path = "C:\Users",
@@ -595,6 +607,18 @@ function Get-Stig {
         } 
         Write-Error 'The file provided is not a XCCDF document.'
     }
+}
+
+function Get-SuccessfulLogons {
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = 4624
+    }
+
+    Get-WinEvent -FilterHashtable $FilterHashTable |
+    Read-WinEvent |
+    Group-Object -Property TargetUserName -NoElement |
+    Sort-Object -Property Count -Descending
 }
 
 function Get-TcpPort {
