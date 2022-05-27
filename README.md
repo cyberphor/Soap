@@ -1,21 +1,23 @@
-## soap
+## Soap
 ![GitHub](https://img.shields.io/github/license/cyberphor/soap)  
-soap is a PowerShell module with functions relating to cyber-security. This repository also contains a few PowerShell scripts. I may or may not merge these scripts into the main "soap" module in the future. 
+Soap is a PowerShell module with cybersecurity-related functions. This repository also contains a few PowerShell scripts. I plan to merge these scripts into the main Soap module in the future. 
 
 ### Table of Contents
-* [How to Install soap Using Git](#how-to-install-soap-using-git)
-* [How to Install soap Using PowerShell](#how-to-install-soap-using-powershell)
-* [soap Functions](#soap-functions)
+* [How to Install Soap Using Git](#how-to-install-soap-using-git)
+* [How to Install Soap Using PowerShell](#how-to-install-soap-using-powershell)
+* [Soap Functions](#soap-functions)
 * [Scripts](#scripts)
   * [Get-EventViewer.ps1](#get-eventviewerps1)
 * [References](#references)
 
-### How to Install soap Using git
+### How to Install Soap Using Git and PowerShell
 ```bash
 git clone https://github.com/cyberphor/soap
+cd soap
+import-module -name .\soap.psm1
 ```
 
-### How to Install soap Using PowerShell
+### How to Install Soap Using PowerShell Only
 Copy and paste the commands below into a PowerShell session to download, install, and import the "soap" PowerShell module.
 ```pwsh
 $Uri = "https://github.com/cyberphor/soap/archive/refs/heads/main.zip"
@@ -28,8 +30,8 @@ Remove-Item -Path "soap"
 Import-Module -Name "soap"
 ```
 
-### soap Functions
-For a list of the functions included in the "soap" PowerShell module, [read the doc](/Docs/Functions.md).
+### Soap Functions
+For a list of the functions included in the Soap PowerShell module, [read the doc](/Docs/Functions.md).
 
 ### Scripts
 #### Get-EventViewer.ps1
