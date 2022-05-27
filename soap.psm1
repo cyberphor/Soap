@@ -77,6 +77,11 @@ function Copy-FileToRemotePublicFolder {
 		}
 	}
 }
+
+function Disable-Firewall {
+    Set-NetFirewallProfile -Name domain,public,private -Enabled False
+}
+
 function Edit-Module {
     Param(
         [Parameter(Mandatory)][string]$Name
@@ -88,6 +93,10 @@ function Edit-Module {
     } else {
         Write-Output "[x] The $Name module does not exist."
     }
+}
+
+function Enable-Firewall {
+    Set-NetFirewallProfile -Name domain,public,private -Enabled true
 }
 
 function Enable-WinRm {
