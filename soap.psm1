@@ -417,17 +417,22 @@ function Get-EventForwarders {
     }
 }
 
-function Get-FailedLogons {
+function Get-FirewallEvents {
+    Param(
+        [ValidateSet("SourceAddress","DestAddress")]$Direction = "DestAddress"
+    )
+
     $FilterHashTable = @{
         LogName = "Security"
-        Id = 4625
+        Id = 5156
     }
 
     Get-WinEvent -FilterHashtable $FilterHashTable |
     Read-WinEvent |
-    Group-Object -Property TargetUserName -NoElement |
+    Group-Object -Property $Direction -NoElement |
     Sort-Object -Property Count -Descending
 }
+
 
 function Get-Indicator {
     param(
@@ -477,6 +482,23 @@ function Get-LocalAdministrators {
     ForEach-Object {
         New-Object -TypeName PSObject -Property @{ Name = $_ }
     }
+}
+
+function Get-LogonEvents {
+    Param([ValidateSet("Failed","Successful")]$Type = "Failed")
+    if ($Type -eq "Failed") {
+        $Id = 4625
+    } elseif ($Type -eq "Successful") {
+        $Id = 4624
+    }
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = $Id
+    }
+    Get-WinEvent -FilterHashtable $FilterHashTable |
+    Read-WinEvent |
+    Group-Object -Property TargetUserName -NoElement |
+    Sort-Object -Property Count -Descending
 }
 
 function Get-ModuleFunctions {
@@ -609,22 +631,23 @@ function Get-Stig {
     }
 }
 
-function Get-SuccessfulLogons {
-    $FilterHashTable = @{
-        LogName = "Security"
-        Id = 4624
-    }
-
-    Get-WinEvent -FilterHashtable $FilterHashTable |
-    Read-WinEvent |
-    Group-Object -Property TargetUserName -NoElement |
-    Sort-Object -Property Count -Descending
-}
-
 function Get-TcpPort {
     Get-NetTCPConnection | 
     Select-Object @{ "Name" = "ProcessId"; "Expression" = { $_.OwningProcess }},LocalPort,@{ "Name" = "ProcessName"; "Expression" = { (Get-Process -Id $_.OwningProcess).Name }},RemoteAddress |
     Sort-Object -Property ProcessId -Descending
+}
+
+function Get-UsbEvents {
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = 6416
+    }
+
+    Get-WinEvent -FilterHashtable $FilterHashTable |
+    Read-WinEvent |
+    Group-Object -Property DeviceDescription -NoElement |
+    Sort-Object -Property Count -Descending |
+    Format-Table -AutoSize
 }
 
 function Get-WhoIs {
