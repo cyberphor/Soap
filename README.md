@@ -11,15 +11,14 @@ Soap is a PowerShell module with cybersecurity-related functions. This repositor
 * [References](#references)
 
 ### How to Install Soap Using Git and PowerShell
-```bash
+```
 git clone https://github.com/cyberphor/soap
 cd soap
 import-module -name .\soap.psm1
 ```
 
 ### How to Install Soap Using PowerShell Only
-Copy and paste the commands below into a PowerShell session to download, install, and import the "soap" PowerShell module.
-```pwsh
+```
 $Uri = "https://github.com/cyberphor/soap/archive/refs/heads/main.zip"
 $Destination = "C:\Program Files\WindowsPowerShell\Modules\soap"
 Invoke-WebRequest -Uri $Uri -OutFile "soap.zip"
