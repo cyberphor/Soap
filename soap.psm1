@@ -80,6 +80,10 @@ function Copy-FileToRemotePublicFolder {
 
 function Disable-Firewall {
     Set-NetFirewallProfile -Name domain,public,private -Enabled False
+} 
+
+function Disable-Ipv6 {
+    Disable-NetAdapterBinding -Name "*" -ComponentID ms_tcpip6
 }
 
 function Edit-Module {
@@ -97,6 +101,10 @@ function Edit-Module {
 
 function Enable-Firewall {
     Set-NetFirewallProfile -Name domain,public,private -Enabled true
+}
+
+function Enable-Ipv6 {
+    Enable-NetAdapterBinding -Name "*" -ComponentID ms_tcpip6
 }
 
 function Enable-WinRm {
