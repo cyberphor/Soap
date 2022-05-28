@@ -30,7 +30,7 @@ CompanyName = 'cyberphor'
 Copyright = '(c) 2022 Victor Fernandez III. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'A cyber-security PowerShell module.'
+Description = 'A PowerShell module with cybersecurity-related functions.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = ''
