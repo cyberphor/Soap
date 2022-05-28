@@ -300,10 +300,21 @@ function Get-CallSign {
     return $CallSign
 }
 
-function Get-PowerShellModule {
-    param([string]$Name)
-    Get-Module -ListAvailable | 
-    Where-Object { $_.Path -like "C:\Program Files\WindowsPowerShell\Modules\*$Name*" }
+function Get-DnsEvents {
+    Param([string]$Whitelist)
+    if ($Whitelist) {
+        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
+    }
+    $FilterHashTable = @{
+        LogName = "Microsoft-Windows-DNS-Client/Operational"
+        Id = 3006
+    }
+    Get-WinEvent -FilterHashtable $FilterHashTable |
+    Read-WinEvent |
+    Where-Object { $_.QueryName -notin $Exclusions } |
+    Group-Object -Property QueryName -NoElement |
+    Sort-Object -Property Count -Descending |
+    Format-Table -AutoSize
 }
 
 function Get-ProcessCreationReport {
@@ -1441,7 +1452,9 @@ function Set-AuditPolicy {
     #>
 
     Param(
-        [parameter(Mandatory)][ValidateSet('Microsoft','DISA','Malware Archaeology')]$Source
+        [ValidateSet('Microsoft','DISA','Malware Archaeology')]$Source,
+        [switch]$EnableDnsLogging,
+        [switch]$DisableDnsLogging
     )
 
     function Set-AuditPolicyUsingMicrosoftRecommendations {
@@ -1753,12 +1766,26 @@ function Set-AuditPolicy {
         reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell\Transcription" /v EnableTranscripting /t REG_DWORD /d 1 /f
     }
 
-    $Prompt = Read-Host -Prompt "This script will implement the baseline Windows 10 audit policy recommended by $Source.`nDo you want to continue? (y/n)"
-    if ($Prompt.ToLower() -eq "y") {
-        switch ($Source) {
-            "Microsoft" { Set-AuditPolicyUsingMicrosoftRecommendations }
-            "Malware Archaeology" { Set-AuditPolicyUsingMalwareArchaeologyRecommendations }
-            "DISA" { Set-AuditPolicyUsingTheDisaStigForWindows10 }
+    if ($Source) {
+        $SourcePrompt = Read-Host -Prompt "This script will implement the baseline Windows 10 audit policy recommended by $Source.`nDo you want to continue? (y/n)"
+        if ($SourcePrompt.ToLower() -eq "y") {
+            switch ($Source) {
+                "Microsoft" { Set-AuditPolicyUsingMicrosoftRecommendations }
+                "Malware Archaeology" { Set-AuditPolicyUsingMalwareArchaeologyRecommendations }
+                "DISA" { Set-AuditPolicyUsingTheDisaStigForWindows10 }
+            }
+        }
+    }
+
+    if ($EnableDnsLogging) {
+        $EnableDnsLoggingPrompt = Read-Host -Prompt "This script will configure the local DNS client to log all DNS queries. `nDo you want to continue? (y/n)"
+        if ($EnableDnsLoggingPrompt.ToLower() -eq "y") {
+            wevtutil sl Microsoft-Windows-DNS-Client/Operational /e:true   
+        }
+    } elseif ($DisableDnsLogging) {
+        $DisableDnsLoggingPrompt = Read-Host -Prompt "This script will configure the local DNS client to NOT log all DNS queries. `nDo you want to continue? (y/n)"
+        if ($DisableDnsLoggingPrompt.ToLower() -eq "y") {
+            wevtutil sl Microsoft-Windows-DNS-Client/Operational /e:false  
         }
     }
 }
