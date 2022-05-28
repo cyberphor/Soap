@@ -9,5 +9,5 @@ jobs:
       - name: checkout
         uses: actions/checkout@v2
       - name: Publishing
-        run: Publish-Module -Path '...' -NuGetApiKey ${{ secrets.PSGALLERY }}
+        run: Publish-Module -Path '...' -NuGetApiKey ${{ secrets.POWERSHELLGALLERY }}
         shell: pwsh
