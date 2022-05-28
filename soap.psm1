@@ -317,6 +317,23 @@ function Get-DnsEvents {
     Format-Table -AutoSize
 }
 
+function Get-ProcessCreationEvents {
+    Param([string]$Whitelist)
+    if ($Whitelist) {
+        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
+    }
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = 4688
+    }
+    Get-WinEvent -FilterHashtable $FilterHashTable |
+    Read-WinEvent |
+    Where-Object { $_.NewProcessName -notin $Exclusions } |
+    Group-Object -Property NewProcessName -NoElement |
+    Sort-Object -Property Count -Descending |
+    Format-Table -AutoSize
+}
+
 function Get-ProcessCreationReport {
     <#
         .SYNOPSIS
@@ -1400,6 +1417,26 @@ function Start-AdScrub {
             Write-Output "[+] $($_.Name) - $Reason"
         }
     }
+}
+
+function Start-Heartbeat {
+    Param([string]$Target)
+    while (-not $TimeToStop) {
+        if (Test-Connection -ComputerName $Target -Count 2 -Quiet) {
+            $Timestamp = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss')
+            Write-Host "[$Timestamp] [$Target] " -NoNewline
+            Write-Host " ONLINE  " -BackgroundColor Green -ForegroundColor Black
+        } else {
+            $Timestamp = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss')
+            Write-Host "[$Timestamp] [$Target] " -NoNewline
+            Write-Host " OFFLINE " -BackgroundColor Red -ForegroundColor Black
+        }
+        Start-Sleep -Seconds 60
+        $TimeToStop = (Get-Date).ToString('hh:mm') -le (Get-Date '17:00').ToString('hh:mm')
+    }
+
+    $Timestamp = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss')
+    Write-Host "[$Timestamp] Time has expired."
 }
 
 function Import-AdUsersFromCsv {
