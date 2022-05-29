@@ -9,10 +9,10 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'soap.psm1'
+RootModule = 'Soap.psm1'
 
 # Version number of this module.
-ModuleVersion = '5.0'
+ModuleVersion = '5.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
