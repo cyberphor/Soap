@@ -12,7 +12,7 @@
 RootModule = 'Soap.psm1'
 
 # Version number of this module.
-ModuleVersion = '5.1'
+ModuleVersion = '5.1.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
