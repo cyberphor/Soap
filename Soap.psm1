@@ -87,15 +87,12 @@ function Disable-Ipv6 {
 }
 
 function Edit-Module {
-    Param(
-        [Parameter(Mandatory)][string]$Name
-    )
-    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name\$Name.psm1"
-    $Expression = 'powershell_ise.exe "$Module"'
-    if (Test-Path -Path $Module) {
-        Invoke-Expression $Expression
+    Param([Parameter(Mandatory)][string]$Name)
+    $Module = Get-Module | Where-Object { $_.Path -like "*$Name.psm1" }
+    if ($Module) { 
+        ise $Module.Path
     } else {
-        Write-Output "[x] The $Name module does not exist."
+        Write-Error "A module with the name '$Name' does not exist."
     }
 }
 
@@ -447,49 +444,6 @@ function Get-DiskSpace {
     },@{
         Label = 'SerialNumber'
         Expression = { $_.VolumeSerialNumber }
-    }
-}
-
-function Get-DnsLogs {
-    <#
-        .SYNOPSIS
-        Prints DNS logs in a human-readable format.
-
-        .NOTES
-        HOW TO ENABLE DNS LOGGING
-        wevtutil sl Microsoft-Windows-DNS-Client/Operational /e:true
-
-        HOW TO DISABLE DNS LOGGING
-        wevtutil sl Microsoft-Windows-DNS-Client/Operational /e:false
-
-        .LINK
-        https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732848(v=ws.10)?redirectedfrom=MSDN
-        https://www.powershellmagazine.com/2013/07/15/pstip-how-to-enable-event-logs-using-windows-powershell/
-        https://www.reddit.com/r/sysadmin/comments/7wgxsg/dns_log_on_windows_10_pro/du0bjds/
-    #>
-    $LoggingIsEnabled = (Get-WinEvent -ListLog Microsoft-Windows-DNS-Client/Operational).IsEnabled
-    if ($LoggingIsEnabled) {
-        $SearchCriteria = @{
-            LogName = 'Microsoft-Windows-DNS-Client/Operational';
-            StartTime = (Get-Date).AddDays(-7);
-            EndTime = (Get-Date);
-            Id = 3006;
-        }
-        Get-WinEvent -FilterHashtable $SearchCriteria |
-        foreach {
-            $XmlData = [xml]$_.ToXml()
-            $ProcessId = $XmlData.Event.System.Execution.ProcessID
-            $DnsQuery = $XmlData.Event.EventData.Data[0].'#text'
-            $Sid = $XmlData.Event.System.Security.UserID      
-            $Event = New-Object -TypeName psobject
-            $Event | Add-Member -MemberType NoteProperty -Name TimeCreated -Value $_.TimeCreated
-            $Event | Add-Member -MemberType NoteProperty -Name ProcessId -Value $ProcessId
-            $Event | Add-Member -MemberType NoteProperty -Name DnsQuery -Value $DnsQuery
-            $Event | Add-Member -MemberType NoteProperty -Name Sid -Value $Sid
-            $Event
-        }
-    } else {
-        Write-Host 'DNS logging is not enabled.'
     }
 }
 
@@ -1280,6 +1234,19 @@ function Remove-App {
         Start-Process "msiexec.exe" -ArgumentList "/X $App /qb" -NoNewWindow
     } else {
         Start-Process $UninstallString -NoNewWindow
+    }
+}
+
+function Remove-Module {
+    param([Parameter(Mandatory)][string]$Name)
+    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name"
+    if (Test-Path -Path $Module) {
+        Remove-Item -Path $Module -Recurse -Force
+        if (-not (Test-Path -Path $Module)) {
+            Write-Output "[+] Deleted the $Name module."
+        }
+    } else {
+        Write-Output "[x] The $Name module does not exist."
     }
 }
 
