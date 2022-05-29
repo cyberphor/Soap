@@ -10,6 +10,7 @@
 * [Read-WinEvent](#read-winevent)
 * [Unblock-TrafficToIpAddress](#unblock-traffictoipaddress)
 * [Update-GitHubRepo](#update-githubrepo)
+* [Get-EventViewer](#get-eventviewer)
 
 ### Block-TrafficToIpAddress
 ```pwsh
@@ -192,3 +193,15 @@ Update-GitHubRepo -Author "cyberphor" -Repo "SOAP-Modules" -Branch "main" -Path 
 # output
 [!] Updating the local branch of scripts.
 ```
+
+### Get-EventViewer
+Get-EventViewer.ps1 is a PowerShell script that parses your local Windows Event logs and adds events to an Excel workbook, organizing the data into different tabs. I developed this tool to make it easier for me to review successful logons, process creation, and PowerShell events on my personal computer. Below are screenshots of the end-result.
+
+**Screenshot #1**
+![Screenshot1](/Screenshots/Screenshot1.PNG)
+
+**Screenshot #2**
+![Screenshot2](/Screenshots/Screenshot2.PNG)
+
+**Screenshot #3**
+![Screenshot3](/Screenshots/Screenshot3.PNG)
