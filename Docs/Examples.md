@@ -3,6 +3,9 @@
 * [Block-TrafficToIpAddress](#block-traffictoipaddress)
 * [ConvertFrom-Base64](#convertfrom-base64)
 * [ConvertTo-Base64](#convertto-base64)
+* [Format-Color](#format-color)
+* [Get-AssetInventory](#get-assetinventory)
+* [Get-IpAddressRange](#get-ipaddressrange)
 * [Get-Indicator](#get-indicator)
 * [Get-LocalAdministrators](#get-localadministrators)
 * [Get-WirelessNetAdapter](#get-wirelessnetadapter)
@@ -37,6 +40,35 @@ ConvertTo-Base64
 ```pwsh
 # output
 
+```
+
+### Format-Color
+```pwsh
+Get-ChildItem | Format-Color -Value passwords.txt -BackgroundColor Red -ForegroundColor White
+```
+
+### Get-AssetInventory
+```pwsh
+Get-AssetInventory -Network 192.168.2.0/24
+
+IpAddress    MacAddress        HostName SerialNumber   UserName       FirstSeen        LastSeen
+---------    ----------        -------- ------------   --------       ---------        --------
+192.168.2.1  -                 -        -              -              2020-12-31 17:44 2021-01-01 09:30
+192.168.2.3  -                 -        -              -              2021-01-01 09:14 2021-01-01 09:14                                       
+192.168.2.57 -                 -        -              -              2020-12-31 17:44 2021-01-01 09:30
+192.168.2.60 -                 -        -              -              2021-01-01 09:33 2021-01-01 09:30                             
+192.168.2.75 aa:aa:bb:bb:cc:cc DC1      T6UsW9N8       WINDOWS\Victor 2020-12-31 17:44 2021-01-01 09:30
+```
+
+### Get-IpAddressRange
+```pwsh
+Get-IpAddressRange -Network 192.168.1.0/30, 192.168.2.0/30, 192.168.3.1/32
+
+192.168.1.1
+192.168.2.2
+192.168.2.1
+192.168.2.2
+192.168.3.1
 ```
 
 ### Get-Indicator

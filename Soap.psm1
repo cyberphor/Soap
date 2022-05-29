@@ -152,6 +152,45 @@ function Export-Gpo {
     }
 }
 
+function Disable-StaleAdAccounts {
+    Import-Module ActiveDirectory
+    $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format) to Scrub'
+    # $SearchBase = 'OU=Users,OU=HQ,OU=EvilCorp,DC=sky,DC=net'
+    $30_Days_Ago = (Get-Date).AddDays(-30)
+    $Filter = { LastLogonDate -le $30_Days_Ago }
+    $DomainRoot = $(Get-ADDomain).DistinguishedName
+    $DisabledUsersOu = "OU=Disabled Users," + $DomainRoot
+    $DisabledUsersOuExists = (Get-ADOrganizationalUnit -Filter *).DistinguishedName -eq $DisabledUsersOu
+    if (-not ($DisabledUsersOuExists)) {
+        New-ADOrganizationalUnit -Name "Disabled Users" -Path $DomainRoot
+    }
+    $VipUsers = (Get-ADGroup -Identity 'VIP Users').Sid
+    Get-ADUser -Filter $Filter -SearchBase $SearchBase -Properties LastLogonDate,Description | 
+    Where-Object { $VipUsers -notcontains $_.Sid } |
+    foreach {
+        if ($_.Enabled) {
+            Set-ADUser $_.SamAccountName -Description $('Last Login - ' + $_.LastLogonDate)
+            Disable-ADAccount $_.SamAccountName
+        }
+        Move-ADObject -Identity $_.DistinguishedName -TargetPath $DisabledUsersOu
+    } 
+}
+
+function Disable-StaleAdComputers {
+    Import-Module ActiveDirectory
+    $30_Days_Ago = (Get-Date).AddDays(-30)
+    $Filter = { LastLogonDate -le $30_Days_Ago }
+    $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format)'
+    Get-ADComputer -Filter $Filter -Properties LastLogonDate | 
+    foreach {
+        if ($_.Enabled) {
+            Set-ADComputer $_.SamAccountName -Description $('Last Login - ' + $_.LastLogonDate)
+            Disable-ADAccount $_.SamAccountName
+        }
+    } 
+    # EXAMPLE OU PATH: OU=Computers,OU=HQ,OU=EvilCorp,DC=vanilla,DC=sky,DC=net
+}
+
 function Find-IpAddressInWindowsEventLog {
     param(
         [string]$IpAddress
@@ -166,6 +205,13 @@ function Find-IpAddressInWindowsEventLog {
         ($_.DestAddress -eq $IpAddress) -or 
         ($_.SourceAddress -eq $IpAddress) } | 
     Select-Object TimeCreated, EventRecordId, SourceAddress, DestAddress
+}
+
+function Find-WirelessComputers {
+    $Computers = Get-AdComputer -Filter * | Select-Object -ExpandProperty DnsHostname
+    Invoke-Command -ComputerName $Computers -ErrorAction Ignore -ScriptBlock {
+      Get-WmiObject Win32_NetworkAdapter | Where-Object { $_.Name -like '*Wireless*' }
+    }
 }
 
 function Format-Color {
@@ -281,6 +327,46 @@ function Get-AuditPolicy {
     }
 }
 
+function Get-AutoRuns {
+    $RegistryKeys = @(
+        "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify",
+        "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Userinit",
+        "HKCU\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\\Shell",
+        "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\\Shell",
+        "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\ShellServiceObjectDelayLoad",
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\",
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\",
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run\",
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnceEx\",
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce\",
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run\",
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run\",
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServices\",
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServices",
+        "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServicesOnce",
+        "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunServicesOnce"
+    )
+    $AutoRunsFound = @{}
+    $RegistryKeys | 
+    ForEach-Object {
+        $RegistryKey = $_ 
+        if (Test-Path $RegistryKey) {
+            $AutoRunsExist = Get-Item $RegistryKey | Select -ExpandProperty Property
+
+            if ($AutoRunsExist) {
+                $Count = (Get-Item $RegistryKey).Property.Count 
+                (Get-Item $RegistryKey).Property[0..$Count] |
+                ForEach-Object { 
+                    $App = $_
+                    $AppPath = (Get-ItemProperty $RegistryKey).$App 
+                    $AutoRunsFound.Add($App,$AppPath)
+                }
+            }
+        }
+    }
+    return $AutoRunsFound 
+}
+
 function Get-BaselineConnections {
     Get-NetTcpConnection -State Established | 
     Select-Object -Property `
@@ -353,6 +439,84 @@ function Get-DnsEvents {
     Group-Object -Property QueryName -NoElement |
     Sort-Object -Property Count -Descending |
     Format-Table -AutoSize
+}
+
+function Get-GitHubRepo {
+    <#
+    .SYNOPSIS
+        Downloads code repositories from GitHub.
+    .EXAMPLE
+        ./Get-SupplyDrop -From cyberphor
+    .INPUTS
+        GitHub username.
+    .OUTPUTS
+        GitHub code repository.
+    .LINK
+        https://github.com/cyberphor/soap
+    .NOTES
+        File name: Get-SupplyDrop.ps1
+        Version: 3.0
+        Author: Victor Fernandez III
+        Creation Date: Saturday, January 25, 2020
+    #>
+    Param([Parameter(Mandatory=$true)][string]$From)
+    try {
+        Write-Output "`n [+] $From's Github repositories: "
+        $GithubProfile = Invoke-WebRequest -UseBasicParsing $URL
+        $GithubProfile -Split "`n" | 
+            Select-String '<span class="repo" title="' |
+            ForEach-Object {
+                $Repo = $_.ToString().Split('>')[1].Split('<')[0]
+                Write-Output " - $Repo"
+            }
+        $Repository = Read-Host -Prompt "`n [!] Which one would you like to download?"
+        $Branch = 'master'
+        $URI = "$URL/$Repository/archive/$Branch.zip"
+        if (Invoke-WebRequest -Method Head -Uri $URI) {
+            Clear-Host
+            $DropZone = $pwd.ToString() + '\' + $Repository
+            $DropZoneIsOccupied = Test-Path $DropZone
+            if ($DropZoneIsOccupied) { Throw 'You may have already downloaded it.' }
+            else {
+                Clear-Host
+                $SupplyDrop = $DropZone + '\' + $Repository + '-' + $Branch + '\'
+                $SupplyDropZipped = $DropZone + '.zip'
+                Write-Output "`n [-] Downloading... `n"
+                Invoke-WebRequest -Uri $URI -OutFile $SupplyDropZipped
+                Expand-Archive $SupplyDropZipped
+                Remove-Item $SupplyDropZipped -Recurse 
+                Move-Item ($SupplyDrop + "*") -Destination $DropZone
+                Remove-Item -Path $SupplyDrop -Recurse
+                Clear-Host
+                Write-Output "`n [+] Success!"
+                Get-ChildItem $DropZone
+            }
+        }
+    } catch { 
+        Clear-Host
+        Write-Output "`n [x] $_ `n" 
+    }
+}
+
+function Get-Hexed {
+    <#
+    .NOTES
+    Takes in user input. Gets the hex version of their input, strips white spaces, gets the total number of individual hex characters, checks if total number of single hex characters are less than 56 (output = yes or no), and then, prints everything: raw string/usability, number of characters, string hex
+    #>
+    $Message = Read-Host -Prompt '[>] Your message'
+    $Hex = ($Message |
+        Format-Hex -Encoding UTF8 |
+        Select -ExpandProperty Bytes |
+        ForEach-Object { '{0:x2}' -f $_ }) -join ''
+    $Length = $Hex.Length
+
+    if ($Length -lt 56) { $Usablility = "will fit." }
+    else { $Usablility = "will not fit" }
+
+    Clear-Host
+    Write-Output "[>] '$Message' $Usablility `n"
+    Write-Output "[>] Number of individual characters: $Length `n"
+    Write-Output "[>] Hex: $Hex `n"
 }
 
 function Get-ProcessCreationEvents {
@@ -782,6 +946,49 @@ function Get-Indicator {
 
 function Get-IpAddressRange {
     param([Parameter(Mandatory)][string[]]$Network)
+        <#
+        .SYNOPSIS
+        Given a network ID in CIDR notation, returns an array of IPv4 address strings.
+
+        .DESCRIPTION
+        Given a network ID in CIDR notation, returns an array of IPv4 address strings.
+
+        .PARAMETER Network
+        Specifies the network ID in CIDR notation.
+
+        .INPUTS
+        None. You cannot pipe objects to Get-IpAddressRange.
+
+        .OUTPUTS
+        System.Array. Get-IpAddressRange returns an array of IPv4 address strings.
+
+        .EXAMPLE
+        Get-IpAddressRange -Network 192.168.2.0/30
+        192.168.2.1
+        192.168.2.2
+
+        .EXAMPLE
+        Get-IpAddressRange -Network 192.168.2.0/30, 192.168.3.0/30
+        192.168.2.1
+        192.168.2.2
+        192.168.3.1
+        192.168.3.2
+
+        .EXAMPLE
+        Get-IpAddressRange -Network 192.168.2.1/32
+        192.168.2.1
+
+        .LINK
+        https://github.com/cyberphor/soap
+
+        .NOTES
+        https://community.spiceworks.com/topic/649706-question-on-splitting-a-string-in-powershell
+        https://devblogs.microsoft.com/scripting/use-powershell-to-easily-convert-decimal-to-binary-and-back/
+        https://stackoverflow.com/questions/28460208/
+            what-is-the-idiomatic-way-to-slice-an-array-relative-to-both-of-its-ends
+        https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/
+            converting-binary-data-to-ip-address-and-vice-versa
+    #>
     $IpAddressRange = @()
     $Network |
     foreach {
@@ -981,6 +1188,67 @@ function Get-TcpPort {
     Sort-Object -Property ProcessId -Descending
 }
 
+function Get-TrafficLights {
+    <#
+    .SYNOPSIS
+        Pings a list of nodes and displays the results using 'traffic light' colors. 
+    .EXAMPLE
+        Get-NetTrafficLights -File C:\Users\Victor\Desktop\routers.txt
+    .INPUTS
+        A text-file with hostnames and/or IP addresses. 
+    .OUTPUTS
+        Prints text to the console (host).
+    .LINK
+        https://github.com/cyberphor/soap
+    .NOTES
+        Author: Victor Fernandez III
+        Creation Date: Friday, December 13th, 2019
+    #>
+    Param(
+        [ValidateScript({ Test-Path $_ })]
+        [string]$File
+    )
+    $Nodes = Get-Content $File 
+    $Nodes | Add-Member -MemberType NoteProperty -Name 'Status' -Value 'Null'
+    $Nodes | Add-Member -MemberType NoteProperty -Name 'FailedChecks' -Value 'Null'
+    While ($true) {
+        $Nodes | 
+        ForEach-Object {
+            if ($_.FailedChecks -eq '1') {
+                $_.FailedChecks = '2'
+                $_.Status = ' Offline ' 
+            } 
+            elseif (Test-Connection $_ -Count 1 -Quiet) {
+                $_.Status = ' Online ' 
+            } 
+            else {
+                $_.FailedChecks = '1'
+                $_.Status = ' Standby ' 
+            } 
+        }
+        Clear-Host
+        Write-Host '----------TRAFFIC LIGHTS----------'
+        Write-Host '       '(Get-Date)
+        Write-Host '----------------------------------'
+        $Nodes | 
+        ForEach-Object {
+            Write-Host '[' -NoNewline
+            if ($_.Status -eq ' Online ') { 
+                Write-Host $_.Status -NoNewline -BackgroundColor Green -ForegroundColor Black
+            } 
+            if ($_.Status -eq ' Offline ') { 
+                Write-Host $_.Status -NoNewline -BackgroundColor Red -ForegroundColor Black
+            } 
+            if ($_.Status -eq ' Standby ') { 
+                Write-Host $_.Status -NoNewline -BackgroundColor Yellow -ForegroundColor Black
+            }
+            Write-Host ']' $_
+        } 
+        Start-Sleep -Seconds ($Nodes | Measure-Object).Count
+    }
+
+}
+
 function Get-UsbEvents {
     $FilterHashTable = @{
         LogName = "Security"
@@ -1043,6 +1311,39 @@ function Import-CustomViews {
     Get-ChildItem -Recurse "$Path\*.xml" |
     Where-Object { $_.Name -notin $CustomViews } | 
     Copy-Item -Destination $CustomViewsFolder
+}
+
+function Install-Sysmon {
+    $Service = 'Sysmon'
+    $OSArchitecture = (Get-WmiObject Win32_OperatingSystem).OSArchitecture
+    if ($OSArchitecture -ne '32-bit') { $Service = $Service + '64' }
+    $Installed = Get-Service | Where-Object { $_.Name -like $Service }
+    $RunStatus = $Installed.Status
+
+    if ($Installed) {
+        if ($RunStatus -ne "Running") { Start-Service -Name $Service }
+    } else {
+        $LocalFolder = "$env:ProgramData\$Service\"
+        if (Test-Path $LocalFolder) { Remove-Item -Recurse $LocalFolder }
+        else { New-Item -Type Directory $LocalFolder | Out-Null }
+
+        $Domain = (Get-WmiObject Win32_ComputerSystem).Domain
+        $AllGpoFiles = Get-ChildItem -Recurse "\\$Domain\sysvol\$Domain\Policies\"
+        $ServiceGPO = ($AllGpoFiles | Where-Object { $_.Name -eq "$Service.exe" }).DirectoryName
+        Copy-Item -Path "$ServiceGPO\$Service.exe", "$ServiceGPO\Eula.txt", "$ServiceGPO\sysmonconfig-export.xml" -Destination $LocalFolder
+    
+        if (Test-Path "$LocalFolder\$Service.exe") {
+            $ServiceArguments = '/accepteula', '-i', "$LocalFolder\sysmonconfig-export.xml"
+            Start-Process -FilePath "$LocalFolder\$Service.exe" -ArgumentList $ServiceArguments -NoNewWindow -Wait
+
+            $Binary = 'C:\Windows\System32\wevtutil.exe'
+            $Option = 'sl'
+            $LogName = 'Microsoft-Windows-Sysmon/Operational'
+            $LogPermissions = '/ca:O:BAG:SYD:(A;;0xf0007;;;SY)(A;;0x7;;;BA)(A;;0x1;;;BO)(A;;0x1;;;SO)(A;;0x1;;;S-1-5-32-573)(A;;0x1;;;S-1-5-20)'
+            $BinaryArguments = $Option, $LogName, $LogPermissions
+            Start-Process -Filepath $Binary -ArgumentList $BinaryArguments -NoNewWindow -Wait
+        }
+    }
 }
 
 function Invoke-WinEventParser {
