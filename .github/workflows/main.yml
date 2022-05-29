@@ -11,5 +11,4 @@ jobs:
         env:
           SECRET: ${{ secrets.POWERSHELLGALLERY }}
         shell: pwsh
-        run: |
-          Publish-Module -Path "." -NuGetApiKey $env:SECRET -Verbose
+        run: Publish-Module -Path "." -NuGetApiKey $env:SECRET -Verbose
