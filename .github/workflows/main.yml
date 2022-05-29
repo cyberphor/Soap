@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Publish
         env:
-          POWERSHELLGALLERY: ${{ secrets.POWERSHELLGALLERY }}
+          SECRET: ${{ secrets.POWERSHELLGALLERY }}
         shell: pwsh
         run: |
-          Publish-Module -Name "Soap" -NuGetApiKey $env:POWERSHELLGALLERY -Verbose
+          Publish-Module -Name "Soap" -NuGetApiKey $env:SECRET -Verbose
