@@ -111,6 +111,47 @@ function Enable-WinRm {
     #Invoke-WmiMethod -Class Win32_Process -Name Create -ArgumentList "cmd.exe /c 'winrm qc'"
 }
 
+function Export-Gpo {
+    Write-Output "`n[+] Available GPOs:"
+    $AllGPOs = (Get-GPO -All).DisplayName
+    $AllGPOs | ForEach-Object { Write-Output " -   $_"}
+    $GPOName = Read-Host -Prompt "`n[+] Which GPO do you want exported? `n -   GPO Name"
+
+    if ($AllGPOs -contains $GPOName) {
+        $GPOBackupFolder = "$PWD\" + ($GPOName).Replace(" ", "-") + "GPO"
+        $FindingGPOBackupFolder = Test-Path -Path $GPOBackupFolder
+        if (-not $FindingGPOBackupFolder) {
+            New-Item -Type Directory -Path $GPOBackupFolder | Out-Null
+        }
+        $GPOGuid = '{' + (Backup-GPO -Name $GPOName -Path $GPOBackupFolder).Id + '}'
+
+        $OldDC = $env:COMPUTERNAME
+        $OldNetBIOSName = $env:USERDOMAIN
+        $OldDNSDomainName = $env:USERDNSDOMAIN
+
+        $NewDC = 'DC1'
+        $NewNetBIOSName = 'CONTOSO'
+        $NewDNSDomainName = 'contoso.com'
+
+        $Files = @(
+            "$GPOBackupFolder\$GPOGuid\Backup.xml"
+            "$GPOBackupFolder\$GPOGuid\bkupInfo.xml" 
+            "$GPOBackupFolder\$GPOGuid\gpreport.xml"
+        ) 
+
+        $Files |
+        ForEach-Object {
+            Write-Output "`n[+] Scrubbing $_"
+            (Get-Content -Path $_) `
+            -replace $OldDC, $NewDC `
+            -replace $OldDNSDomainName, $NewDNSDomainName `
+            -replace $OldNetBIOSName, $NewNetBIOSName |
+            Set-Content $_
+            Write-Output " -   Done."
+        }
+    }
+}
+
 function Find-IpAddressInWindowsEventLog {
     param(
         [string]$IpAddress
@@ -874,6 +915,14 @@ function Get-ProcessToKill {
     $Process.Kill()
 }
 
+function Get-SerialNumberAndCurrentUser {
+    Param([string[]]$ComputerName)
+    Invoke-Command -ComputerName $ComputerName -ScriptBlock {
+        Get-WmiObject -Class Win32_Bios | Select-Object -ExpandProperty SerialNumber
+        Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty UserName
+    }
+}
+
 function Get-Shares {
     param([string[]]$Whitelist = @("ADMIN$","C$","IPC$"))
     Get-SmbShare | 
@@ -1237,17 +1286,17 @@ function Remove-App {
     }
 }
 
-function Remove-Module {
-    param([Parameter(Mandatory)][string]$Name)
-    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name"
-    if (Test-Path -Path $Module) {
-        Remove-Item -Path $Module -Recurse -Force
-        if (-not (Test-Path -Path $Module)) {
-            Write-Output "[+] Deleted the $Name module."
-        }
-    } else {
-        Write-Output "[x] The $Name module does not exist."
-    }
+function Remove-StaleDnsRecords {
+    <#
+        .LINK
+        https://adamtheautomator.com/powershell-dns/
+    #>
+    Import-Module DnsServer
+    $Domain = Read-Host -Prompt 'Domain Name'
+    $30_Days_Ago = (Get-Date).AddDays(-30)
+    Get-DnsServerResourceRecord -Zone $Domain -RRType A | 
+    Where-Object { $_.TimeStamp -le $30_Days_Ago } | 
+    Remove-DnsServerResourceRecord -ZoneName $Domain -Force
 }
 
 function Send-Alert {
