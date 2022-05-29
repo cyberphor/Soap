@@ -1283,19 +1283,6 @@ function Remove-App {
     }
 }
 
-function Remove-Module {
-    param([Parameter(Mandatory)][string]$Name)
-    $Module = "C:\Program Files\WindowsPowerShell\Modules\$Name"
-    if (Test-Path -Path $Module) {
-        Remove-Item -Path $Module -Recurse -Force
-        if (-not (Test-Path -Path $Module)) {
-            Write-Output "[+] Deleted the $Name module."
-        }
-    } else {
-        Write-Output "[x] The $Name module does not exist."
-    }
-}
-
 function Send-Alert {
     [CmdletBinding(DefaultParameterSetName = 'Log')]
     Param(
