@@ -12,4 +12,4 @@ jobs:
           POWERSHELLGALLERY: ${{ secrets.POWERSHELLGALLERY }}
         shell: pwsh
         run: |
-          Publish-Module -Path '...' -NuGetApiKey $env:POWERSHELLGALLERY -Verbose
+          Publish-Module -Name "Soap" -NuGetApiKey $env:POWERSHELLGALLERY -Verbose
