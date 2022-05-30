@@ -494,7 +494,6 @@ function Get-DscResourcesRequired {
     Compress-Archive -DestinationPath "DscResources.zip"
 }
 
-
 function Get-GitHubRepo {
     <#
     .SYNOPSIS
@@ -1304,16 +1303,23 @@ function Get-TrafficLights {
 }
 
 function Get-UsbEvents {
+    Param([switch]$Verbose)
     $FilterHashTable = @{
         LogName = "Security"
         Id = 6416
     }
-
-    Get-WinEvent -FilterHashtable $FilterHashTable |
-    Read-WinEvent |
-    Group-Object -Property DeviceDescription -NoElement |
-    Sort-Object -Property Count -Descending |
-    Format-Table -AutoSize
+    if ($Verbose) {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent | 
+        Where-Object { $_.ClassName -ne $null } 
+    } else {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent | 
+        Where-Object { $_.ClassName -ne $null } |
+        Group-Object -Property ClassName -NoElement |
+        Sort-Object -Property Count -Descending |
+        Format-Table -AutoSize
+    } 
 }
 
 function Get-WhoIs {
