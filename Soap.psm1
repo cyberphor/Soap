@@ -58,7 +58,6 @@ function Copy-FileToRemotePublicFolder {
 		[string]$Computers,
 		[string]$File
 	)
-
 	$Computers |
 	ForEach-Object {
 		# for each computer
@@ -464,7 +463,10 @@ function Get-CallSign {
 }
 
 function Get-DnsEvents {
-    Param([string]$Whitelist)
+    Param(
+        [string]$Whitelist,
+        [switch]$Verbose
+    )
     if ($Whitelist) {
         $Exclusions = Get-Content $Whitelist -ErrorAction Stop
     }
@@ -472,12 +474,18 @@ function Get-DnsEvents {
         LogName = "Microsoft-Windows-DNS-Client/Operational"
         Id = 3006
     }
-    Get-WinEvent -FilterHashtable $FilterHashTable |
-    Read-WinEvent |
-    Where-Object { $_.QueryName -notin $Exclusions } |
-    Group-Object -Property QueryName -NoElement |
-    Sort-Object -Property Count -Descending |
-    Format-Table -AutoSize
+    if ($Verbose) {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Where-Object { $_.QueryName -notin $Exclusions }
+    } else {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Where-Object { $_.QueryName -notin $Exclusions } |
+        Group-Object -Property QueryName -NoElement |
+        Sort-Object -Property Count -Descending |
+        Format-Table -AutoSize
+    }
 }
 
 function Get-DscResourcesRequired {
@@ -494,199 +502,7 @@ function Get-DscResourcesRequired {
     Compress-Archive -DestinationPath "DscResources.zip"
 }
 
-function Get-GitHubRepo {
-    <#
-    .SYNOPSIS
-        Downloads code repositories from GitHub.
-    .EXAMPLE
-        ./Get-SupplyDrop -From cyberphor
-    .INPUTS
-        GitHub username.
-    .OUTPUTS
-        GitHub code repository.
-    .LINK
-        https://github.com/cyberphor/soap
-    .NOTES
-        File name: Get-SupplyDrop.ps1
-        Version: 3.0
-        Author: Victor Fernandez III
-        Creation Date: Saturday, January 25, 2020
-    #>
-    Param([Parameter(Mandatory=$true)][string]$From)
-    try {
-        Write-Output "`n [+] $From's Github repositories: "
-        $GithubProfile = Invoke-WebRequest -UseBasicParsing $URL
-        $GithubProfile -Split "`n" | 
-            Select-String '<span class="repo" title="' |
-            ForEach-Object {
-                $Repo = $_.ToString().Split('>')[1].Split('<')[0]
-                Write-Output " - $Repo"
-            }
-        $Repository = Read-Host -Prompt "`n [!] Which one would you like to download?"
-        $Branch = 'master'
-        $URI = "$URL/$Repository/archive/$Branch.zip"
-        if (Invoke-WebRequest -Method Head -Uri $URI) {
-            Clear-Host
-            $DropZone = $pwd.ToString() + '\' + $Repository
-            $DropZoneIsOccupied = Test-Path $DropZone
-            if ($DropZoneIsOccupied) { Throw 'You may have already downloaded it.' }
-            else {
-                Clear-Host
-                $SupplyDrop = $DropZone + '\' + $Repository + '-' + $Branch + '\'
-                $SupplyDropZipped = $DropZone + '.zip'
-                Write-Output "`n [-] Downloading... `n"
-                Invoke-WebRequest -Uri $URI -OutFile $SupplyDropZipped
-                Expand-Archive $SupplyDropZipped
-                Remove-Item $SupplyDropZipped -Recurse 
-                Move-Item ($SupplyDrop + "*") -Destination $DropZone
-                Remove-Item -Path $SupplyDrop -Recurse
-                Clear-Host
-                Write-Output "`n [+] Success!"
-                Get-ChildItem $DropZone
-            }
-        }
-    } catch { 
-        Clear-Host
-        Write-Output "`n [x] $_ `n" 
-    }
-}
 
-function Get-Hexed {
-    <#
-    .NOTES
-    Takes in user input. Gets the hex version of their input, strips white spaces, gets the total number of individual hex characters, checks if total number of single hex characters are less than 56 (output = yes or no), and then, prints everything: raw string/usability, number of characters, string hex
-    #>
-    $Message = Read-Host -Prompt '[>] Your message'
-    $Hex = ($Message |
-        Format-Hex -Encoding UTF8 |
-        Select -ExpandProperty Bytes |
-        ForEach-Object { '{0:x2}' -f $_ }) -join ''
-    $Length = $Hex.Length
-
-    if ($Length -lt 56) { $Usablility = "will fit." }
-    else { $Usablility = "will not fit" }
-
-    Clear-Host
-    Write-Output "[>] '$Message' $Usablility `n"
-    Write-Output "[>] Number of individual characters: $Length `n"
-    Write-Output "[>] Hex: $Hex `n"
-}
-
-function Get-ProcessCreationEvents {
-    Param([string]$Whitelist)
-    if ($Whitelist) {
-        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
-    }
-    $FilterHashTable = @{
-        LogName = "Security"
-        Id = 4688
-    }
-    Get-WinEvent -FilterHashtable $FilterHashTable |
-    Read-WinEvent |
-    Where-Object { $_.NewProcessName -notin $Exclusions } |
-    Group-Object -Property NewProcessName -NoElement |
-    Sort-Object -Property Count -Descending |
-    Format-Table -AutoSize
-}
-
-function Get-ProcessCreationReport {
-    <#
-        .SYNOPSIS
-        Searches the Windows "Security" Event log for commands defined in a blacklist and sends an email when a match is found. 
-        .DESCRIPTION
-        This script will automatically create a file called "SentItems.log" to keep track of what logs have already been emailed (using the Record Id field/value). 
-        .INPUTS
-        None. You cannot pipe objects to this script.
-        .OUTPUTS
-        An email.
-        .EXAMPLE 
-        Get-ProcessCreationReport.ps1 -BlacklistFile ".\command-blacklist.txt" -EmailServer "smtp.gmail.com" -EmailServerPort 587 -EmailAddressSource "DrSpockTheChandelier@gmail.com" -EmailPassword "iHaveABadFeelingAboutThis2022!" -EmailAddressDestination "DrSpockTheChandelier@gmail.com" 
-    
-        .NOTES
-        If you are going to use Gmail, this is what you need to use (as of 17 MAR 22):
-        - EmailServer = smtp.gmail.com
-        - EmailServerPort = 587
-        - EmailAddressSource = YourEmailAddress@gmail.com
-        - EmailAddressDestination = AnyEmailAddress@AnyDomain.com
-        - EmailPassword = iHaveABadFeelingAboutThis2022!
-    
-        Also, consider reading this:
-        - https://myaccount.google.com/lesssecureapps
-    #>
-
-    param(
-        [Parameter(Mandatory)][string]$BlacklistFile,
-        [Parameter(Mandatory)][string]$EmailServer,
-        [Parameter(Mandatory)][int]$EmailServerPort,
-        [Parameter(Mandatory)][string]$EmailAddressSource,
-        [Parameter(Mandatory)][string]$EmailPassword,
-        [Parameter(Mandatory)][string]$EmailAddressDestination,
-        [string]$SentItemsLog = ".\SentItems.log"           
-    )
-
-    $UserId = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $AdminId = [Security.Principal.WindowsBuiltInRole]::Administrator
-    $CurrentUser = New-Object Security.Principal.WindowsPrincipal($UserId)
-    $RunningAsAdmin = $CurrentUser.IsInRole($AdminId)
-    if (-not $RunningAsAdmin) { 
-        Write-Error "This script requires administrator privileges."
-        break
-    }
-
-    # get the command blacklist
-    # - commands in your blacklist must include the full-path
-    #   - ex: C:\Windows\System32\whoami.exe
-    $Blacklist = Get-Content -Path $BlacklistFile
-
-    if (Test-Path $SentItemsLog) {
-        # check if the script log exists
-        # - save its contents to a variable
-        $SentItems = Get-Content -Path $SentItemsLog
-    } else {
-        # otherwise, create a script log
-        # - this is important so you are not sending the same record multiple times
-        New-Item -ItemType File -Path $SentItemsLog | Out-Null
-    }
-
-    # define the search criteria
-    $FilterHashTable = @{
-        LogName = "Security"
-        Id = 4688
-        StartTime = $(Get-Date).AddDays(-1)    
-    }
-
-    # cycle through events matching the criteria above
-    # - return the first event that contains a command on the blacklist
-    $Event = Get-WinEvent -FilterHashtable $FilterHashTable |
-        Where-Object { 
-            ($Blacklist -contains $_.Properties[5].Value) -and 
-            ($SentItems -notcontains $_.RecordId)    
-        } | 
-        Select-Object * -First 1
-
-    # if there is an event meeting the criteria defined, send an email
-    if ($Event) {
-        # assign important fields to separate variables for readability
-        $EventId = $Event.Id
-        $Source = $Event.ProviderName
-        $MachineName = $Event.MachineName
-        $Message = $Event.Message
-
-        # define values required to send an email via PowerShell
-        $EmailClient = New-Object Net.Mail.SmtpClient($EmailServer, $EmailServerPort)
-        $Subject = "Alert from $MachineName"
-        $Body = "
-            EventID: $EventId `r
-            Source: $Source `r `
-            MachineName: $MachineName `r
-            Message: $Message `r
-        "
-        $EmailClient.EnableSsl = $true
-        $EmailClient.Credentials = New-Object System.Net.NetworkCredential($EmailAddressSource, $EmailPassword)
-        $EmailClient.Send($EmailAddressSource, $EmailAddressDestination, $Subject, $Body)
-        Add-Content -Value $Event.RecordId -Path $SentItemsLog
-    }
-}
 
 function Get-DiskSpace {
     Get-CimInstance -Class Win32_LogicalDisk |
@@ -972,20 +788,108 @@ function Get-EventViewer {
 
 function Get-FirewallEvents {
     Param(
-        [ValidateSet("SourceAddress","DestAddress")]$Direction = "DestAddress"
+        [ValidateSet("SourceAddress","DestAddress")]$Direction = "DestAddress",
+        [string]$Whitelist,
+        [switch]$Verbose
     )
-
+    if ($Whitelist) {
+        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
+    }
     $FilterHashTable = @{
         LogName = "Security"
         Id = 5156
     }
-
-    Get-WinEvent -FilterHashtable $FilterHashTable |
-    Read-WinEvent |
-    Group-Object -Property $Direction -NoElement |
-    Sort-Object -Property Count -Descending
+    if ($Verbose) {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Where-Object { $_.$Direction -notin $Exclusions }
+    } else {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent | 
+        Where-Object { $_.$Direction -notin $Exclusions } |
+        Group-Object -Property $Direction -NoElement |
+        Sort-Object -Property Count -Descending |
+        Format-Table -AutoSize
+    }
 }
 
+function Get-GitHubRepo {
+    <#
+    .SYNOPSIS
+        Downloads code repositories from GitHub.
+    .EXAMPLE
+        ./Get-SupplyDrop -From cyberphor
+    .INPUTS
+        GitHub username.
+    .OUTPUTS
+        GitHub code repository.
+    .LINK
+        https://github.com/cyberphor/soap
+    .NOTES
+        File name: Get-SupplyDrop.ps1
+        Version: 3.0
+        Author: Victor Fernandez III
+        Creation Date: Saturday, January 25, 2020
+    #>
+    Param([Parameter(Mandatory=$true)][string]$From)
+    try {
+        Write-Output "`n [+] $From's Github repositories: "
+        $GithubProfile = Invoke-WebRequest -UseBasicParsing $URL
+        $GithubProfile -Split "`n" | 
+            Select-String '<span class="repo" title="' |
+            ForEach-Object {
+                $Repo = $_.ToString().Split('>')[1].Split('<')[0]
+                Write-Output " - $Repo"
+            }
+        $Repository = Read-Host -Prompt "`n [!] Which one would you like to download?"
+        $Branch = 'master'
+        $URI = "$URL/$Repository/archive/$Branch.zip"
+        if (Invoke-WebRequest -Method Head -Uri $URI) {
+            Clear-Host
+            $DropZone = $pwd.ToString() + '\' + $Repository
+            $DropZoneIsOccupied = Test-Path $DropZone
+            if ($DropZoneIsOccupied) { Throw 'You may have already downloaded it.' }
+            else {
+                Clear-Host
+                $SupplyDrop = $DropZone + '\' + $Repository + '-' + $Branch + '\'
+                $SupplyDropZipped = $DropZone + '.zip'
+                Write-Output "`n [-] Downloading... `n"
+                Invoke-WebRequest -Uri $URI -OutFile $SupplyDropZipped
+                Expand-Archive $SupplyDropZipped
+                Remove-Item $SupplyDropZipped -Recurse 
+                Move-Item ($SupplyDrop + "*") -Destination $DropZone
+                Remove-Item -Path $SupplyDrop -Recurse
+                Clear-Host
+                Write-Output "`n [+] Success!"
+                Get-ChildItem $DropZone
+            }
+        }
+    } catch { 
+        Clear-Host
+        Write-Output "`n [x] $_ `n" 
+    }
+}
+
+function Get-Hexed {
+    <#
+    .NOTES
+    Takes in user input. Gets the hex version of their input, strips white spaces, gets the total number of individual hex characters, checks if total number of single hex characters are less than 56 (output = yes or no), and then, prints everything: raw string/usability, number of characters, string hex
+    #>
+    $Message = Read-Host -Prompt '[>] Your message'
+    $Hex = ($Message |
+        Format-Hex -Encoding UTF8 |
+        Select -ExpandProperty Bytes |
+        ForEach-Object { '{0:x2}' -f $_ }) -join ''
+    $Length = $Hex.Length
+
+    if ($Length -lt 56) { $Usablility = "will fit." }
+    else { $Usablility = "will not fit" }
+
+    Clear-Host
+    Write-Output "[>] '$Message' $Usablility `n"
+    Write-Output "[>] Number of individual characters: $Length `n"
+    Write-Output "[>] Hex: $Hex `n"
+}
 
 function Get-Indicator {
     param(
@@ -1081,7 +985,10 @@ function Get-LocalAdministrators {
 }
 
 function Get-LogonEvents {
-    Param([ValidateSet("Failed","Successful")]$Type = "Failed")
+    Param(
+        [ValidateSet("Failed","Successful")]$Type = "Failed",
+        [switch]$Verbose
+    )
     if ($Type -eq "Failed") {
         $Id = 4625
     } elseif ($Type -eq "Successful") {
@@ -1091,15 +998,16 @@ function Get-LogonEvents {
         LogName = "Security"
         Id = $Id
     }
-    Get-WinEvent -FilterHashtable $FilterHashTable |
-    Read-WinEvent |
-    Group-Object -Property TargetUserName -NoElement |
-    Sort-Object -Property Count -Descending
-}
-
-function Get-ModuleFunctions {
-    param([string]$Module)
-    (Get-Module $Module | Select-Object -Property ExportedCommands).ExportedCommands.Keys 
+    if ($Verbose) {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent
+    } else {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Group-Object -Property TargetUserName -NoElement |
+        Sort-Object -Property Count -Descending |
+        Format-Table -AutoSize
+    }
 }
 
 function Get-Permissions {
@@ -1175,11 +1083,162 @@ function Get-ProcessToKill {
     $Process.Kill()
 }
 
+function Get-ProcessCreationEvents {
+    Param(
+        [string]$Whitelist,
+        [switch]$Verbose    
+    )
+    if ($Whitelist) {
+        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
+    }
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = 4688
+    }
+    if ($Verbose) {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Where-Object { $_.NewProcessName -notin $Exclusions }
+    } else {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Where-Object { $_.NewProcessName -notin $Exclusions } |
+        Group-Object -Property NewProcessName -NoElement |
+        Sort-Object -Property Count -Descending |
+        Format-Table -AutoSize
+    }
+}
+
+function Get-ProcessCreationReport {
+    <#
+        .SYNOPSIS
+        Searches the Windows "Security" Event log for commands defined in a blacklist and sends an email when a match is found. 
+        .DESCRIPTION
+        This script will automatically create a file called "SentItems.log" to keep track of what logs have already been emailed (using the Record Id field/value). 
+        .INPUTS
+        None. You cannot pipe objects to this script.
+        .OUTPUTS
+        An email.
+        .EXAMPLE 
+        Get-ProcessCreationReport.ps1 -BlacklistFile ".\command-blacklist.txt" -EmailServer "smtp.gmail.com" -EmailServerPort 587 -EmailAddressSource "DrSpockTheChandelier@gmail.com" -EmailPassword "iHaveABadFeelingAboutThis2022!" -EmailAddressDestination "DrSpockTheChandelier@gmail.com" 
+    
+        .NOTES
+        If you are going to use Gmail, this is what you need to use (as of 17 MAR 22):
+        - EmailServer = smtp.gmail.com
+        - EmailServerPort = 587
+        - EmailAddressSource = YourEmailAddress@gmail.com
+        - EmailAddressDestination = AnyEmailAddress@AnyDomain.com
+        - EmailPassword = iHaveABadFeelingAboutThis2022!
+    
+        Also, consider reading this:
+        - https://myaccount.google.com/lesssecureapps
+    #>
+
+    param(
+        [Parameter(Mandatory)][string]$BlacklistFile,
+        [Parameter(Mandatory)][string]$EmailServer,
+        [Parameter(Mandatory)][int]$EmailServerPort,
+        [Parameter(Mandatory)][string]$EmailAddressSource,
+        [Parameter(Mandatory)][string]$EmailPassword,
+        [Parameter(Mandatory)][string]$EmailAddressDestination,
+        [string]$SentItemsLog = ".\SentItems.log"           
+    )
+
+    $UserId = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $AdminId = [Security.Principal.WindowsBuiltInRole]::Administrator
+    $CurrentUser = New-Object Security.Principal.WindowsPrincipal($UserId)
+    $RunningAsAdmin = $CurrentUser.IsInRole($AdminId)
+    if (-not $RunningAsAdmin) { 
+        Write-Error "This script requires administrator privileges."
+        break
+    }
+
+    # get the command blacklist
+    # - commands in your blacklist must include the full-path
+    #   - ex: C:\Windows\System32\whoami.exe
+    $Blacklist = Get-Content -Path $BlacklistFile
+
+    if (Test-Path $SentItemsLog) {
+        # check if the script log exists
+        # - save its contents to a variable
+        $SentItems = Get-Content -Path $SentItemsLog
+    } else {
+        # otherwise, create a script log
+        # - this is important so you are not sending the same record multiple times
+        New-Item -ItemType File -Path $SentItemsLog | Out-Null
+    }
+
+    # define the search criteria
+    $FilterHashTable = @{
+        LogName = "Security"
+        Id = 4688
+        StartTime = $(Get-Date).AddDays(-1)    
+    }
+
+    # cycle through events matching the criteria above
+    # - return the first event that contains a command on the blacklist
+    $Event = Get-WinEvent -FilterHashtable $FilterHashTable |
+        Where-Object { 
+            ($Blacklist -contains $_.Properties[5].Value) -and 
+            ($SentItems -notcontains $_.RecordId)    
+        } | 
+        Select-Object * -First 1
+
+    # if there is an event meeting the criteria defined, send an email
+    if ($Event) {
+        # assign important fields to separate variables for readability
+        $EventId = $Event.Id
+        $Source = $Event.ProviderName
+        $MachineName = $Event.MachineName
+        $Message = $Event.Message
+
+        # define values required to send an email via PowerShell
+        $EmailClient = New-Object Net.Mail.SmtpClient($EmailServer, $EmailServerPort)
+        $Subject = "Alert from $MachineName"
+        $Body = "
+            EventID: $EventId `r
+            Source: $Source `r `
+            MachineName: $MachineName `r
+            Message: $Message `r
+        "
+        $EmailClient.EnableSsl = $true
+        $EmailClient.Credentials = New-Object System.Net.NetworkCredential($EmailAddressSource, $EmailPassword)
+        $EmailClient.Send($EmailAddressSource, $EmailAddressDestination, $Subject, $Body)
+        Add-Content -Value $Event.RecordId -Path $SentItemsLog
+    }
+}
+
 function Get-SerialNumberAndCurrentUser {
     Param([string[]]$ComputerName)
     Invoke-Command -ComputerName $ComputerName -ScriptBlock {
         Get-WmiObject -Class Win32_Bios | Select-Object -ExpandProperty SerialNumber
         Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty UserName
+    }
+}
+
+function Get-ServiceEvents {
+    Param(
+        [string]$Whitelist,
+        [switch]$Verbose
+    )
+    if ($Whitelist) {
+        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
+    }
+    $FilterHashTable = @{
+        LogName = "System"
+        Id = 7045
+    }
+    if ($Verbose) {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Where-Object { $_.ServiceName -notin $Exclusions }
+    } else {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent  | 
+        Where-Object { $_.ServiceName -notin $Exclusions }
+        Group-Object -Property ServiceName -NoElement |
+        Sort-Object -Property Count -Descending |
+        Format-Table -AutoSize
     }
 }
 
@@ -1303,7 +1362,13 @@ function Get-TrafficLights {
 }
 
 function Get-UsbEvents {
-    Param([switch]$Verbose)
+    Param(
+        [string]$Whitelist,
+        [switch]$Verbose
+    )
+    if ($Whitelist) {
+        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
+    }
     $FilterHashTable = @{
         LogName = "Security"
         Id = 6416
@@ -1311,15 +1376,47 @@ function Get-UsbEvents {
     if ($Verbose) {
         Get-WinEvent -FilterHashtable $FilterHashTable |
         Read-WinEvent | 
-        Where-Object { $_.ClassName -ne $null } 
+        Where-Object { 
+            ($_.ClassName -notin $Exclusions) -and 
+            ($_.ClassName -ne $null)
+        } 
     } else {
         Get-WinEvent -FilterHashtable $FilterHashTable |
         Read-WinEvent | 
-        Where-Object { $_.ClassName -ne $null } |
+        Where-Object { 
+            ($_.ClassName -notin $Exclusions) -and 
+            ($_.ClassName -ne $null)
+        } |
         Group-Object -Property ClassName -NoElement |
         Sort-Object -Property Count -Descending |
         Format-Table -AutoSize
     } 
+}
+
+function Get-WindowsDefenderEvents {
+    Param(
+        [string]$Whitelist,
+        [switch]$Verbose
+    )
+    if ($Whitelist) {
+        $Exclusions = Get-Content $Whitelist -ErrorAction Stop
+    }
+    $FilterHashTable = @{
+        LogName = "Microsoft-Windows-Windows Defender/Operational"
+        Id = 1116,1117
+    }
+    if ($Verbose) {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent |
+        Where-Object { $_."Threat Name" -notin $Exclusions }
+    } else {
+        Get-WinEvent -FilterHashtable $FilterHashTable |
+        Read-WinEvent | 
+        Where-Object { $_."Threat Name" -notin $Exclusions } |
+        Group-Object -Property "Threat Name" -NoElement |
+        Sort-Object -Property "Count" -Descending |
+        Format-Table -AutoSize
+    }
 }
 
 function Get-WhoIs {

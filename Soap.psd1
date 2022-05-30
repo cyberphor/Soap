@@ -12,7 +12,7 @@
 RootModule = 'Soap.psm1'
 
 # Version number of this module.
-ModuleVersion = '6.0.2'
+ModuleVersion = '6.0.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -30,7 +30,7 @@ CompanyName = 'cyberphor'
 Copyright = '(c) 2022 Victor Fernandez III. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = 'A PowerShell module with cybersecurity-related functions.'
+Description = 'Soap is a PowerShell module with system hardening, log analysis, and incident response functions.'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = ''
