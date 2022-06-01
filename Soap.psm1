@@ -34,50 +34,8 @@ function ConvertTo-IpAddress {
     return $IpAddress
 }
 
-function ConvertFrom-CsvToMarkdownTable {
-    <# .EXAMPLE 
-    ConvertFrom-CsvToMarkdownTable -Path .\Report.csv
-    #>
-    param([Parameter(Mandatory)][string]$Path)
-    if (Test-Path -Path $Path) {
-        $Csv = Get-Content $Path
-        $Headers = $Csv | Select-Object -First 1
-        $NumberOfHeaders = ($Headers.ToCharArray() | Where-Object { $_ -eq ',' }).Count + 1
-        $MarkdownTable = $Csv | ForEach-Object { '| ' + $_.Replace(',',' | ') + ' |' }
-        $MarkdownTable[0] += "`r`n" + ('| --- ' * $NumberOfHeaders) + '|'
-        return $MarkdownTable 
-    }
-}
 
-function Copy-FileToRemotePublicFolder {
-	<#
-		.SYNOPSIS
-		Copies a file to the "Public" folder of one or more remote computers.
-	#>
-	Param(
-		[string]$Computers,
-		[string]$File
-	)
-	$Computers |
-	ForEach-Object {
-		# for each computer
-		$Computer = $_
-		# if it is online
-		If (Test-Connection -ComputerName $Computer -Count 2 -Quiet) {
-			# try and copy the file to the public folder
-			Try {
-				Copy-Item -Path $File -Destination "\\$_\C`$\Users\Public\"
-                Write-Output "Copied $File to $Computer."
-			} Catch { 
-				"Failed to copy $File to $Computer."
-			}
-		} Else { 
-			Write-Output "$Computer appears to be offline."
-		}
-	}
-}
-
-function Disable-AdStaleAccounts {
+function Disable-StaleAdAccounts {
     Import-Module ActiveDirectory
     $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format) to Scrub'
     # $SearchBase = 'OU=Users,OU=HQ,OU=EvilCorp,DC=sky,DC=net'
@@ -101,7 +59,7 @@ function Disable-AdStaleAccounts {
     } 
 }
 
-function Disable-AdStaleComputers {
+function Disable-StaleAdComputers {
     Import-Module ActiveDirectory
     $30_Days_Ago = (Get-Date).AddDays(-30)
     $Filter = { LastLogonDate -le $30_Days_Ago }
@@ -188,45 +146,6 @@ function Export-Gpo {
             Write-Output " -   Done."
         }
     }
-}
-
-function Disable-StaleAdAccounts {
-    Import-Module ActiveDirectory
-    $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format) to Scrub'
-    # $SearchBase = 'OU=Users,OU=HQ,OU=EvilCorp,DC=sky,DC=net'
-    $30_Days_Ago = (Get-Date).AddDays(-30)
-    $Filter = { LastLogonDate -le $30_Days_Ago }
-    $DomainRoot = $(Get-ADDomain).DistinguishedName
-    $DisabledUsersOu = "OU=Disabled Users," + $DomainRoot
-    $DisabledUsersOuExists = (Get-ADOrganizationalUnit -Filter *).DistinguishedName -eq $DisabledUsersOu
-    if (-not ($DisabledUsersOuExists)) {
-        New-ADOrganizationalUnit -Name "Disabled Users" -Path $DomainRoot
-    }
-    $VipUsers = (Get-ADGroup -Identity 'VIP Users').Sid
-    Get-ADUser -Filter $Filter -SearchBase $SearchBase -Properties LastLogonDate,Description | 
-    Where-Object { $VipUsers -notcontains $_.Sid } |
-    foreach {
-        if ($_.Enabled) {
-            Set-ADUser $_.SamAccountName -Description $('Last Login - ' + $_.LastLogonDate)
-            Disable-ADAccount $_.SamAccountName
-        }
-        Move-ADObject -Identity $_.DistinguishedName -TargetPath $DisabledUsersOu
-    } 
-}
-
-function Disable-StaleAdComputers {
-    Import-Module ActiveDirectory
-    $30_Days_Ago = (Get-Date).AddDays(-30)
-    $Filter = { LastLogonDate -le $30_Days_Ago }
-    $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format)'
-    Get-ADComputer -Filter $Filter -Properties LastLogonDate | 
-    foreach {
-        if ($_.Enabled) {
-            Set-ADComputer $_.SamAccountName -Description $('Last Login - ' + $_.LastLogonDate)
-            Disable-ADAccount $_.SamAccountName
-        }
-    } 
-    # EXAMPLE OU PATH: OU=Computers,OU=HQ,OU=EvilCorp,DC=vanilla,DC=sky,DC=net
 }
 
 function Find-IpAddressInWindowsEventLog {
@@ -434,34 +353,6 @@ function Get-BaselineProcesses {
     Sort-Object -Property Path
 }
 
-function Get-Bat {
-    <#
-        .SYNOPSIS
-        Prints an image of a bat using ASCII characters. 
-
-        .LINK
-        https://www.asciiart.eu/animals/bats
-    #>
-    $Bat = "
-        =/\                 /\=
-        / \'._   (\_/)   _.'/ \
-       / .''._'--(o.o)--'_.''. \
-      /.' _/ |``'=/ `" \='``| \_ ``.\
-     /`` .' ``\;-,'\___/',-;/`` '. '\
-    /.-'       ``\(-V-)/``       ``-.\
-    ``            `"   `"            ``
-    "
-
-    Write-Output $Bat
-}
-
-function Get-CallSign {
-    $Adjectives = @("Bastard","Brass","Cannibal","Dark","Liquid","Solid","Doom","Gray","Silent","Steel","Stone")
-    $Animals = @("Bat","Bear","Bison","Beetle","Cat","Cobra","Fox","Snake","Mantis","Mustang","Tiger")
-    $CallSign = $($Adjectives | Get-Random -Count 1) + ' ' + $($Animals | Get-Random -Count 1)
-    return $CallSign
-}
-
 function Get-DnsEvents {
     Param(
         [string]$Whitelist,
@@ -502,8 +393,6 @@ function Get-DscResourcesRequired {
     Compress-Archive -DestinationPath "DscResources.zip"
 }
 
-
-
 function Get-DiskSpace {
     Get-CimInstance -Class Win32_LogicalDisk |
     Select-Object -Property @{
@@ -542,29 +431,6 @@ function Get-EnterpriseVisbility {
     $Visbility | Add-Member -MemberType NoteProperty -Name EventForwarders -Value $EventForwarders.Count
     $Visbility | Add-Member -MemberType NoteProperty -Name WinRmClients -Value $WinRmclients.Count
     return $Visbility
-}
-
-function Get-EventFieldNumber {
-    param(
-        [parameter(Mandatory)][int]$EventId,
-        [parameter(Mandatory)][string]$Field
-    )
-    $LookupTable = "windows-event-fields.json"
-    if (Test-Path $LookupTable) {
-        $FieldNumber = $(Get-Content $LookupTable | ConvertFrom-Json) |
-            Where-Object { $_.Id -eq $EventId } |
-            Select-Object -ExpandProperty Fields |
-            Select-Object -ExpandProperty $Field -ErrorAction Ignore
-        if ($FieldNumber -eq $null) {
-            Write-Error "Event ID $EventId does not have a field called $Field."
-            break
-        } else {
-            return $FieldNumber
-        }
-    } else {
-        Write-Error "File not found: $LookupTable"
-        break
-    }
 }
 
 function Get-EventForwarders {
@@ -870,37 +736,6 @@ function Get-GitHubRepo {
     }
 }
 
-function Get-Hexed {
-    <#
-    .NOTES
-    Takes in user input. Gets the hex version of their input, strips white spaces, gets the total number of individual hex characters, checks if total number of single hex characters are less than 56 (output = yes or no), and then, prints everything: raw string/usability, number of characters, string hex
-    #>
-    $Message = Read-Host -Prompt '[>] Your message'
-    $Hex = ($Message |
-        Format-Hex -Encoding UTF8 |
-        Select -ExpandProperty Bytes |
-        ForEach-Object { '{0:x2}' -f $_ }) -join ''
-    $Length = $Hex.Length
-
-    if ($Length -lt 56) { $Usablility = "will fit." }
-    else { $Usablility = "will not fit" }
-
-    Clear-Host
-    Write-Output "[>] '$Message' $Usablility `n"
-    Write-Output "[>] Number of individual characters: $Length `n"
-    Write-Output "[>] Hex: $Hex `n"
-}
-
-function Get-Indicator {
-    param(
-        [string]$Path = "C:\Users",
-        [Parameter(Mandatory)][string]$FileName
-    )
-    Get-ChildItem -Path $Path -Recurse -Force -ErrorAction Ignore |
-    Where-Object { $_.Name -like $FileName } |
-    Select-Object -ExpandProperty FullName
-}
-
 function Get-IpAddressRange {
     param([Parameter(Mandatory)][string[]]$Network)
         <#
@@ -1008,79 +843,6 @@ function Get-LogonEvents {
         Sort-Object -Property Count -Descending |
         Format-Table -AutoSize
     }
-}
-
-function Get-Permissions {
-    param(
-        [string]$File = $pwd,
-        [int]$Depth = 1
-    )
-    if (Test-Path -Path $File) {
-        Get-ChildItem -Path $File -Recurse -Depth $Depth |
-        ForEach-Object {
-            $Object = New-Object -TypeName PSObject
-            $Object | Add-Member -MemberType NoteProperty -Name Name -Value $_.PsChildName
-            $Acl = Get-Acl -Path $_.FullName | Select-Object -ExpandProperty Access
-            $AclAccount = $Acl.IdentityReference
-            $AclRight = ($Acl.FileSystemRights -split ',').Trim()
-            for ($Ace = 0; $Ace -lt $AclAccount.Count; $Ace++) {
-                $Object | Add-Member -MemberType NoteProperty -Name $AclAccount[$Ace] -Value $AclRight[$Ace]
-            }
-            return $Object
-        }
-    }
-}
-
-function Get-Privileges {
-    # powershell.exe "whoami /priv | findstr Enabled | % { $_.Split(" ")[0] } > C:\Users\Public\privileges-$env:USERNAME.txt"
-    # create a scheduled task and run this command...using the Users group
-
-    SecEdit.exe /export /areas USER_RIGHTS /cfg ./user-rights.txt /quiet
-    $Privileges = Get-Content .\user-rights.txt | Where-Object { $_.StartsWith("Se") }
-    Remove-Item .\user-rights.txt | Out-Null
-
-    $Privileges |
-    ForEach-Object {
-        $Assignment = $_.Split(" = ")
-        $Privilege = $Assignment[0]
-        $Sids = $Assignment[3].Split(",") |
-            ForEach-Object {
-                if ($_.StartsWith("*")) {
-                    $_.Substring(1)
-                } else {
-                    $_
-                }
-            }
-        $Sids | 
-        ForEach-Object {
-            $Sid = $_
-            $UserAccount = Get-WmiObject -Class Win32_UserAccount | Where-Object { $_.Sid -eq $Sid } | Select-Object -ExpandProperty Name
-            $BuiltInAccount = Get-WmiObject -Class Win32_Account | Where-Object { $_.Sid -eq $Sid } | Select-Object -ExpandProperty Name
-            $BuiltInGroup = Get-WmiObject -Class Win32_Group | Where-Object { $_.Sid -eq $Sid } | Select-Object -ExpandProperty Name
-
-            if ($UserAccount) {
-                $Username = $UserAccount
-            } elseif ($BuiltInAccount) {
-                $Username = $BuiltInAccount
-            } elseif ($BuiltInGroup) {
-                $Username = $BuiltInGroup
-            } else {
-                $Username = $Sid
-            }
-        
-            $Output = New-Object psobject
-            Add-Member -InputObject $Output -MemberType NoteProperty -Name Privilege -Value $Privilege
-            Add-Member -InputObject $Output -MemberType NoteProperty -Name Sid -Value $_
-            Add-Member -InputObject $Output -MemberType NoteProperty -Name Username -Value $Username
-            $Output
-        }
-    }
-}
-
-function Get-ProcessToKill {
-    param([Parameter(Mandatory)]$Name)
-    $Process = Get-Process | Where-Object { $_.Name -like $Name }
-    $Process.Kill()
 }
 
 function Get-ProcessCreationEvents {
@@ -1242,13 +1004,6 @@ function Get-ServiceEvents {
     }
 }
 
-function Get-Shares {
-    param([string[]]$Whitelist = @("ADMIN$","C$","IPC$"))
-    Get-SmbShare | 
-    Where-Object { $Whitelist -notcontains $_.Name } |
-    Select-Object -Property Name, Path, Description
-}
-
 function Get-Stig {
     <#
         .SYNOPSIS
@@ -1292,12 +1047,6 @@ function Get-Stig {
         } 
         Write-Error 'The file provided is not a XCCDF document.'
     }
-}
-
-function Get-TcpPort {
-    Get-NetTCPConnection | 
-    Select-Object @{ "Name" = "ProcessId"; "Expression" = { $_.OwningProcess }},LocalPort,@{ "Name" = "ProcessName"; "Expression" = { (Get-Process -Id $_.OwningProcess).Name }},RemoteAddress |
-    Sort-Object -Property ProcessId -Descending
 }
 
 function Get-TrafficLights {
@@ -1419,25 +1168,6 @@ function Get-WindowsDefenderEvents {
     }
 }
 
-function Get-WhoIs {
-    $FilterHashTable = @{
-        LogName = 'Microsoft-Windows-Sysmon/Operational' 
-        Id = 3
-    }
-    Get-WinEvent -FilterHashtable $FilterHashTable |
-    Read-WinEvent |
-    Select-Object SourceIp,DestinationIp,DestinationPort | 
-    Sort-Object -Property DestinationIp -Unique | 
-    ForEach-Object {
-        $Header = @{"Accept" = "application/xml"}
-        $Response = Invoke-Restmethod -Uri $("http://whois.arin.net/rest/ip/" + $_.DestinationIp) -Headers $Header -ErrorAction Ignore
-        $Organization = $Response.net.orgRef.name
-        if ($Organization -ne 'Microsoft Corporation') {
-            return New-Object -TypeName psobject -Property @{SourceIp = $_.SourceIp; DestinationIp = $_.DestinationIp; DestinationPort = $_.DestinationPort; Organization = $Organization}
-        } 
-    }
-}
-
 function Get-WinRmClients {
     $ComputerNames = $(Get-AdComputer -Filter *).Name
     Invoke-Command -ComputerName $ComputerNames -ScriptBlock { $env:HOSTNAME } -ErrorAction Ignore
@@ -1459,15 +1189,6 @@ function Get-WordWheelQuery {
             [System.Text.Encoding]::Unicode.GetString($Value)
         }
     }
-}
-
-function Import-CustomViews {
-    param([string]$Path = "C:\Program Files\WindowsPowerShell\Modules\SOAP-Modules\Custom-Views")
-    $CustomViewsFolder = "C:\ProgramData\Microsoft\Event Viewer\Views"
-    $CustomViews = Get-ChildItem -Recurse $CustomViewsFolder
-    Get-ChildItem -Recurse "$Path\*.xml" |
-    Where-Object { $_.Name -notin $CustomViews } | 
-    Copy-Item -Destination $CustomViewsFolder
 }
 
 function Install-Sysmon {
@@ -1500,35 +1221,6 @@ function Install-Sysmon {
             $BinaryArguments = $Option, $LogName, $LogPermissions
             Start-Process -Filepath $Binary -ArgumentList $BinaryArguments -NoNewWindow -Wait
         }
-    }
-}
-
-function Invoke-WinEventParser {
-    param(
-        [Parameter(Position=0)][string]$ComputerName,
-        [ValidateSet("Application","Security","System","ForwardedEvents","Microsoft-Windows-PowerShell/Operational")][Parameter(Position=1)][string]$LogName,
-        [ValidateSet("4104","4624","4625","4663","4672","4688","4697","5140","5156","6416")][Parameter(Position=2)]$EventId,
-        [Parameter(Position=3)][int]$DaysAgo=1,
-        [Parameter(Position=4)][switch]$TurnOffOutputFilter
-    )
-    if ($TurnOffOutputFilter) {
-        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
-        Read-WinEvent
-    } else {
-        if ($EventId -eq "4104") { $Properties = "TimeCreated","SecurityUserId","ScriptBlockText" }
-        elseif ($EventId -eq "4624") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
-        elseif ($EventId -eq "4625") { $Properties = "TimeCreated","IpAddress","TargetUserName","LogonType" }
-        elseif ($EventId -eq "4663") { $Properties = "*" }
-        elseif ($EventId -eq "4672") { $Properties = "TimeCreated","SubjectUserSid","SubjectUserName" }
-        elseif ($EventId -eq "4688") { $Properties = "TimeCreated","TargetUserName","NewProcessName","CommandLine" }
-        elseif ($EventId -eq "4697") { $Properties = "*" }
-        elseif ($EventId -eq "5140") { $Properties = "*" }
-        elseif ($EventId -eq "5156") { $Properties = "TimeCreated","SourceAddress","DestAddress","DestPort" }
-        elseif ($EventId -eq "6416") { $Properties = "TimeCreated","SubjectUserName","ClassName","DeviceDescription" }
-        else { $Properties = "*" }
-        Get-WinEvent -FilterHashtable @{ LogName=$LogName; Id=$EventId } |
-        Read-WinEvent |
-        Select-Object -Property $Properties
     }
 }
 
@@ -1676,30 +1368,6 @@ function New-CustomViewsForTheSexySixEventIds {
 "@
             # add the custom view data to the filepath (creating it at the same time)
             Add-Content -Value $CustomView -Path $FilePath
-        }
-    }
-}
-
-function New-PowerShellModule {
-    param(
-        [Parameter(Mandatory,Position=0)][string]$Name,
-        [Parameter(Mandatory,Position=1)][string]$Author,
-        [Parameter(Mandatory,Position=2)][string]$Description
-    )
-    $Directory = "C:\Program Files\WindowsPowerShell\Modules\$Name"
-    $Module = "$Directory\$Name.psm1"
-    $Manifest = "$Directory\$Name.psd1"
-    if (Test-Path -Path $Directory) {
-        Write-Output "[x] The $Name module already exists."
-    } else { 
-        New-Item -ItemType Directory -Path $Directory | Out-Null
-        New-Item -ItemType File -Path $Module | Out-Null
-        New-ModuleManifest -Path $Manifest `
-            -Author $Author `
-            -RootModule "$Name.psm1" `
-            -Description $Description
-        if (Test-Path -Path $Module) {
-            Write-Output "[+] Created the $Name module."
         }
     }
 }
@@ -2288,7 +1956,6 @@ function Set-AuditPolicy {
     }
 }
 
-
 function Set-FirewallPolicy {
     Param(
         [string[]]$AuthorizedProtocol = "ICMP",
@@ -2325,17 +1992,6 @@ function Set-FirewallPolicy {
     }
 }
 
-function Set-Wallpaper {
-    Param(
-        [parameter(Mandatory)]$Path
-    )
-
-    if (Test-Path $Path) {
-        Set-ItemProperty -Path "HKCU:Control Panel\Desktop\" -name WallPaper -value $Path
-        rundll32.exe user32.dll, UpdatePerUserSystemParameters
-    }
-}
-
 function Start-AdBackup {
     param(
         [Parameter(Mandatory)][string]$ComputerName,
@@ -2364,78 +2020,10 @@ function Start-AdBackup {
     }
 }
 
-function Start-Coffee {
-    while ($true) {
-        (New-Object -ComObject Wscript.Shell).Sendkeys(' '); sleep 60
-    }
-}
-
-function Start-ImperialMarch {
-    [console]::beep(440,500)      
-    [console]::beep(440,500)
-    [console]::beep(440,500)       
-    [console]::beep(349,350)       
-    [console]::beep(523,150)       
-    [console]::beep(440,500)       
-    [console]::beep(349,350)       
-    [console]::beep(523,150)       
-    [console]::beep(440,1000)
-    [console]::beep(659,500)       
-    [console]::beep(659,500)       
-    [console]::beep(659,500)       
-    [console]::beep(698,350)       
-    [console]::beep(523,150)       
-    [console]::beep(415,500)       
-    [console]::beep(349,350)       
-    [console]::beep(523,150)       
-    [console]::beep(440,1000)
-}
-
 function Start-Panic {
     param([string]$ComputerName = 'localhost')
     #shutdown /r /f /m ComputerName /d P:0:1 /c "Your comment"
     Stop-Computer -ComputerName $ComputerName
-}
-
-function Start-RollingReboot {
-    param(
-        [int]$Interval = 4,
-        [int]$Duration = 60
-    )
-    $TaskName = "Rolling Reboot"
-    $Action = New-ScheduledTaskAction -Execute "shutdown.exe" -Argument "/r /t 0" 
-    $Trigger = New-ScheduledTaskTrigger -At $(Get-Date) -Once -RepetitionInterval $(New-TimeSpan -Minutes $Interval) -RepetitionDuration $(New-TimeSpan -Minutes $Duration)
-    $User = 'NT AUTHORITY\SYSTEM' 
-    Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Trigger -User $User -RunLevel Highest -Force
-    Start-ScheduledTask -TaskName $TaskName
-}
-
-function Test-Connections {
-    param([Parameter(ValueFromPipeline)][string]$IpAddress)
-    Begin{ $IpAddressRange = @() }
-    Process{ $IpAddressRange += $IpAddress }
-    End{ 
-        $Test = $IpAddressRange | ForEach-Object { (New-Object Net.NetworkInformation.Ping).SendPingAsync($_,2000) }
-        [Threading.Tasks.Task]::WaitAll($Test)
-        $Test.Result | Where-Object { $_.Status -eq 'Success' } | Select-Object @{ Label = 'ActiveIp'; Expression = { $_.Address } }
-    }
-}
-
-function Test-TcpPort {
-    param(
-        [Parameter(Mandatory)][ipaddress]$IpAddress,
-        [Parameter(Mandatory)][int]$Port
-    )
-    $TcpClient = New-Object System.Net.Sockets.TcpClient
-    $State = $TcpClient.ConnectAsync($IpAddress,$Port).Wait(1000)
-    if ($State -eq 'True') { $State = 'Open' }
-    else { $State = 'Closed' }
-    $TcpPort = [pscustomobject] @{
-        'IpAddress' = $IpAddress;
-        'Port' = $Port;
-        'State' = $State;
-    }
-    return $TcpPort
 }
 
 function Unblock-TrafficToIpAddress {
