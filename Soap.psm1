@@ -181,21 +181,28 @@ function Format-Color {
     <#
         .SYNOPSIS
         Hightlights strings of text if they contain a specified value. 
+
         .PARAMETER Value
         Specifies the value to color if found. 
+        
         .PARAMETER BackgroundColor
         Specifies the background color to use. 
+        
         .PARAMETER ForegroundColor
         Specifies the foreground color to use. 
+        
         .INPUTS
         Format-Color accepts pipeline objects. 
+        
         .OUTPUTS
         Format-Color returns highlighted strings.  
+        
         .EXAMPLE
         Get-ChildItem | Format-Color -Value foo.txt -BackgroundColor Red -ForegroundColor White
+        
         .LINK
         https://www.bgreco.net/powershell/format-color/
-        https://www.github.com/cyberphor/scripts/PowerShell/Format-Color.ps1
+        https://www.github.com/cyberphor/Soap
     #>
     
     $Lines = ($Input | Format-Table -AutoSize | Out-String) -replace "`r", "" -split "`n"
@@ -683,20 +690,26 @@ function Get-GitHubRepo {
     <#
     .SYNOPSIS
         Downloads code repositories from GitHub.
+
     .EXAMPLE
-        ./Get-SupplyDrop -From cyberphor
+        Get-SupplyDrop -From cyberphor
+    
     .INPUTS
         GitHub username.
+    
     .OUTPUTS
         GitHub code repository.
+    
     .LINK
-        https://github.com/cyberphor/soap
+        https://github.com/cyberphor/Soap
+    
     .NOTES
         File name: Get-SupplyDrop.ps1
         Version: 3.0
         Author: Victor Fernandez III
         Creation Date: Saturday, January 25, 2020
     #>
+
     Param([Parameter(Mandatory=$true)][string]$From)
     try {
         Write-Output "`n [+] $From's Github repositories: "
@@ -776,11 +789,10 @@ function Get-IpAddressRange {
         .NOTES
         https://community.spiceworks.com/topic/649706-question-on-splitting-a-string-in-powershell
         https://devblogs.microsoft.com/scripting/use-powershell-to-easily-convert-decimal-to-binary-and-back/
-        https://stackoverflow.com/questions/28460208/
-            what-is-the-idiomatic-way-to-slice-an-array-relative-to-both-of-its-ends
-        https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/
-            converting-binary-data-to-ip-address-and-vice-versa
+        https://stackoverflow.com/questions/28460208/what-is-the-idiomatic-way-to-slice-an-array-relative-to-both-of-its-ends
+        https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/converting-binary-data-to-ip-address-and-vice-versa
     #>
+
     $IpAddressRange = @()
     $Network |
     foreach {
@@ -875,12 +887,16 @@ function Get-ProcessCreationReport {
     <#
         .SYNOPSIS
         Searches the Windows "Security" Event log for commands defined in a blacklist and sends an email when a match is found. 
+        
         .DESCRIPTION
         This script will automatically create a file called "SentItems.log" to keep track of what logs have already been emailed (using the Record Id field/value). 
+        
         .INPUTS
         None. You cannot pipe objects to this script.
+        
         .OUTPUTS
         An email.
+        
         .EXAMPLE 
         Get-ProcessCreationReport.ps1 -BlacklistFile ".\command-blacklist.txt" -EmailServer "smtp.gmail.com" -EmailServerPort 587 -EmailAddressSource "DrSpockTheChandelier@gmail.com" -EmailPassword "iHaveABadFeelingAboutThis2022!" -EmailAddressDestination "DrSpockTheChandelier@gmail.com" 
     
@@ -1024,6 +1040,7 @@ function Get-Stig {
         .LINK
         https://gist.github.com/entelechyIT
     #>
+
     Param([Parameter(Mandatory)]$Path)
     if (Test-Path $Path) {
         [xml]$XCCDFdocument = Get-Content -Path $Path
@@ -1053,18 +1070,24 @@ function Get-TrafficLights {
     <#
     .SYNOPSIS
         Pings a list of nodes and displays the results using 'traffic light' colors. 
+    
     .EXAMPLE
         Get-NetTrafficLights -File C:\Users\Victor\Desktop\routers.txt
+    
     .INPUTS
         A text-file with hostnames and/or IP addresses. 
+    
     .OUTPUTS
         Prints text to the console (host).
+    
     .LINK
-        https://github.com/cyberphor/soap
+        https://github.com/cyberphor/Soap
+    
     .NOTES
         Author: Victor Fernandez III
         Creation Date: Friday, December 13th, 2019
     #>
+
     Param(
         [ValidateScript({ Test-Path $_ })]
         [string]$File
@@ -1544,6 +1567,63 @@ function Start-AdScrub {
             Disable-AdAccount $_.SamAccountName
             Move-AdObject -Identity $_.DistinguishedName -TargetPath $DisabledUsersOu
             Write-Output "[+] $($_.Name) - $Reason"
+        }
+    }
+}
+
+function Start-Eradication {
+    Param(
+        [string[]]$Service,
+        [string[]]$Process,
+        [string[]]$File
+    )
+    <#
+        .SYNOPSIS
+        TBD.
+
+        .DESCRIPTION
+        TBD.
+
+        .INPUTS
+        None.
+
+        .OUTPUTS
+        None.
+
+        .EXAMPLE
+        Start-Eradication -Service "rshell" -Process "mimikatz" -File "c:\trojan.exe","c:\ransomware.exe"
+
+        .LINK
+        https://github.com/cyberphor/soap
+        https://gist.github.com/ecapuano/d18b3b914021171da42e13e5a56cce42
+    #>
+
+    if ($Service) {
+        $Service |
+        ForEach-Object {
+            if (Get-Service $_ -ErrorAction SilentlyContinue) {
+                Write-Output "Removing service: $_"
+                Stop-Service $_ -Force
+                Start-Process -FilePath sc.exe -ArgumentList "delete",$_
+            }
+        }
+    }
+    if ($Process) {
+        $Process |
+        ForEach-Object {
+            if (Get-Process $_ -ErrorAction SilentlyContinue) {
+                Write-Output "Killing process: $_"
+                Stop-Process -Name $_ -Force
+            }
+        }
+    }
+    if ($File) {
+        $File |
+        ForEach-Object {
+            if (Test-Path $_ -PathType Leaf -ErrorAction SilentlyContinue) {
+                Write-Output "Deleting file: $_"
+                Remove-Item $_
+            }
         }
     }
 }
