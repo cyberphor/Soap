@@ -1247,6 +1247,70 @@ function Install-Sysmon {
     }
 }
 
+function Invoke-What2Log {
+    <#
+    
+    .LINK
+    https://theitbros.com/powershell-gui-for-scripts/
+    https://docs.microsoft.com/en-us/powershell/scripting/samples/selecting-items-from-a-list-box?view=powershell-7.2
+    #>
+    
+    # define the form
+    Add-Type -Assembly System.Windows.Forms
+    $Form = New-Object System.Windows.Forms.Form
+    $Form.Text = "What2Log"
+    $Form.Width = 600
+    $Form.Height = 400
+    $Form.AutoSize = $true
+
+    # define the checklist label
+    $LabelChecklist = New-Object System.Windows.Forms.Label
+    $LabelChecklist.Text = "Audit Policy"
+    $LabelChecklist.AutoSize = $true
+    $LabelChecklist.Location = New-Object System.Drawing.Point(10,10)
+    $Form.Controls.Add($LabelChecklist)
+
+    # define the checklist
+    $ElementChecklist = New-Object System.Windows.Forms.CheckedListBox
+    $ElementChecklist.Items.Add("Logon")
+    $ElementChecklist.Items.Add("Logoff")
+    $ElementChecklist.Items.Add("Special Logon")
+    $ElementChecklist.Location = New-Object System.Drawing.Point(10,30)
+    $Form.Controls.Add($ElementChecklist)
+
+    # define an 'Apply' button
+    $ButtonApply = New-Object System.Windows.Forms.Button
+    $ButtonApply.Text = "Apply"
+    $ButtonApply.AutoSize = $true
+    $ButtonApply.Location = New-Object System.Drawing.Size(510,390)
+    $ButtonApplyClick = {
+        $CheckedItems = $ElementChecklist.SelectedItems
+        $CheckedItems |
+        ForEach-Object {
+            Add-Content -Value $_ -Path "test.log"
+        }
+        $Form.Close()
+    }
+    $ButtonApply.Add_Click($ButtonApplyClick)
+
+    # define an 'Cancel' button
+    $ButtonCancel = New-Object System.Windows.Forms.Button
+    $ButtonCancel.Text = "Cancel"
+    $ButtonCancel.AutoSize = $true
+    $ButtonCancel.Location = New-Object System.Drawing.Size(590,390)
+    $ButtonCancelClick = { 
+        $Form.Close() 
+    }
+    $ButtonCancel.Add_Click($ButtonCancelClick)
+
+    # add the buttons to the checklist
+    $Form.Controls.Add($ButtonApply)
+    $Form.Controls.Add($ButtonCancel)
+
+    # show the form
+    $Form.ShowDialog()
+}
+
 function New-CustomViewsForSysmon {
     $SysmonFolder = "C:\ProgramData\Microsoft\Event Viewer\Views\Sysmon"
     if (-not (Test-Path -Path $SysmonFolder)) {
