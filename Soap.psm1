@@ -1265,16 +1265,31 @@ function Invoke-What2Log {
 
     # define the checklist label
     $LabelChecklist = New-Object System.Windows.Forms.Label
-    $LabelChecklist.Text = "Audit Policy"
+    $LabelChecklist.Text = "Logon/Logoff"
     $LabelChecklist.AutoSize = $true
     $LabelChecklist.Location = New-Object System.Drawing.Point(10,10)
     $Form.Controls.Add($LabelChecklist)
 
     # define the checklist
     $ElementChecklist = New-Object System.Windows.Forms.CheckedListBox
-    $ElementChecklist.Items.Add("Logon")
-    $ElementChecklist.Items.Add("Logoff")
-    $ElementChecklist.Items.Add("Special Logon")
+    $ElementChecklist.AutoSize = $true
+    $LogonLogoffSubcategories = @(
+        "Logon",
+        "Logoff",
+        "Account Lockout",
+        "IPsec Main Mode",
+        "IPsec Quick Mode",
+        "IPsec Extended Mode",
+        "Special Logon",
+        "Other Logon/Logff Events",
+        "Network Policy Server",
+        "User/Device Claims",
+        "Group Membership"
+    )
+    $LogonLogoffSubcategories |
+    ForEach-Object {
+        $ElementChecklist.Items.Add($_)
+    }
     $ElementChecklist.Location = New-Object System.Drawing.Point(10,30)
     $Form.Controls.Add($ElementChecklist)
 
@@ -1287,7 +1302,7 @@ function Invoke-What2Log {
         $CheckedItems = $ElementChecklist.SelectedItems
         $CheckedItems |
         ForEach-Object {
-            Add-Content -Value $_ -Path "test.log"
+            auditpol.exe /set /subcategory:"$_" /success:enable
         }
         $Form.Close()
     }
