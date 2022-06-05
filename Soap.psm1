@@ -1,12 +1,21 @@
-function Block-TrafficToIpAddress {
-    param([Parameter(Mandatory)][ipaddress]$IpAddress)
-    New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
-}
+function Block-Traffic {
+    Param(
+        [ValidateSet("Any","TCP","UDP","ICMPv4","ICMPv6")][string]$Protocol = "Any",
+        [Parameter(Mandatory)][ipaddress]$IpAddress,
+        $Port = "Any"
+    )
+    New-NetFirewallRule `
+        -DisplayName "Block '$Protocol' traffic to '$Port' port on $IpAddress" `
+        -Direction Outbound `
+        -Protocol $Protocol `
+        -RemoteAddress $IpAddress `
+        -RemotePort $RemotePort `
+        -Action Block
+} 
 
-function Block-TrafficToRemotePort {
-    param([Parameter(Mandatory)][int]$Port)
-    New-NetFirewallRule -DisplayName "Block Outbound Port $Port" -Direction Outbound -Protocol TCP -RemotePort $Port -Action Block
-}   
+function Clear-AuditPolicy {
+    Start-Process -FilePath "auditpol.exe" -ArgumentList "/clear","/y"
+}
 
 function ConvertFrom-Base64 {
     param([Parameter(Mandatory, ValueFromPipeline)]$String)
@@ -1249,10 +1258,11 @@ function Install-Sysmon {
 
 function Invoke-What2Log {
     <#
-    
     .LINK
     https://theitbros.com/powershell-gui-for-scripts/
     https://docs.microsoft.com/en-us/powershell/scripting/samples/selecting-items-from-a-list-box?view=powershell-7.2
+    https://stackoverflow.com/questions/30753369/selecting-and-highlight-a-datagridview-row-by-checking-a-checkbox
+    https://social.technet.microsoft.com/Forums/en-US/0b18703c-73ac-4e42-8e66-31739bfa452c/form-datagridview-autosizemode-resize-form-width-to-fit?forum=winserverpowershell
     #>
     
     # define the form
@@ -1263,35 +1273,46 @@ function Invoke-What2Log {
     $Form.Height = 400
     $Form.AutoSize = $true
 
-    # define the checklist label
-    $LabelChecklist = New-Object System.Windows.Forms.Label
-    $LabelChecklist.Text = "Logon/Logoff"
-    $LabelChecklist.AutoSize = $true
-    $LabelChecklist.Location = New-Object System.Drawing.Point(10,10)
-    $Form.Controls.Add($LabelChecklist)
+    # define a grid element
+    $ElementDataGridView = New-Object System.Windows.Forms.DataGridView
+    $ElementDataGridView.AutoSize = $true
+    $ElementDataGridView.Location = New-Object System.Drawing.Point(10,10)
+    $ElementDataGridView.AllowUserToAddRows = $false
 
-    # define the checklist
-    $ElementChecklist = New-Object System.Windows.Forms.CheckedListBox
-    $ElementChecklist.AutoSize = $true
-    $LogonLogoffSubcategories = @(
-        "Logon",
-        "Logoff",
-        "Account Lockout",
-        "IPsec Main Mode",
-        "IPsec Quick Mode",
-        "IPsec Extended Mode",
-        "Special Logon",
-        "Other Logon/Logff Events",
-        "Network Policy Server",
-        "User/Device Claims",
-        "Group Membership"
-    )
-    $LogonLogoffSubcategories |
+    # define the Subcategory column
+    $ColumnSubcategory = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
+    $ColumnSubcategory.Name = "Logon/Logoff"
+    $ColumnSubcategory.HeaderCell.Style.Alignment = "MiddleCenter"
+    $ColumnSubcategory.ReadOnly = $true
+    $ColumnSubcategory.AutoSizeMode = "Fill"
+    $ElementDataGridView.Columns.Add($ColumnSubcategory) | Out-Null
+
+    # define the Success and Failure columns
+    "Success",
+    "Failure" |
     ForEach-Object {
-        $ElementChecklist.Items.Add($_)
+        $Column = New-Object System.Windows.Forms.DataGridViewCheckBoxColumn
+        $Column.Name = $_
+        $Column.HeaderCell.Style.Alignment = "MiddleCenter"
+        $ElementDataGridView.Columns.Add($Column) | Out-Null
     }
-    $ElementChecklist.Location = New-Object System.Drawing.Point(10,30)
-    $Form.Controls.Add($ElementChecklist)
+
+    "Logon",
+    "Logoff",
+    "Account Lockout",
+    "IPsec Main Mode",
+    "IPsec Quick Mode",
+    "IPsec Extended Mode",
+    "Special Logon",
+    "Other Logon/Logoff Events",
+    "Network Policy Server",
+    "User/Device Claims",
+    "Group Membership" |
+    ForEach-Object {
+        $ElementDataGridView.Rows.Add($_) | Out-Null
+    }
+
+    $Form.Controls.Add($ElementDataGridView)
 
     # define an 'Apply' button
     $ButtonApply = New-Object System.Windows.Forms.Button
@@ -1299,10 +1320,12 @@ function Invoke-What2Log {
     $ButtonApply.AutoSize = $true
     $ButtonApply.Location = New-Object System.Drawing.Size(510,390)
     $ButtonApplyClick = {
-        $CheckedItems = $ElementChecklist.SelectedItems
-        $CheckedItems |
-        ForEach-Object {
-            auditpol.exe /set /subcategory:"$_" /success:enable
+        Clear-AuditPolicy 
+        for ($i = 0; $i -lt $ElementDataGridView.RowCount; $i++) {
+            if ($ElementDataGridView.Rows[$i].Cells["Success"].Value -eq $true) {
+                $Subcategory = $ElementDataGridView.Rows[$i].Cells[0].Value
+                auditpol.exe /set /subcategory:"$Subcategory" /success:enable
+            }
         }
         $Form.Close()
     }
