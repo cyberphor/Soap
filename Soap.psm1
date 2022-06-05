@@ -1,12 +1,17 @@
-function Block-TrafficToIpAddress {
-    param([Parameter(Mandatory)][ipaddress]$IpAddress)
-    New-NetFirewallRule -DisplayName "Block $IpAddress" -Direction Outbound -Action Block -RemoteAddress $IpAddress
+function Block-Traffic {
+    Param(
+        [ValidateSet("Any","TCP","UDP","ICMPv4","ICMPv6")][string]$Protocol = "Any",
+        [Parameter(Mandatory)][ipaddress]$IpAddress,
+        $Port = "Any"
+    )
+    New-NetFirewallRule `
+        -DisplayName "Block '$Protocol' traffic to '$Port' port on $IpAddress" `
+        -Direction Outbound `
+        -Protocol $Protocol `
+        -RemoteAddress $IpAddress `
+        -RemotePort $RemotePort `
+        -Action Block
 }
-
-function Block-TrafficToRemotePort {
-    param([Parameter(Mandatory)][int]$Port)
-    New-NetFirewallRule -DisplayName "Block Outbound Port $Port" -Direction Outbound -Protocol TCP -RemotePort $Port -Action Block
-}   
 
 function ConvertFrom-Base64 {
     param([Parameter(Mandatory, ValueFromPipeline)]$String)
