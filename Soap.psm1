@@ -463,36 +463,6 @@ function Get-EventForwarders {
 }
 
 function Get-EventViewer {
-    filter Read-WinEvent {
-            $WinEvent = [ordered]@{} 
-            $XmlData = [xml]$_.ToXml()
-            $SystemData = $XmlData.Event.System
-            $SystemData | 
-            Get-Member -MemberType Properties | 
-            Select-Object -ExpandProperty Name |
-            ForEach-Object {
-                $Field = $_
-                if ($Field -eq 'TimeCreated') {
-                    $WinEvent.$Field = Get-Date -Format 'yyyy-MM-dd hh:mm:ss' $SystemData[$Field].SystemTime
-                } elseif ($SystemData[$Field].'#text') {
-                    $WinEvent.$Field = $SystemData[$Field].'#text'
-                } else {
-                    $SystemData[$Field]  | 
-                    Get-Member -MemberType Properties | 
-                    Select-Object -ExpandProperty Name |
-                    ForEach-Object { 
-                        $WinEvent.$Field = @{}
-                        $WinEvent.$Field.$_ = $SystemData[$Field].$_
-                    }
-                }
-            }
-            $XmlData.Event.EventData.Data |
-            ForEach-Object { 
-                $WinEvent.$($_.Name) = $_.'#text'
-            }
-            return New-Object -TypeName PSObject -Property $WinEvent
-    }
-
     # create a COM object for Excel
     $Excel = New-Object -ComObject Excel.Application
 
@@ -832,6 +802,21 @@ function Get-IpAddressRange {
 }
 
 function Get-LocalAdministrators {
+    <#
+    .EXAMPLE
+    Get-LocalAdministrators
+    Name         
+    ----         
+    Administrator
+    Cristal      
+    Victor 
+
+    .EXAMPLE
+    $Computers = (Get-AdComputer -Filter *).Name
+    Invoke-Command -ComputerName $Computers -ScriptBlock ${function:Get-LocalAdministrators} |
+    Select-Object Name, PsComputerName
+    #>
+    
     (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) |
     Select-Object -Skip 4 |
     Select-String -Pattern "The command completed successfully." -NotMatch |
@@ -1232,6 +1217,25 @@ function Get-WinRmClients {
 }
 
 function Get-WirelessNetAdapter {
+    <#
+        .EXAMPLE
+        Get-WirelessNetAdapter
+        ServiceName      : RtlWlanu
+        MACAddress       : 00:13:EF:F3:6F:F5
+        AdapterType      : Ethernet 802.3
+        DeviceID         : 16
+        Name             : Realtek 8812BU Wireless LAN 802.11ac USB NIC
+        NetworkAddresses : 
+        Speed            : 144400000
+
+        ServiceName      : vwifimp
+        MACAddress       : 02:13:EF:F3:6F:F5
+        AdapterType      : Ethernet 802.3
+        DeviceID         : 17
+        Name             : Microsoft Wi-Fi Direct Virtual Adapter #2
+        NetworkAddresses : 
+        Speed            : 9223372036854775807
+    #>
     param([string]$ComputerName = $env:COMPUTERNAME)
     Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter |
     Where-Object { $_.Name -match 'wi-fi|wireless' }
@@ -1524,33 +1528,43 @@ function New-CustomViewsForTheSexySixEventIds {
 }
 
 filter Read-WinEvent {
-        $WinEvent = [ordered]@{} 
-        $XmlData = [xml]$_.ToXml()
-        $SystemData = $XmlData.Event.System
-        $SystemData | 
-        Get-Member -MemberType Properties | 
-        Select-Object -ExpandProperty Name |
-        ForEach-Object {
-            $Field = $_
-            if ($Field -eq 'TimeCreated') {
-                $WinEvent.$Field = Get-Date -Format 'yyyy-MM-dd hh:mm:ss' $SystemData[$Field].SystemTime
-            } elseif ($SystemData[$Field].'#text') {
-                $WinEvent.$Field = $SystemData[$Field].'#text'
-            } else {
-                $SystemData[$Field]  | 
-                Get-Member -MemberType Properties | 
-                Select-Object -ExpandProperty Name |
-                ForEach-Object { 
-                    $WinEvent.$Field = @{}
-                    $WinEvent.$Field.$_ = $SystemData[$Field].$_
-                }
+    <#
+        .EXAMPLE
+        Get-WinEvent -FilterHashTable @{LogName="Security";Id=4625} | Read-WinEvent | Select-Object -Property TimeCreated,Hostname,TargetUserName,LogonType | Format-Table -AutoSize
+        TimeCreated          TargetUserName LogonType
+        -----------          -------------- ---------
+        9/12/2021 8:23:27 AM Victor         2        
+        9/12/2021 8:23:27 AM Victor         2        
+        9/12/2021 7:49:37 AM Victor         2        
+        9/12/2021 7:49:37 AM Victor         2
+    #>
+    $WinEvent = [ordered]@{} 
+    $XmlData = [xml]$_.ToXml()
+    $SystemData = $XmlData.Event.System
+    $SystemData | 
+    Get-Member -MemberType Properties | 
+    Select-Object -ExpandProperty Name |
+    ForEach-Object {
+        $Field = $_
+        if ($Field -eq 'TimeCreated') {
+            $WinEvent.$Field = Get-Date -Format 'yyyy-MM-dd hh:mm:ss' $SystemData[$Field].SystemTime
+        } elseif ($SystemData[$Field].'#text') {
+            $WinEvent.$Field = $SystemData[$Field].'#text'
+        } else {
+            $SystemData[$Field]  | 
+            Get-Member -MemberType Properties | 
+            Select-Object -ExpandProperty Name |
+            ForEach-Object { 
+                $WinEvent.$Field = @{}
+                $WinEvent.$Field.$_ = $SystemData[$Field].$_
             }
         }
-        $XmlData.Event.EventData.Data |
-        ForEach-Object { 
-            $WinEvent.$($_.Name) = $_.'#text'
-        }
-        return New-Object -TypeName PSObject -Property $WinEvent
+    }
+    $XmlData.Event.EventData.Data |
+    ForEach-Object { 
+        $WinEvent.$($_.Name) = $_.'#text'
+    }
+    return New-Object -TypeName PSObject -Property $WinEvent
 }
 
 function Remove-App {
