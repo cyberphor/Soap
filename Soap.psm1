@@ -43,7 +43,6 @@ function ConvertTo-IpAddress {
     return $IpAddress
 }
 
-
 function Disable-StaleAdAccounts {
     Import-Module ActiveDirectory
     $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format) to Scrub'
