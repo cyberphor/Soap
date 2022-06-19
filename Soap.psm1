@@ -1276,6 +1276,11 @@ function Get-WordWheelQuery {
     }
 }
 
+function Install-RSAT {
+    Get-WindowsCapability -Name RSAT* -Online | 
+    Add-WindowsCapability -Online
+}
+
 function Install-Sysmon {
     $Service = 'Sysmon'
     $OSArchitecture = (Get-WmiObject Win32_OperatingSystem).OSArchitecture
