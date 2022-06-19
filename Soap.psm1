@@ -1412,7 +1412,6 @@ function New-AdForest {
         [Parameter(Mandatory)][string]$DomainName,
         [securestring]$SafeModeAdministratorPassword = $(ConvertTo-SecureString -AsPlainText -Force "1qaz2wsx!QAZ@WSX")
     )
-
     Install-WindowsFeature DNS, AD-Domain-Services -IncludeManagementTools
     $Parameters = @{
         DomainName                    = $DomainName
@@ -1577,17 +1576,14 @@ function New-GpoWallpaper {
         [Parameter(Mandatory)]$InputFile,
         [Parameter(Mandatory)]$Server
     )
-
     # create a SMB share on the server
     $Session = New-PSSession -ComputerName $Server
     Invoke-Command -Session $Session -ScriptBlock {
         New-Item -ItemType Directory -Path "C:\Wallpaper"
         New-SmbShare -Name "Wallpaper" -Path "C:\Wallpaper" -FullAccess "Administrators" -ReadAccess "Everyone"
     }
-
     # copy the wallpaper to the SMB share
     Copy-Item -ToSession $Session -Path $InputFile -Destination "C:\Wallpaper\Wallpaper.jpg"
-
     # create the GPO 
     $WallpaperPath = "\\$Server\Wallpaper\Wallpaper.jpg"
     $Key = "HKCU\Software\Microsoft\Windows\CurrentVersion\Policies\System"
