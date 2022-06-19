@@ -1414,8 +1414,8 @@ function New-AdForest {
     )
     Install-WindowsFeature DNS, AD-Domain-Services -IncludeManagementTools
     $Parameters = @{
-        DomainName                    = $DomainName
         InstallDns                    = $True
+        DomainName                    = $DomainName
         SafeModeAdministratorPassword = $SafeModeAdministratorPassword
         NoRebootOnCompletion          = $True
         Force                         = $True
