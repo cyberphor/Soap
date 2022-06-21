@@ -1,4 +1,32 @@
 function Block-Traffic {
+    <#
+        .SYNOPSIS
+        Blocks network traffic destined to the provided IP address and/or port. 
+
+        .DESCRIPTION
+        Adds a rule to the local Windows Firewall policy so network traffic destined to the provided IP address and/or port is blocked.
+
+        .PARAMETER Protocol
+        Specifies the protocol to block.
+
+        .PARAMETER IpAddress
+        Specifies the IP address to block traffic.
+
+        .PARAMETER Port
+        Specifies the port to block traffic.
+
+        .INPUTS
+        None. You cannot pipe objects to this function.
+
+        .OUTPUTS
+        None. 
+
+        .EXAMPLE
+        PS> Block-Traffic -Protocol UDP -IpAddress 8.8.8.8 -Port 53
+
+        .LINK
+        https://github.com/cyberphor/Soap
+    #>
     Param(
         [ValidateSet("Any","TCP","UDP","ICMPv4","ICMPv6")][string]$Protocol = "Any",
         [Parameter(Mandatory)][ipaddress]$IpAddress,
@@ -180,12 +208,6 @@ function Find-WirelessComputers {
 }
 
 function Format-Color {
-    Param(
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline)]$Input,
-        [Parameter(Mandatory = $true, Position = 1)][string]$Value,
-        [Parameter(Mandatory = $true, Position = 2)][string]$BackgroundColor,
-        [Parameter(Mandatory = $true, Position = 3)][string]$ForegroundColor
-    )
     <#
         .SYNOPSIS
         Hightlights strings of text if they contain a specified value. 
@@ -212,7 +234,12 @@ function Format-Color {
         https://www.bgreco.net/powershell/format-color/
         https://www.github.com/cyberphor/Soap
     #>
-    
+    Param(
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline)]$Input,
+        [Parameter(Mandatory = $true, Position = 1)][string]$Value,
+        [Parameter(Mandatory = $true, Position = 2)][string]$BackgroundColor,
+        [Parameter(Mandatory = $true, Position = 3)][string]$ForegroundColor
+    )
     $Lines = ($Input | Format-Table -AutoSize | Out-String) -replace "`r", "" -split "`n"
     foreach ($Line in $Lines) {
     	foreach ($Pattern in $Value) { 
@@ -221,7 +248,7 @@ function Format-Color {
 
             if ($LineMatchesValue) { Write-Host $Line -BackgroundColor $BackgroundColor -ForegroundColor $ForegroundColor } 
             else { Write-Host $Line }
-	}
+	    }
     }
 }
 
@@ -687,7 +714,6 @@ function Get-GitHubRepo {
         Author: Victor Fernandez III
         Creation Date: Saturday, January 25, 2020
     #>
-
     Param([Parameter(Mandatory=$true)][string]$From)
     try {
         Write-Output "`n [+] $From's Github repositories: "
@@ -728,8 +754,7 @@ function Get-GitHubRepo {
 }
 
 function Get-IpAddressRange {
-    param([Parameter(Mandatory)][string[]]$Network)
-        <#
+    <#
         .SYNOPSIS
         Given a network ID in CIDR notation, returns an array of IPv4 address strings.
 
@@ -770,7 +795,7 @@ function Get-IpAddressRange {
         https://stackoverflow.com/questions/28460208/what-is-the-idiomatic-way-to-slice-an-array-relative-to-both-of-its-ends
         https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/converting-binary-data-to-ip-address-and-vice-versa
     #>
-
+    Param([Parameter(Mandatory)][string[]]$Network)
     $IpAddressRange = @()
     $Network |
     foreach {
@@ -802,20 +827,19 @@ function Get-IpAddressRange {
 
 function Get-LocalAdministrators {
     <#
-    .EXAMPLE
-    Get-LocalAdministrators
-    Name         
-    ----         
-    Administrator
-    Cristal      
-    Victor 
+        .EXAMPLE
+        Get-LocalAdministrators
+        Name         
+        ----         
+        Administrator
+        Cristal      
+        Victor 
 
-    .EXAMPLE
-    $Computers = (Get-AdComputer -Filter *).Name
-    Invoke-Command -ComputerName $Computers -ScriptBlock ${function:Get-LocalAdministrators} |
-    Select-Object Name, PsComputerName
+        .EXAMPLE
+        $Computers = (Get-AdComputer -Filter *).Name
+        Invoke-Command -ComputerName $Computers -ScriptBlock ${function:Get-LocalAdministrators} |
+        Select-Object Name, PsComputerName
     #>
-    
     (net localgroup administrators | Out-String).Split([Environment]::NewLine, [StringSplitOptions]::RemoveEmptyEntries) |
     Select-Object -Skip 4 |
     Select-String -Pattern "The command completed successfully." -NotMatch |
@@ -954,8 +978,7 @@ function Get-ProcessCreationReport {
         Also, consider reading this:
         - https://myaccount.google.com/lesssecureapps
     #>
-
-    param(
+    Param(
         [Parameter(Mandatory)][string]$BlacklistFile,
         [Parameter(Mandatory)][string]$EmailServer,
         [Parameter(Mandatory)][int]$EmailServerPort,
@@ -964,7 +987,6 @@ function Get-ProcessCreationReport {
         [Parameter(Mandatory)][string]$EmailAddressDestination,
         [string]$SentItemsLog = ".\SentItems.log"           
     )
-
     $UserId = [Security.Principal.WindowsIdentity]::GetCurrent()
     $AdminId = [Security.Principal.WindowsBuiltInRole]::Administrator
     $CurrentUser = New-Object Security.Principal.WindowsPrincipal($UserId)
@@ -973,12 +995,10 @@ function Get-ProcessCreationReport {
         Write-Error "This script requires administrator privileges."
         break
     }
-
     # get the command blacklist
     # - commands in your blacklist must include the full-path
     #   - ex: C:\Windows\System32\whoami.exe
     $Blacklist = Get-Content -Path $BlacklistFile
-
     if (Test-Path $SentItemsLog) {
         # check if the script log exists
         # - save its contents to a variable
@@ -988,14 +1008,12 @@ function Get-ProcessCreationReport {
         # - this is important so you are not sending the same record multiple times
         New-Item -ItemType File -Path $SentItemsLog | Out-Null
     }
-
     # define the search criteria
     $FilterHashTable = @{
         LogName = "Security"
         Id = 4688
         StartTime = $(Get-Date).AddDays(-1)    
     }
-
     # cycle through events matching the criteria above
     # - return the first event that contains a command on the blacklist
     $Event = Get-WinEvent -FilterHashtable $FilterHashTable |
@@ -1004,7 +1022,6 @@ function Get-ProcessCreationReport {
             ($SentItems -notcontains $_.RecordId)    
         } | 
         Select-Object * -First 1
-
     # if there is an event meeting the criteria defined, send an email
     if ($Event) {
         # assign important fields to separate variables for readability
@@ -1012,7 +1029,6 @@ function Get-ProcessCreationReport {
         $Source = $Event.ProviderName
         $MachineName = $Event.MachineName
         $Message = $Event.Message
-
         # define values required to send an email via PowerShell
         $EmailClient = New-Object Net.Mail.SmtpClient($EmailServer, $EmailServerPort)
         $Subject = "Alert from $MachineName"
@@ -1083,7 +1099,6 @@ function Get-Stig {
         .LINK
         https://gist.github.com/entelechyIT
     #>
-
     Param([Parameter(Mandatory)]$Path)
     if (Test-Path $Path) {
         [xml]$XCCDFdocument = Get-Content -Path $Path
@@ -1111,26 +1126,25 @@ function Get-Stig {
 
 function Get-TrafficLights {
     <#
-    .SYNOPSIS
-        Pings a list of nodes and displays the results using 'traffic light' colors. 
+        .SYNOPSIS
+            Pings a list of nodes and displays the results using 'traffic light' colors. 
     
-    .EXAMPLE
-        Get-NetTrafficLights -File C:\Users\Victor\Desktop\routers.txt
+        .EXAMPLE
+            Get-NetTrafficLights -File C:\Users\Victor\Desktop\routers.txt
     
-    .INPUTS
-        A text-file with hostnames and/or IP addresses. 
+        .INPUTS
+            A text-file with hostnames and/or IP addresses. 
     
-    .OUTPUTS
-        Prints text to the console (host).
+        .OUTPUTS
+            Prints text to the console (host).
     
-    .LINK
-        https://github.com/cyberphor/Soap
+        .LINK
+            https://github.com/cyberphor/Soap
     
-    .NOTES
-        Author: Victor Fernandez III
-        Creation Date: Friday, December 13th, 2019
+        .NOTES
+            Author: Victor Fernandez III
+            Creation Date: Friday, December 13th, 2019
     #>
-
     Param(
         [ValidateScript({ Test-Path $_ })]
         [string]$File
@@ -1259,7 +1273,7 @@ function Get-WirelessNetAdapter {
         NetworkAddresses : 
         Speed            : 9223372036854775807
     #>
-    param([string]$ComputerName = $env:COMPUTERNAME)
+    Param([string]$ComputerName = $env:COMPUTERNAME)
     Get-WmiObject -ComputerName $ComputerName -Class Win32_NetworkAdapter |
     Where-Object { $_.Name -match 'wi-fi|wireless' }
 }
@@ -1316,13 +1330,13 @@ function Install-Sysmon {
 
 function Invoke-What2Log {
     <#
-    .LINK
-    https://theitbros.com/powershell-gui-for-scripts/
-    https://docs.microsoft.com/en-us/powershell/scripting/samples/selecting-items-from-a-list-box?view=powershell-7.2
-    https://stackoverflow.com/questions/30753369/selecting-and-highlight-a-datagridview-row-by-checking-a-checkbox
-    https://social.technet.microsoft.com/Forums/en-US/0b18703c-73ac-4e42-8e66-31739bfa452c/form-datagridview-autosizemode-resize-form-width-to-fit?forum=winserverpowershell
+        .LINK
+        https://theitbros.com/powershell-gui-for-scripts/
+        https://docs.microsoft.com/en-us/powershell/scripting/samples/selecting-items-from-a-list-box?view=powershell-7.2
+        https://stackoverflow.com/questions/30753369/selecting-and-highlight-a-datagridview-row-by-checking-a-checkbox
+        https://social.technet.microsoft.com/Forums/en-US/0b18703c-73ac-4e42-8e66-31739bfa452c/form-datagridview-autosizemode-resize-form-width-to-fit?forum=winserverpowershell
     #>
-    
+
     # define the form
     Add-Type -Assembly System.Windows.Forms
     $Form = New-Object System.Windows.Forms.Form
@@ -1657,6 +1671,16 @@ function Remove-StaleDnsRecords {
 }
 
 function Send-Alert {
+    <#
+        .SYNOPSIS
+        Sends an alert. 
+
+        .DESCRIPTION
+        When called, this function will either write to the Windows Event log, send an email, or generate a Windows balloon tip notification.
+        
+        .LINK
+        https://mcpmag.com/articles/2017/09/07/creating-a-balloon-tip-notification-using-powershell.aspx
+    #>
     [CmdletBinding(DefaultParameterSetName = 'Log')]
     Param(
         [Parameter(Mandatory, Position = 0)][ValidateSet("Balloon","Log","Email")][string]$AlertMethod,
@@ -1672,17 +1696,6 @@ function Send-Alert {
         [Parameter(ParameterSetName = "Email")][string]$EmailPassword,
         [Parameter(ParameterSetName = "Email")][string]$EmailAddressDestination
     )
-    <#
-        .SYNOPSIS
-        Sends an alert. 
-
-        .DESCRIPTION
-        When called, this function will either write to the Windows Event log, send an email, or generate a Windows balloon tip notification.
-        
-        .LINK
-        https://mcpmag.com/articles/2017/09/07/creating-a-balloon-tip-notification-using-powershell.aspx
-    #>
-
     if ($AlertMethod -eq "Balloon") {
         Add-Type -AssemblyName System.Windows.Forms
         Unregister-Event -SourceIdentifier IconClicked -ErrorAction Ignore
@@ -1723,7 +1736,6 @@ function Send-Alert {
 
 function Start-AdScrub {
     Import-Module ActiveDirectory
-
     $30DaysAgo = (Get-Date).AddDays(-30)
     $AtctsReport = Import-Csv $Report | Select Name, @{Name='TrainingDate';Expression={$_.'Date Awareness Training Completed'}}
     $AdSearchBase = ''
@@ -1735,7 +1747,6 @@ function Start-AdScrub {
         $SpaceBetweenFirstAndMiddle = $_.Substring($_.Length -2).Substring(0,1)
         if ($SpaceBetweenFirstAndMiddle) { $_ -replace ".$" }
     }
-
     $AdUserAccounts |
     Where-Object { $VipUsers -notcontains $_.Sid } |
     foreach {
@@ -1747,14 +1758,11 @@ function Start-AdScrub {
         } else {
             $FullName = ($_.SamAccountName).ToUpper()
         }
-
         $AtctsProfile = $UsersInAtctsReport | Where-Object { $_ -like "$FullName*" }
-
         if (-not $AtctsProfile) {
             $NotCompliant = $true
             $Reason = $Reason + ' ATCTS profile does not exist.'
         }
-
         if ($AtctsProfile) {
             $TrainingDate = ($AtctsReport | Where-Object { $_.Name -like "$FullName*" }).TrainingDate
             $NewDate = $TrainingDate.Split('-')[0]+ $TrainingDate.Split('-')[2] + $TrainingDate.Split('-')[1]
@@ -1764,12 +1772,10 @@ function Start-AdScrub {
                 $Reason = $Reason + ' Training has expired.'
             }
         }
-
         if ($_.LastLogonDate -le $30DaysAgo) {
             $NotCompliant = $true
             $Reason = $Reason + 'Inactive for 30 days.'
         }
-
         if ($NotCompliant) {
             Set-AdUser $_.SamAccountName -Description $Reason
             Disable-AdAccount $_.SamAccountName
@@ -1805,7 +1811,6 @@ function Start-Eradication {
         https://github.com/cyberphor/soap
         https://gist.github.com/ecapuano/d18b3b914021171da42e13e5a56cce42
     #>
-
     if ($Service) {
         $Service |
         ForEach-Object {
@@ -1904,7 +1909,6 @@ function Set-AuditPolicy {
         https://cryptome.org/2014/01/nsa-windows-event.pdf
         https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/ 
     #>
-
     Param(
         [ValidateSet('Microsoft','DISA','Malware Archaeology')]$Source,
         [switch]$EnableDnsLogging,
@@ -2281,7 +2285,7 @@ function Set-FirewallPolicy {
 }
 
 function Start-AdBackup {
-    param(
+    Param(
         [Parameter(Mandatory)][string]$ComputerName,
         [string]$Share = "Backups",
         [string]$Prefix = "AdBackup"
@@ -2309,12 +2313,12 @@ function Start-AdBackup {
 }
 
 function Start-Panic {
-    param([string]$ComputerName = 'localhost')
+    Param([string]$ComputerName = 'localhost')
     #shutdown /r /f /m ComputerName /d P:0:1 /c "Your comment"
     Stop-Computer -ComputerName $ComputerName
 }
 
 function Unblock-TrafficToIpAddress {
-    param([Parameter(Mandatory)][ipaddress]$IpAddress)
+    Param([Parameter(Mandatory)][ipaddress]$IpAddress)
     Remove-NetFirewallRule -DisplayName "Block $IpAddress"
 }
