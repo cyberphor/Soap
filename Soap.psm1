@@ -121,7 +121,27 @@ function ConvertTo-Base64 {
 }
 
 function ConvertTo-BinaryString {
-    Param([IPAddress]$IpAddress)
+    <#
+        .SYNOPSIS
+        Converts the provided IP address into binary.
+
+        .DESCRIPTION
+        Outputs a string of binary digits if the provided input is a valid IP address.
+
+        .INPUTS
+        This function accepts piped objects.
+
+        .OUTPUTS
+        System.String.
+
+        .EXAMPLE
+        PS> "8.8.8.8" | ConvertTo-BinaryString
+        1000000010000000100000001000
+
+        .LINK
+        https://github.com/cyberphor/Soap
+    #>
+    Param([parameter(Mandatory,ValueFromPipeline)][IPAddress]$IpAddress)
     $Integer = $IpAddress.Address
     $ReverseIpAddress = [IPAddress][String]$Integer
     $BinaryString = [Convert]::toString($ReverseIpAddress.Address,2)
@@ -129,11 +149,32 @@ function ConvertTo-BinaryString {
 }
 
 function ConvertTo-IpAddress {
-    Param($BinaryString)
+    <#
+        .SYNOPSIS
+        Converts the provided string into an IP address.
+
+        .DESCRIPTION
+        Outputs an IP address if the provided input is a string of binary digits. 
+
+        .INPUTS
+        This function accepts piped objects.
+
+        .OUTPUTS
+        System.String.
+
+        .EXAMPLE
+        PS> ConvertTo-IpAddress -BinaryString 1000000010000000100000001000
+        8.8.8.8
+
+        .LINK
+        https://github.com/cyberphor/Soap
+    #>
+    Param([parameter(Mandatory,ValueFromPipeline)]$BinaryString)
     $Integer = [System.Convert]::ToInt64($BinaryString,2).ToString()
     $IpAddress = ([System.Net.IPAddress]$Integer).IpAddressToString
     return $IpAddress
 }
+
 
 function Disable-StaleAdAccounts {
     Import-Module ActiveDirectory
