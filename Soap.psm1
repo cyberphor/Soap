@@ -169,7 +169,7 @@ function ConvertTo-IpAddress {
         .LINK
         https://github.com/cyberphor/Soap
     #>
-    Param([parameter(Mandatory,ValueFromPipeline)]$BinaryString)
+    Param([parameter(Mandatory,ValueFromPipeline)][string]$BinaryString)
     $Integer = [System.Convert]::ToInt64($BinaryString,2).ToString()
     $IpAddress = ([System.Net.IPAddress]$Integer).IpAddressToString
     return $IpAddress
