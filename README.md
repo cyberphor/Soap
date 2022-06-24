@@ -12,8 +12,6 @@ Block-Traffic
 Clear-AuditPolicy
 Disable-Firewall
 Disable-Ipv6
-Disable-StaleAdAccounts
-Disable-StaleAdComputers
 Edit-Module
 Enable-Firewall
 Enable-Ipv6
@@ -38,6 +36,7 @@ Read-WinEvent
 Set-AuditPolicy
 Start-Eradication
 Start-Heartbeat
+Start-AdAccountAudit
 ```
 
 Below is a list of functions provided by Soap, but marked for review (i.e., I'm considering putting them in a different module to keep Soap tidy and focused). 
@@ -76,14 +75,11 @@ Get-TrafficLights
 Get-WirelessNetAdapter
 Import-AdUsersFromCsv
 Install-Sysmon
-Invoke-What2Log
 New-CustomViewsForSysmon
-New-CustomViewsForTheSexySixEventIds
 Remove-App
 Send-Alert
 Set-FirewallPolicy
 Start-AdBackup
-Start-AdScrub
 Start-Panic
 Unblock-TrafficToIpAddress
 ```
