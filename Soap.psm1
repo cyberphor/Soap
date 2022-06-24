@@ -1399,38 +1399,12 @@ function Install-RSAT {
     Get-WindowsCapability -Name RSAT* -Online | 
     Add-WindowsCapability -Online
 }
-
 function Install-Sysmon {
-    $Service = 'Sysmon'
-    $OSArchitecture = (Get-WmiObject Win32_OperatingSystem).OSArchitecture
-    if ($OSArchitecture -ne '32-bit') { $Service = $Service + '64' }
-    $Installed = Get-Service | Where-Object { $_.Name -like $Service }
-    $RunStatus = $Installed.Status
-
-    if ($Installed) {
-        if ($RunStatus -ne "Running") { Start-Service -Name $Service }
-    } else {
-        $LocalFolder = "$env:ProgramData\$Service\"
-        if (Test-Path $LocalFolder) { Remove-Item -Recurse $LocalFolder }
-        else { New-Item -Type Directory $LocalFolder | Out-Null }
-
-        $Domain = (Get-WmiObject Win32_ComputerSystem).Domain
-        $AllGpoFiles = Get-ChildItem -Recurse "\\$Domain\sysvol\$Domain\Policies\"
-        $ServiceGPO = ($AllGpoFiles | Where-Object { $_.Name -eq "$Service.exe" }).DirectoryName
-        Copy-Item -Path "$ServiceGPO\$Service.exe", "$ServiceGPO\Eula.txt", "$ServiceGPO\sysmonconfig-export.xml" -Destination $LocalFolder
-    
-        if (Test-Path "$LocalFolder\$Service.exe") {
-            $ServiceArguments = '/accepteula', '-i', "$LocalFolder\sysmonconfig-export.xml"
-            Start-Process -FilePath "$LocalFolder\$Service.exe" -ArgumentList $ServiceArguments -NoNewWindow -Wait
-
-            $Binary = 'C:\Windows\System32\wevtutil.exe'
-            $Option = 'sl'
-            $LogName = 'Microsoft-Windows-Sysmon/Operational'
-            $LogPermissions = '/ca:O:BAG:SYD:(A;;0xf0007;;;SY)(A;;0x7;;;BA)(A;;0x1;;;BO)(A;;0x1;;;SO)(A;;0x1;;;S-1-5-32-573)(A;;0x1;;;S-1-5-20)'
-            $BinaryArguments = $Option, $LogName, $LogPermissions
-            Start-Process -Filepath $Binary -ArgumentList $BinaryArguments -NoNewWindow -Wait
-        }
-    }
+    Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile "Sysmon.zip"
+    Expand-Archive -Path "Sysmon.zip" -DestinationPath "C:\Program Files\Sysmon" 
+    Remove-Item -Path "Sysmon.zip" -Recurse
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml" -OutFile "C:\Program Files\Sysmon\config.xml"
+    Invoke-Expression "C:\'Program Files'\Sysmon\Sysmon64.exe -accepteula -i C:\'Program Files'\Sysmon\config.xml"
 }
 
 function Invoke-What2Log {
@@ -2418,12 +2392,14 @@ function Start-AdBackup {
 }
 
 function Start-Panic {
-    Param([string]$ComputerName = 'localhost')
-    #shutdown /r /f /m ComputerName /d P:0:1 /c "Your comment"
-    Stop-Computer -ComputerName $ComputerName
+    $DomainController = (Get-AdDomainController).Name
+    $ComputerName = (Get-AdComputer -Filter *).Name | Where-Object { $_ -ne $env:COMPUTERNAME -and $_ -ne $DomainController }
+    Invoke-Command -ComputerName $ComputerName -ScriptBlock {
+        shutdown.exe /s /t 0
+    }
 }
 
-function Unblock-TrafficToIpAddress {
-    Param([Parameter(Mandatory)][ipaddress]$IpAddress)
-    Remove-NetFirewallRule -DisplayName "Block $IpAddress"
+function Uninstall-Sysmon {
+    Invoke-Expression "C:\'Program Files'\Sysmon\Sysmon64.exe -u"
+    Remove-Item -Path "C:\Program Files\Sysmon" -Recurse -Force
 }
