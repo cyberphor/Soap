@@ -175,46 +175,6 @@ function ConvertTo-IpAddress {
     return $IpAddress
 }
 
-
-function Disable-StaleAdAccounts {
-    Import-Module ActiveDirectory
-    $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format) to Scrub'
-    # $SearchBase = 'OU=Users,OU=HQ,OU=EvilCorp,DC=sky,DC=net'
-    $30_Days_Ago = (Get-Date).AddDays(-30)
-    $Filter = { LastLogonDate -le $30_Days_Ago }
-    $DomainRoot = $(Get-ADDomain).DistinguishedName
-    $DisabledUsersOu = "OU=Disabled Users," + $DomainRoot
-    $DisabledUsersOuExists = (Get-ADOrganizationalUnit -Filter *).DistinguishedName -eq $DisabledUsersOu
-    if (-not ($DisabledUsersOuExists)) {
-        New-ADOrganizationalUnit -Name "Disabled Users" -Path $DomainRoot
-    }
-    $VipUsers = (Get-ADGroup -Identity 'VIP Users').Sid
-    Get-ADUser -Filter $Filter -SearchBase $SearchBase -Properties LastLogonDate,Description | 
-    Where-Object { $VipUsers -notcontains $_.Sid } |
-    foreach {
-        if ($_.Enabled) {
-            Set-ADUser $_.SamAccountName -Description $('Last Login - ' + $_.LastLogonDate)
-            Disable-ADAccount $_.SamAccountName
-        }
-        Move-ADObject -Identity $_.DistinguishedName -TargetPath $DisabledUsersOu
-    } 
-}
-
-function Disable-StaleAdComputers {
-    Import-Module ActiveDirectory
-    $30_Days_Ago = (Get-Date).AddDays(-30)
-    $Filter = { LastLogonDate -le $30_Days_Ago }
-    $SearchBase = Read-Host -Prompt 'Distinguished Name (OU Path in LDAP Format)'
-    Get-ADComputer -Filter $Filter -Properties LastLogonDate | 
-    foreach {
-        if ($_.Enabled) {
-            Set-ADComputer $_.SamAccountName -Description $('Last Login - ' + $_.LastLogonDate)
-            Disable-ADAccount $_.SamAccountName
-        }
-    } 
-    # EXAMPLE OU PATH: OU=Computers,OU=HQ,OU=EvilCorp,DC=vanilla,DC=sky,DC=net
-}
-
 function Disable-Firewall {
     Set-NetFirewallProfile -Name domain,public,private -Enabled False
 } 
@@ -1395,109 +1355,42 @@ function Get-WordWheelQuery {
     }
 }
 
+function Import-AdUsersFromCsv {
+    $Password = ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force
+    Import-Csv -Path .\users.csv |
+    ForEach-Object {
+        $Name = $_.LastName + ', ' + $_.FirstName
+        $SamAccountName = ($_.FirstName + '.' + $_.LastName).ToLower()
+        $UserPrincipalName = $SamAccountName + '@' + (Get-AdDomain).Forest
+        $Description = $_.Description
+        $ExpirationDate = Get-Date -Date 'October 31 2022'
+        New-AdUser `
+            -Name $Name `
+            -DisplayName $Name `
+            -GivenName $_.FirstName `
+            -Surname $_.LastName `
+            -SamAccountName $SamAccountName `
+            -UserPrincipalName $UserPrincipalName `
+            -Description $Description `
+            -ChangePasswordAtLogon $true `
+            -AccountExpirationDate $ExpirationDate `
+            -Enabled $true `
+            -Path "OU=Users,$(Get-ADDomain).DistinguishedName" `
+            -AccountPassword $Password
+    }
+}
+
 function Install-RSAT {
     Get-WindowsCapability -Name RSAT* -Online | 
     Add-WindowsCapability -Online
 }
+
 function Install-Sysmon {
     Invoke-WebRequest -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile "Sysmon.zip"
     Expand-Archive -Path "Sysmon.zip" -DestinationPath "C:\Program Files\Sysmon" 
     Remove-Item -Path "Sysmon.zip" -Recurse
     Invoke-WebRequest -Uri "https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/sysmonconfig-export.xml" -OutFile "C:\Program Files\Sysmon\config.xml"
     Invoke-Expression "C:\'Program Files'\Sysmon\Sysmon64.exe -accepteula -i C:\'Program Files'\Sysmon\config.xml"
-}
-
-function Invoke-What2Log {
-    <#
-        .LINK
-        https://theitbros.com/powershell-gui-for-scripts/
-        https://docs.microsoft.com/en-us/powershell/scripting/samples/selecting-items-from-a-list-box?view=powershell-7.2
-        https://stackoverflow.com/questions/30753369/selecting-and-highlight-a-datagridview-row-by-checking-a-checkbox
-        https://social.technet.microsoft.com/Forums/en-US/0b18703c-73ac-4e42-8e66-31739bfa452c/form-datagridview-autosizemode-resize-form-width-to-fit?forum=winserverpowershell
-    #>
-
-    # define the form
-    Add-Type -Assembly System.Windows.Forms
-    $Form = New-Object System.Windows.Forms.Form
-    $Form.Text = "What2Log"
-    $Form.Width = 600
-    $Form.Height = 400
-    $Form.AutoSize = $true
-
-    # define a grid element
-    $ElementDataGridView = New-Object System.Windows.Forms.DataGridView
-    $ElementDataGridView.AutoSize = $true
-    $ElementDataGridView.Location = New-Object System.Drawing.Point(10,10)
-    $ElementDataGridView.AllowUserToAddRows = $false
-
-    # define the Subcategory column
-    $ColumnSubcategory = New-Object System.Windows.Forms.DataGridViewTextBoxColumn
-    $ColumnSubcategory.Name = "Logon/Logoff"
-    $ColumnSubcategory.HeaderCell.Style.Alignment = "MiddleCenter"
-    $ColumnSubcategory.ReadOnly = $true
-    $ColumnSubcategory.AutoSizeMode = "Fill"
-    $ElementDataGridView.Columns.Add($ColumnSubcategory) | Out-Null
-
-    # define the Success and Failure columns
-    "Success",
-    "Failure" |
-    ForEach-Object {
-        $Column = New-Object System.Windows.Forms.DataGridViewCheckBoxColumn
-        $Column.Name = $_
-        $Column.HeaderCell.Style.Alignment = "MiddleCenter"
-        $ElementDataGridView.Columns.Add($Column) | Out-Null
-    }
-
-    "Logon",
-    "Logoff",
-    "Account Lockout",
-    "IPsec Main Mode",
-    "IPsec Quick Mode",
-    "IPsec Extended Mode",
-    "Special Logon",
-    "Other Logon/Logoff Events",
-    "Network Policy Server",
-    "User/Device Claims",
-    "Group Membership" |
-    ForEach-Object {
-        $ElementDataGridView.Rows.Add($_) | Out-Null
-    }
-
-    $Form.Controls.Add($ElementDataGridView)
-
-    # define an 'Apply' button
-    $ButtonApply = New-Object System.Windows.Forms.Button
-    $ButtonApply.Text = "Apply"
-    $ButtonApply.AutoSize = $true
-    $ButtonApply.Location = New-Object System.Drawing.Size(510,390)
-    $ButtonApplyClick = {
-        Clear-AuditPolicy 
-        for ($i = 0; $i -lt $ElementDataGridView.RowCount; $i++) {
-            if ($ElementDataGridView.Rows[$i].Cells["Success"].Value -eq $true) {
-                $Subcategory = $ElementDataGridView.Rows[$i].Cells[0].Value
-                auditpol.exe /set /subcategory:"$Subcategory" /success:enable
-            }
-        }
-        $Form.Close()
-    }
-    $ButtonApply.Add_Click($ButtonApplyClick)
-
-    # define an 'Cancel' button
-    $ButtonCancel = New-Object System.Windows.Forms.Button
-    $ButtonCancel.Text = "Cancel"
-    $ButtonCancel.AutoSize = $true
-    $ButtonCancel.Location = New-Object System.Drawing.Size(590,390)
-    $ButtonCancelClick = { 
-        $Form.Close() 
-    }
-    $ButtonCancel.Add_Click($ButtonCancelClick)
-
-    # add the buttons to the checklist
-    $Form.Controls.Add($ButtonApply)
-    $Form.Controls.Add($ButtonCancel)
-
-    # show the form
-    $Form.ShowDialog()
 }
 
 function New-AdForest {
@@ -1557,110 +1450,6 @@ function New-CustomViewsForSysmon {
             $CustomViewConfig = '<ViewerConfig><QueryConfig><QueryParams><Simple><Channel>Microsoft-Windows-Sysmon/Operational</Channel><EventId>' + $_.Key + '</EventId><RelativeTimeInfo>0</RelativeTimeInfo><BySource>False</BySource></Simple></QueryParams><QueryNode><Name>' + $_.Value + '</Name><QueryList><Query Id="0" Path="Microsoft-Windows-Sysmon/Operational"><Select Path="Microsoft-Windows-Sysmon/Operational">*[System[(EventID=' + $_.Key + ')]]</Select></Query></QueryList></QueryNode></QueryConfig><ResultsConfig><Columns><Column Name="Level" Type="System.String" Path="Event/System/Level" Visible="">217</Column><Column Name="Keywords" Type="System.String" Path="Event/System/Keywords">70</Column><Column Name="Date and Time" Type="System.DateTime" Path="Event/System/TimeCreated/@SystemTime" Visible="">267</Column><Column Name="Source" Type="System.String" Path="Event/System/Provider/@Name" Visible="">177</Column><Column Name="Event ID" Type="System.UInt32" Path="Event/System/EventID" Visible="">177</Column><Column Name="Task Category" Type="System.String" Path="Event/System/Task" Visible="">181</Column><Column Name="User" Type="System.String" Path="Event/System/Security/@UserID">50</Column><Column Name="Operational Code" Type="System.String" Path="Event/System/Opcode">110</Column><Column Name="Log" Type="System.String" Path="Event/System/Channel">80</Column><Column Name="Computer" Type="System.String" Path="Event/System/Computer">170</Column><Column Name="Process ID" Type="System.UInt32" Path="Event/System/Execution/@ProcessID">70</Column><Column Name="Thread ID" Type="System.UInt32" Path="Event/System/Execution/@ThreadID">70</Column><Column Name="Processor ID" Type="System.UInt32" Path="Event/System/Execution/@ProcessorID">90</Column><Column Name="Session ID" Type="System.UInt32" Path="Event/System/Execution/@SessionID">70</Column><Column Name="Kernel Time" Type="System.UInt32" Path="Event/System/Execution/@KernelTime">80</Column><Column Name="User Time" Type="System.UInt32" Path="Event/System/Execution/@UserTime">70</Column><Column Name="Processor Time" Type="System.UInt32" Path="Event/System/Execution/@ProcessorTime">100</Column><Column Name="Correlation Id" Type="System.Guid" Path="Event/System/Correlation/@ActivityID">85</Column><Column Name="Relative Correlation Id" Type="System.Guid" Path="Event/System/Correlation/@RelatedActivityID">140</Column><Column Name="Event Source Name" Type="System.String" Path="Event/System/Provider/@EventSourceName">140</Column></Columns></ResultsConfig></ViewerConfig>'
             Add-Content -Path $CustomViewFilePath -Value $CustomViewConfig
         } 
-    }
-}
-
-function New-CustomViewsForTheSexySixEventIds {
-    <#
-        .SYNOPSIS
-        Creates custom views for the following Event IDs: 4688, 4624, 5140, 5156, 4697, and 4663.
-
-        .DESCRIPTION
-        Open "Event Viewer" to see and use the custom views built by this function.
-
-        .INPUTS
-        None.
-
-        .OUTPUTS
-        Six custom views in the "C:\ProgramData\Microsoft\Event Viewer\Views" directory.
-
-        .LINK
-        https://www.slideshare.net/Hackerhurricane/finding-attacks-with-these-6-events
-    #>
-
-    # define where the custom views will be housed
-    $Directory = "C:\ProgramData\Microsoft\Event Viewer\Views\Sexy-Six-Event-IDs"
-
-    # create the custom views directory if not already done
-    if (-not (Test-Path -Path $Directory)) {
-        New-Item -ItemType Directory -Path $Directory | Out-Null
-    }
-
-    # create a hashtable for event IDs and their names
-    $Events = @{
-        "4688" = "Process-Creation"
-        "4624" = "Successful-Logons"
-        "5140" = "Shares-Accessed"
-        "5156" = "Network-Connections"
-        "4697" = "New-Services"
-        "4663" = "File-Access"
-    }
-
-    # for every event
-    $Events.GetEnumerator() | 
-    ForEach-Object {
-        # define the filepath to the custom view
-        $FilePath = "$Directory\" + $_.Value + ".xml"
-
-        # if the filepath does not exist
-        if (-not (Test-Path -Path $FilePath)) {
-            # define the custom view's variables
-            $ChannelPath = "Security"
-            $EventId = $_.Key
-            $ViewName = $_.Value
-
-            # define the custom view using the variables above
-            $CustomView = @"
-                <ViewerConfig>
-                    <QueryConfig>
-                        <QueryParams>
-                            <Simple>
-                                <Channel>$ChannelPath</Channel>
-                                <EventId>$EventId</EventId>
-                                <RelativeTimeInfo>0</RelativeTimeInfo>
-                                <BySource>False</BySource>
-                            </Simple>
-                        </QueryParams>
-                        <QueryNode>
-                            <Name>$ViewName</Name>
-                            <QueryList>
-                                <Query Id="0" Path="$ChannelPath">
-                                    <Select Path="$ChannelPath">
-                                    *[System[(EventID=$EventId)]]
-                                    </Select>
-                                </Query>
-                            </QueryList>
-                        </QueryNode>
-                    </QueryConfig>
-                    <ResultsConfig>
-                        <Columns>
-                            <Column Name="Level" Type="System.String" Path="Event/System/Level" Visible="">217</Column>
-                            <Column Name="Keywords" Type="System.String" Path="Event/System/Keywords">70</Column>
-                            <Column Name="Date and Time" Type="System.DateTime" Path="Event/System/TimeCreated/@SystemTime" Visible="">267</Column>
-                            <Column Name="Source" Type="System.String" Path="Event/System/Provider/@Name" Visible="">177</Column>
-                            <Column Name="Event ID" Type="System.UInt32" Path="Event/System/EventID" Visible="">177</Column>
-                            <Column Name="Task Category" Type="System.String" Path="Event/System/Task" Visible="">181</Column>
-                            <Column Name="User" Type="System.String" Path="Event/System/Security/@UserID">50</Column>
-                            <Column Name="Operational Code" Type="System.String" Path="Event/System/Opcode">110</Column>
-                            <Column Name="Log" Type="System.String" Path="Event/System/Channel">80</Column>
-                            <Column Name="Computer" Type="System.String" Path="Event/System/Computer">170</Column>
-                            <Column Name="Process ID" Type="System.UInt32" Path="Event/System/Execution/@ProcessID">70</Column>
-                            <Column Name="Thread ID" Type="System.UInt32" Path="Event/System/Execution/@ThreadID">70</Column>
-                            <Column Name="Processor ID" Type="System.UInt32" Path="Event/System/Execution/@ProcessorID">90</Column>
-                            <Column Name="Session ID" Type="System.UInt32" Path="Event/System/Execution/@SessionID">70</Column>
-                            <Column Name="Kernel Time" Type="System.UInt32" Path="Event/System/Execution/@KernelTime">80</Column>
-                            <Column Name="User Time" Type="System.UInt32" Path="Event/System/Execution/@UserTime">70</Column>
-                            <Column Name="Processor Time" Type="System.UInt32" Path="Event/System/Execution/@ProcessorTime">100</Column>
-                            <Column Name="Correlation Id" Type="System.Guid" Path="Event/System/Correlation/@ActivityID">85</Column>
-                            <Column Name="Relative Correlation Id" Type="System.Guid" Path="Event/System/Correlation/@RelatedActivityID">140</Column>
-                            <Column Name="Event Source Name" Type="System.String" Path="Event/System/Provider/@EventSourceName">140</Column>
-                        </Columns>
-                    </ResultsConfig>
-                </ViewerConfig>
-"@
-            # add the custom view data to the filepath (creating it at the same time)
-            Add-Content -Value $CustomView -Path $FilePath
-        }
     }
 }
 
@@ -1812,55 +1601,39 @@ function Send-Alert {
     }
 }
 
-function Start-AdScrub {
-    Import-Module ActiveDirectory
-    $30DaysAgo = (Get-Date).AddDays(-30)
-    $AtctsReport = Import-Csv $Report | Select Name, @{Name='TrainingDate';Expression={$_.'Date Awareness Training Completed'}}
-    $AdSearchBase = ''
-    $DisabledUsersOu = '' + $AdSearchBase
-    $AdUserAccounts = Get-AdUser -Filter * -SearchBase $AdSearchBase -Properties LastLogonDate
-    $VipUsers = $(Get-AdGroup -Identity 'VIP Users').Sid
-    $UsersInAtctsReport = $AtctsReport.Name.ToUpper() |
-    foreach {
-        $SpaceBetweenFirstAndMiddle = $_.Substring($_.Length -2).Substring(0,1)
-        if ($SpaceBetweenFirstAndMiddle) { $_ -replace ".$" }
-    }
-    $AdUserAccounts |
-    Where-Object { $VipUsers -notcontains $_.Sid } |
-    foreach {
-        $NotCompliant = $false
-        $Reason = 'Disabled:'
+function Start-AdAccountAudit {
+   <#
+        .SYNOPSIS
+        Disables inactive domain accounts. 
+        
+        .DESCRIPTION
+        Disables domain accounts that have been inactive for 45 days and moves them into a container called "Disabled." This function will create a Active Directory container called "Disabled" if it does not exist.  
 
-        if ($_.Surname -and $_.GivenName) {
-            $FullName = ($_.Surname + ', ' + $_.GivenName).ToUpper()
-        } else {
-            $FullName = ($_.SamAccountName).ToUpper()
-        }
-        $AtctsProfile = $UsersInAtctsReport | Where-Object { $_ -like "$FullName*" }
-        if (-not $AtctsProfile) {
-            $NotCompliant = $true
-            $Reason = $Reason + ' ATCTS profile does not exist.'
-        }
-        if ($AtctsProfile) {
-            $TrainingDate = ($AtctsReport | Where-Object { $_.Name -like "$FullName*" }).TrainingDate
-            $NewDate = $TrainingDate.Split('-')[0]+ $TrainingDate.Split('-')[2] + $TrainingDate.Split('-')[1]
-            $ExpirationDate = (Get-Date $NewDate).AddYears(1).ToString('yyyy-MM-dd')
-            if ($ExpirationDate -lt $(Get-Date -Format 'yyyy-MM-dd')){
-                $NotCompliant = $true
-                $Reason = $Reason + ' Training has expired.'
-            }
-        }
-        if ($_.LastLogonDate -le $30DaysAgo) {
-            $NotCompliant = $true
-            $Reason = $Reason + 'Inactive for 30 days.'
-        }
-        if ($NotCompliant) {
-            Set-AdUser $_.SamAccountName -Description $Reason
-            Disable-AdAccount $_.SamAccountName
-            Move-AdObject -Identity $_.DistinguishedName -TargetPath $DisabledUsersOu
-            Write-Output "[+] $($_.Name) - $Reason"
-        }
+        .INPUTS
+        None. You cannot pipe objects to this function.
+
+        .OUTPUTS
+        None. 
+
+        .EXAMPLE
+        PS> Start-AdAccountAudit
+
+        .LINK
+        https://github.com/cyberphor/Soap
+    #>
+    $Domain = (Get-ADDomain).DistinguishedName
+    $DisabledContainer = "OU=Disabled,$Domain"
+    $DisabledContainerDoesNotExist = [bool](Get-ADOrganizationalUnit -Identity $DisabledContainer) -eq $false
+    if ($DisabledContainerDoesNotExist) {
+        New-ADOrganizationalUnit -Name "Disabled" -Path $Domain
     }
+
+    # search for accounts w/lastlogondate beyond 45 days, disable them, and then move them to a "Disabled" container
+    Get-ADUser -Filter { LastLogonDate -le (Get-Date).AddDays(-45) } | 
+    ForEach-Object {
+        Disable-ADAccount $_.SamAccountName
+        Move-ADObject -Identity $_.DistinguishedName -TargetPath $DisabledContainer
+    } 
 }
 
 function Start-Eradication {
@@ -1937,31 +1710,6 @@ function Start-Heartbeat {
 
     $Timestamp = (Get-Date).ToString('yyyy-MM-dd hh:mm:ss')
     Write-Host "[$Timestamp] Time has expired."
-}
-
-function Import-AdUsersFromCsv {
-    $Password = ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force
-    Import-Csv -Path .\users.csv |
-    ForEach-Object {
-        $Name = $_.LastName + ', ' + $_.FirstName
-        $SamAccountName = ($_.FirstName + '.' + $_.LastName).ToLower()
-        $UserPrincipalName = $SamAccountName + '@evilcorp.local'
-        $Description = $_.Description
-        $ExpirationDate = Get-Date -Date 'October 31 2022'
-        New-AdUser `
-            -Name $Name `
-            -DisplayName $Name `
-            -GivenName $_.FirstName `
-            -Surname $_.LastName `
-            -SamAccountName $SamAccountName `
-            -UserPrincipalName $UserPrincipalName `
-            -Description $Description `
-            -ChangePasswordAtLogon $true `
-            -AccountExpirationDate $ExpirationDate `
-            -Enabled $true `
-            -Path 'OU=Users,OU=evilcorp,DC=local' `
-            -AccountPassword $Password
-    }
 }
 
 function Set-AuditPolicy {
