@@ -1741,11 +1741,10 @@ function Remove-StaleDnsRecords {
         .LINK
         https://adamtheautomator.com/powershell-dns/
     #>
-    Import-Module DnsServer
-    $Domain = Read-Host -Prompt 'Domain Name'
-    $30_Days_Ago = (Get-Date).AddDays(-30)
+    $Domain = (Get-AdDomain).Forest
+    $30DaysAgo = (Get-Date).AddDays(-30)
     Get-DnsServerResourceRecord -Zone $Domain -RRType A | 
-    Where-Object { $_.TimeStamp -le $30_Days_Ago } | 
+    Where-Object { $_.TimeStamp -le $30DaysAgo } | 
     Remove-DnsServerResourceRecord -ZoneName $Domain -Force
 }
 
