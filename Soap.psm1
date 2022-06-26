@@ -1393,6 +1393,28 @@ function Install-Sysmon {
     Invoke-Expression "C:\'Program Files'\Sysmon\Sysmon64.exe -accepteula -i C:\'Program Files'\Sysmon\config.xml"
 }
 
+function New-AdDomainAdmin {
+    Param(
+        [Param(Mandatory)][string]$FirstName,
+        [Param(Mandatory)][string]$LastName,
+        [Param(Mandatory)][securestring]$Password = (ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force)
+    )
+    $Name = "$LastName, $FirstName (DA)"
+    $SamAccountName = ("$FirstName.$LastName.da").ToLower()
+    $AccountExpirationDate = (Get-Date).AddYears(1)
+    New-ADUser `
+        -GivenName $FirstName `
+        -Surname $LastName `
+        -Name $Name `
+        -DisplayName $Name `
+        -SamAccountName $SamAccountName `
+        -AccountPassword $Password `
+        -AccountExpirationDate $AccountExpirationDate `
+        -ChangePasswordAtLogon $true `
+        -Enabled $true
+    Add-ADGroupMember -Identity "Domain Admins" -Members $SamAccountName
+}
+
 function New-AdForest {
     Param(
         [Parameter(Mandatory)][string]$DomainName,
