@@ -1395,9 +1395,9 @@ function Install-Sysmon {
 
 function New-AdDomainAdmin {
     Param(
-        [Param(Mandatory)][string]$FirstName,
-        [Param(Mandatory)][string]$LastName,
-        [Param(Mandatory)][securestring]$Password = (ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force)
+        [Parameter(Mandatory)][string]$FirstName,
+        [Parameter(Mandatory)][string]$LastName,
+        [securestring]$Password = $(ConvertTo-SecureString -String '1qaz2wsx!QAZ@WSX' -AsPlainText -Force)
     )
     $Name = "$LastName, $FirstName (DA)"
     $SamAccountName = ("$FirstName.$LastName.da").ToLower()
