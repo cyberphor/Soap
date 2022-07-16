@@ -360,85 +360,11 @@ function Find-IpAddressInWindowsEventLog {
     Select-Object TimeCreated, EventRecordId, SourceAddress, DestAddress
 }
 
-function Find-WirelessComputers {
+function Find-WirelessComputer {
     $Computers = Get-AdComputer -Filter * | Select-Object -ExpandProperty DnsHostname
     Invoke-Command -ComputerName $Computers -ErrorAction Ignore -ScriptBlock {
       Get-WmiObject Win32_NetworkAdapter | Where-Object { $_.Name -like '*Wireless*' }
     }
-}
-
-function Format-Color {
-    <#
-        .SYNOPSIS
-        Hightlights strings of text if they contain a specified value. 
-
-        .PARAMETER Value
-        Specifies the value to color if found. 
-        
-        .PARAMETER BackgroundColor
-        Specifies the background color to use. 
-        
-        .PARAMETER ForegroundColor
-        Specifies the foreground color to use. 
-        
-        .INPUTS
-        Format-Color accepts pipeline objects. 
-        
-        .OUTPUTS
-        Format-Color returns highlighted strings.  
-        
-        .EXAMPLE
-        Get-ChildItem | Format-Color -Value foo.txt -BackgroundColor Red -ForegroundColor White
-        
-        .LINK
-        https://www.bgreco.net/powershell/format-color/
-        https://www.github.com/cyberphor/Soap
-    #>
-    Param(
-        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline)]$Input,
-        [Parameter(Mandatory = $true, Position = 1)][string]$Value,
-        [Parameter(Mandatory = $true, Position = 2)][string]$BackgroundColor,
-        [Parameter(Mandatory = $true, Position = 3)][string]$ForegroundColor
-    )
-    $Lines = ($Input | Format-Table -AutoSize | Out-String) -replace "`r", "" -split "`n"
-    foreach ($Line in $Lines) {
-    	foreach ($Pattern in $Value) { 
-            if ($Line -match $Value) { $LineMatchesValue = $true } 
-            else { $LineMatchesValue = $false }
-
-            if ($LineMatchesValue) { Write-Host $Line -BackgroundColor $BackgroundColor -ForegroundColor $ForegroundColor } 
-            else { Write-Host $Line }
-	    }
-    }
-}
-
-function Get-App {
-    param([string]$Name)
-    $Apps = @()
-    $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-    $Apps += Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
-    return $Apps | Where-Object { $_.DisplayName -like "*$Name*"}
-}
-
-function Get-Asset {
-    param([switch]$Verbose)
-    $NetworkAdapterConfiguration = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = 'True'"
-    $IpAddress = $NetworkAdapterConfiguration.IpAddress[0]
-    $MacAddress = $NetworkAdapterConfiguration.MACAddress[0]
-    $SystemInfo = Get-ComputerInfo
-    $Asset = [pscustomobject] @{
-        "Hostname" = $env:COMPUTERNAME
-        "IpAddress" = $IpAddress
-        "MacAddress" = $MacAddress
-        "SerialNumber" = $SystemInfo.BiosSeralNumber
-        "Make" = $SystemInfo.CsManufacturer
-        "Model" = $SystemInfo.CsModel
-        "OperatingSystem" = $SystemInfo.OsName
-        "Architecture" = $SystemInfo.OsArchitecture
-        "Version" = $SystemInfo.OsVersion
-    }
-    if ($Verbose) { $Asset }
-    else { $Asset | Select-Object -Property HostName,IpAddress,MacAddress,SerialNumber}
 }
 
 function Get-AuditPolicy {
@@ -526,36 +452,7 @@ function Get-AutoRuns {
     return $AutoRunsFound 
 }
 
-function Get-BaselineConnections {
-    Get-NetTcpConnection -State Established | 
-    Select-Object -Property `
-        OwningProcess,`
-        @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
-        @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
-        RemoteAddress,`
-        RemotePort -Unique | 
-    Sort-Object -Property Path,RemotePort |
-    Format-Table -AutoSize
-}
-
-function Get-BaselinePorts {
-    Get-NetTcpConnection -State Listen | 
-    Select-Object -Property `
-        OwningProcess,`
-        @{ Name = "ProcessName"; Expression = { (Get-Process -Id $_.OwningProcess).ProcessName } },`
-        @{ Name = "Path"; Expression = { (Get-Process -Id $_.OwningProcess).Path } },`
-        LocalPort |
-    Sort-Object -Property Path,LocalPort |
-    Format-Table -AutoSize
-}
-
-function Get-BaselineProcesses {
-    Get-Process | 
-    Select-Object -Property ProcessName,Path -Unique | 
-    Sort-Object -Property Path
-}
-
-function Get-DnsEvents {
+function Get-DnsEvent {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
@@ -612,7 +509,7 @@ function Get-DiskSpace {
     }
 }
 
-function Get-DomainAdministrators {
+function Get-DomainAdministrator {
     Get-AdGroupMember -Identity "Domain Admins" |
     Select-Object -Property Name,SamAccountName,Sid |
     Format-Table -AutoSize
@@ -635,7 +532,7 @@ function Get-EnterpriseVisbility {
     return $Visbility
 }
 
-function Get-EventForwarders {
+function Get-EventForwarder {
     param(
       [string]$ComputerName,
       [string]$Subscription = "Forwarded Events"
@@ -824,7 +721,7 @@ function Get-EventViewer {
     Invoke-Item -Path $Path
 }
 
-function Get-FirewallEvents {
+function Get-FirewallEvent {
     Param(
         [ValidateSet("SourceAddress","DestAddress")]$Direction = "DestAddress",
         [string]$Whitelist,
@@ -848,68 +745,6 @@ function Get-FirewallEvents {
         Group-Object -Property $Direction -NoElement |
         Sort-Object -Property Count -Descending |
         Format-Table -AutoSize
-    }
-}
-
-function Get-GitHubRepo {
-    <#
-    .SYNOPSIS
-        Downloads code repositories from GitHub.
-
-    .EXAMPLE
-        Get-SupplyDrop -From cyberphor
-    
-    .INPUTS
-        GitHub username.
-    
-    .OUTPUTS
-        GitHub code repository.
-    
-    .LINK
-        https://github.com/cyberphor/Soap
-    
-    .NOTES
-        File name: Get-SupplyDrop.ps1
-        Version: 3.0
-        Author: Victor Fernandez III
-        Creation Date: Saturday, January 25, 2020
-    #>
-    Param([Parameter(Mandatory=$true)][string]$From)
-    try {
-        Write-Output "`n [+] $From's Github repositories: "
-        $GithubProfile = Invoke-WebRequest -UseBasicParsing $URL
-        $GithubProfile -Split "`n" | 
-            Select-String '<span class="repo" title="' |
-            ForEach-Object {
-                $Repo = $_.ToString().Split('>')[1].Split('<')[0]
-                Write-Output " - $Repo"
-            }
-        $Repository = Read-Host -Prompt "`n [!] Which one would you like to download?"
-        $Branch = 'master'
-        $URI = "$URL/$Repository/archive/$Branch.zip"
-        if (Invoke-WebRequest -Method Head -Uri $URI) {
-            Clear-Host
-            $DropZone = $pwd.ToString() + '\' + $Repository
-            $DropZoneIsOccupied = Test-Path $DropZone
-            if ($DropZoneIsOccupied) { Throw 'You may have already downloaded it.' }
-            else {
-                Clear-Host
-                $SupplyDrop = $DropZone + '\' + $Repository + '-' + $Branch + '\'
-                $SupplyDropZipped = $DropZone + '.zip'
-                Write-Output "`n [-] Downloading... `n"
-                Invoke-WebRequest -Uri $URI -OutFile $SupplyDropZipped
-                Expand-Archive $SupplyDropZipped
-                Remove-Item $SupplyDropZipped -Recurse 
-                Move-Item ($SupplyDrop + "*") -Destination $DropZone
-                Remove-Item -Path $SupplyDrop -Recurse
-                Clear-Host
-                Write-Output "`n [+] Success!"
-                Get-ChildItem $DropZone
-            }
-        }
-    } catch { 
-        Clear-Host
-        Write-Output "`n [x] $_ `n" 
     }
 }
 
@@ -985,7 +820,7 @@ function Get-IpAddressRange {
     return $IpAddressRange
 }
 
-function Get-LocalAdministrators {
+function Get-LocalAdministrator {
     <#
         .EXAMPLE
         Get-LocalAdministrators
@@ -1008,7 +843,7 @@ function Get-LocalAdministrators {
     }
 }
 
-function Get-LogonEvents {
+function Get-LogonEvent {
     Param(
         [ValidateSet("Failed","Successful")]$Type = "Failed",
         [switch]$Verbose
@@ -1034,7 +869,7 @@ function Get-LogonEvents {
     }
 }
 
-function Get-PowerShellEvents {
+function Get-PowerShellEvent {
     Param(
         [string]$Whitelist,
         [switch]$Verbose    
@@ -1084,7 +919,7 @@ function Get-ProcessByNetworkConnection {
     Format-Table -AutoSize
 }
 
-function Get-ProcessCreationEvents {
+function Get-ProcessCreationEvent {
     Param(
         [string]$Whitelist,
         [switch]$Verbose    
@@ -1213,7 +1048,7 @@ function Get-SerialNumberAndCurrentUser {
     }
 }
 
-function Get-ServiceEvents {
+function Get-ServiceEvent {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
@@ -1284,73 +1119,7 @@ function Get-Stig {
     }
 }
 
-function Get-TrafficLights {
-    <#
-        .SYNOPSIS
-            Pings a list of nodes and displays the results using 'traffic light' colors. 
-    
-        .EXAMPLE
-            Get-NetTrafficLights -File C:\Users\Victor\Desktop\routers.txt
-    
-        .INPUTS
-            A text-file with hostnames and/or IP addresses. 
-    
-        .OUTPUTS
-            Prints text to the console (host).
-    
-        .LINK
-            https://github.com/cyberphor/Soap
-    
-        .NOTES
-            Author: Victor Fernandez III
-            Creation Date: Friday, December 13th, 2019
-    #>
-    Param(
-        [ValidateScript({ Test-Path $_ })]
-        [string]$File
-    )
-    $Nodes = Get-Content $File 
-    $Nodes | Add-Member -MemberType NoteProperty -Name 'Status' -Value 'Null'
-    $Nodes | Add-Member -MemberType NoteProperty -Name 'FailedChecks' -Value 'Null'
-    While ($true) {
-        $Nodes | 
-        ForEach-Object {
-            if ($_.FailedChecks -eq '1') {
-                $_.FailedChecks = '2'
-                $_.Status = ' Offline ' 
-            } 
-            elseif (Test-Connection $_ -Count 1 -Quiet) {
-                $_.Status = ' Online ' 
-            } 
-            else {
-                $_.FailedChecks = '1'
-                $_.Status = ' Standby ' 
-            } 
-        }
-        Clear-Host
-        Write-Host '----------TRAFFIC LIGHTS----------'
-        Write-Host '       '(Get-Date)
-        Write-Host '----------------------------------'
-        $Nodes | 
-        ForEach-Object {
-            Write-Host '[' -NoNewline
-            if ($_.Status -eq ' Online ') { 
-                Write-Host $_.Status -NoNewline -BackgroundColor Green -ForegroundColor Black
-            } 
-            if ($_.Status -eq ' Offline ') { 
-                Write-Host $_.Status -NoNewline -BackgroundColor Red -ForegroundColor Black
-            } 
-            if ($_.Status -eq ' Standby ') { 
-                Write-Host $_.Status -NoNewline -BackgroundColor Yellow -ForegroundColor Black
-            }
-            Write-Host ']' $_
-        } 
-        Start-Sleep -Seconds ($Nodes | Measure-Object).Count
-    }
-
-}
-
-function Get-UsbEvents {
+function Get-UsbEvent {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
@@ -1382,7 +1151,7 @@ function Get-UsbEvents {
     } 
 }
 
-function Get-WindowsDefenderEvents {
+function Get-WindowsDefenderEvent {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
@@ -1408,7 +1177,7 @@ function Get-WindowsDefenderEvents {
     }
 }
 
-function Get-WinRmClients {
+function Get-WinRmClient {
     $ComputerNames = $(Get-AdComputer -Filter *).Name
     Invoke-Command -ComputerName $ComputerNames -ScriptBlock { $env:HOSTNAME } -ErrorAction Ignore
 }
@@ -1488,7 +1257,7 @@ function Install-Sysmon {
     Invoke-Expression "C:\'Program Files'\Sysmon\Sysmon64.exe -accepteula -i C:\'Program Files'\Sysmon\config.xml"
 }
 
-function Invoke-StigWindows10 {
+function Invoke-SecurityBaseline {
     # V-220726: Data Execution Prevention (DEP) must be configured to at least OptOut.
     bcdedit /set "{current}" nx OptOut
 
@@ -1888,17 +1657,7 @@ filter Read-WinEvent {
     return New-Object -TypeName PSObject -Property $WinEvent
 }
 
-function Remove-App {
-    param([Parameter(Mandatory,ValueFromPipelineByPropertyName)][string]$UninstallString)
-    if ($UninstallString -contains "msiexec") {
-        $App = ($UninstallString -Replace "msiexec.exe","" -Replace "/I","" -Replace "/X","").Trim()
-        Start-Process "msiexec.exe" -ArgumentList "/X $App /qb" -NoNewWindow
-    } else {
-        Start-Process $UninstallString -NoNewWindow
-    }
-}
-
-function Remove-StaleDnsRecords {
+function Remove-StaleDnsRecord {
     <#
         .LINK
         https://adamtheautomator.com/powershell-dns/
