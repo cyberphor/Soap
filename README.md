@@ -74,6 +74,7 @@ Get-Stig
 Get-TrafficLights
 Get-WirelessNetAdapter
 Import-AdUsersFromCsv
+Invoke-StigWindows10
 Install-Sysmon
 New-CustomViewsForSysmon
 Remove-App
