@@ -1,24 +1,14 @@
 ## Soap
 ![GitHub](https://img.shields.io/github/license/cyberphor/Soap?color=Green) ![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/Soap?color=Green&label=PowerShell%20Gallery%20Downloads)  
-Soap is a PowerShell module with system hardening, log analysis, and incident response functions. To install it, open PowerShell as an administrator and execute the command below. 
-
+Soap is a PowerShell module with threat hunting, incident response, log management, and server management functions.  To install it, open PowerShell as an administrator and execute the command below. 
 ```pwsh
 Install-Module -Name Soap -Force
 ```
 
-Below is a list of functions provided by Soap. 
-```pwsh
-Block-Traffic
-Clear-AuditPolicy
-Disable-Firewall
-Disable-Ipv6
-Edit-Module
-Enable-Firewall
-Enable-Ipv6
+**Threat Hunting**
+```
 Find-IpAddressInWindowsEventLog
-Get-AuditPolicy
 Get-AutoRuns
-Get-DiskSpace
 Get-DnsEvent
 Get-DomainAdministrator
 Get-FirewallEvent
@@ -30,11 +20,31 @@ Get-ProcessCreationEvent
 Get-ServiceEvent
 Get-UsbEvent
 Get-WindowsDefenderEvent
-Get-WinRmClient
 Get-WordWheelQuery
 Read-WinEvent
-Set-AuditPolicy
+```
+
+**Incident Response**
+```
+Block-Traffic
+Enable-Firewall
 Start-Eradication
+```
+
+**Log Management**
+```
+Clear-AuditPolicy
+Get-AuditPolicy
+Set-AuditPolicy
+Get-DiskSpace
+```
+
+**Server Management**
+```
+Disable-Firewall
+Disable-Ipv6
+Edit-Module
+Enable-Ipv6
 Start-Heartbeat
 Start-AdAccountAudit
 ```
@@ -57,7 +67,6 @@ Remove-StaleDnsRecord
 
 Below is a list of functions provided by Soap, but should be used with caution as they are not finished. 
 ```pwsh
-Enable-WinRm
 Find-WirelessComputer
 Get-DscResourcesRequired
 Get-EnterpriseVisbility
