@@ -452,7 +452,7 @@ function Get-AutoRuns {
     return $AutoRunsFound 
 }
 
-function Get-DnsEvent {
+function Get-WinEventDns {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
@@ -721,7 +721,7 @@ function Get-EventViewer {
     Invoke-Item -Path $Path
 }
 
-function Get-FirewallEvent {
+function Get-WinEventFirewall {
     Param(
         [ValidateSet("SourceAddress","DestAddress")]$Direction = "DestAddress",
         [string]$Whitelist,
@@ -843,7 +843,7 @@ function Get-LocalAdministrator {
     }
 }
 
-function Get-LogonEvent {
+function Get-WinEventLogon {
     Param(
         [ValidateSet("Failed","Successful")]$Type = "Failed",
         [switch]$Verbose
@@ -869,7 +869,7 @@ function Get-LogonEvent {
     }
 }
 
-function Get-PowerShellEvent {
+function Get-WinEventPowerShell {
     Param(
         [string]$Whitelist,
         [switch]$Verbose    
@@ -919,7 +919,7 @@ function Get-ProcessByNetworkConnection {
     Format-Table -AutoSize
 }
 
-function Get-ProcessCreationEvent {
+function Get-WinEventProcessCreation {
     Param(
         [string]$Whitelist,
         [switch]$Verbose    
@@ -1048,7 +1048,7 @@ function Get-SerialNumberAndCurrentUser {
     }
 }
 
-function Get-ServiceEvent {
+function Get-WinEventService {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
@@ -1119,7 +1119,7 @@ function Get-Stig {
     }
 }
 
-function Get-UsbEvent {
+function Get-WinEventUsb {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
@@ -1151,7 +1151,7 @@ function Get-UsbEvent {
     } 
 }
 
-function Get-WindowsDefenderEvent {
+function Get-WinEventWindowsDefender {
     Param(
         [string]$Whitelist,
         [switch]$Verbose
