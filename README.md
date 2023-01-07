@@ -1,15 +1,12 @@
 ## Soap
 ![GitHub](https://img.shields.io/github/license/cyberphor/Soap?color=Green) ![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/Soap?color=Green&label=PowerShell%20Gallery%20Downloads)  
-Soap is a PowerShell module with threat hunting, incident response, log management, and server management functions.  To install it, open PowerShell as an administrator and execute the command below. 
+Soap is a PowerShell module with incident response and threat hunting functions. To install it, open PowerShell as an administrator and execute the command below. 
 ```pwsh
 Install-Module -Name Soap -Force
 ```
 
 **Functions**
-```
-∩╗┐
-Name                                
-----                                
+```                              
 Block-Traffic                       
 Clear-AuditPolicy                   
 ConvertFrom-Base64                  
@@ -41,7 +38,6 @@ Get-DscResourcesRequired
 Get-EnterpriseVisbility             
 Get-EventForwarders                 
 Get-EventViewer                     
-Get-FirewallEvents                  
 Get-GitHubRepo                      
 Get-IpAddressRange                  
 Get-LocalAdministrators             
@@ -50,12 +46,13 @@ Get-ProcessCreationReport
 Get-SerialNumberAndCurrentUser                   
 Get-Stig                            
 Get-TrafficLights                   
-Get-UsbEvents
-Get-WinEventDns         
+Get-WinEventDns
+Get-WinEventFirewall         
 Get-WinEventLogon    
 Get-WinEventPowerShell
 Get-WinEventProcessCreation
 Get-WinEventService
+Get-WinEventUsb
 Get-WinEventWindowsDefender
 Get-WinRmClients                    
 Get-WirelessNetAdapter              
