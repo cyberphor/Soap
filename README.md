@@ -79,7 +79,7 @@ Start-Panic
 Uninstall-Sysmon                    
 ```
 
-Below is a list of functions provided by Soap, but marked for review (i.e., I'm considering putting them in a different module to keep Soap tidy and focused). 
+This repository includes another PowerShell module called "Suds." It includes functions auxillary to incident response and threat hunting. 
 ```pwsh
 ConvertFrom-Base64
 ConvertTo-Base64
