@@ -2,81 +2,49 @@
 ![GitHub](https://img.shields.io/github/license/cyberphor/Soap?color=Green) ![PowerShell Gallery](https://img.shields.io/powershellgallery/dt/Soap?color=Green&label=PowerShell%20Gallery%20Downloads)  
 Soap is a PowerShell module with incident response and threat hunting functions. To install it, open PowerShell as an administrator and execute the command below. 
 ```pwsh
-Install-Module -Name Soap -Force
+Install-Module -Name Soap
 ```
 
 **Functions**
-```                              
-Block-Traffic                       
-Clear-AuditPolicy                   
-ConvertFrom-Base64                  
-ConvertTo-Base64                    
-ConvertTo-BinaryString              
-ConvertTo-IpAddress                 
-Disable-Firewall                    
-Disable-Ipv6                        
-Disable-StaleAdAccounts             
-Disable-StaleAdComputers            
-Edit-Module                         
-Enable-Firewall                     
-Enable-Ipv6                         
-Enable-WinRm                        
-Export-Gpo                          
-Find-IpAddressInWindowsEventLog     
-Find-WirelessComputers              
-Format-Color                        
-Get-App                             
-Get-Asset                           
-Get-AuditPolicy                     
-Get-AutoRuns                        
-Get-BaselineConnections             
-Get-BaselinePorts                   
-Get-BaselineProcesses               
-Get-DiskSpace         
-Get-DomainAdministrators            
-Get-DscResourcesRequired            
-Get-EnterpriseVisbility             
-Get-EventForwarders                 
-Get-EventViewer                     
-Get-GitHubRepo                      
-Get-IpAddressRange                  
-Get-LocalAdministrators             
-Get-ProcessByNetworkConnection      
-Get-ProcessCreationReport           
-Get-SerialNumberAndCurrentUser                   
-Get-Stig                            
-Get-TrafficLights                   
+```pwsh
+Clear-AuditPolicy
+Disable-Firewall
+Disable-Ipv6
+Edit-Module
+Enable-Firewall
+Enable-Ipv6
+Enable-WinRm
+Find-IpAddressInWindowsEventLog
+Find-WirelessComputer # work-in-progress (use with caution)
+Get-AuditPolicy
+Get-AutoRuns
+Get-DiskSpace
+Get-DomainAdministrator
+Get-EnterpriseVisbility # work-in-progress (use with caution)
+Get-EventForwarder # work-in-progress (use with caution)
+Get-LocalAdministrator
+Get-ProcessByNetworkConnection
 Get-WinEventDns
-Get-WinEventFirewall         
-Get-WinEventLogon    
+Get-WinEventFirewall
+Get-WinEventLogon
 Get-WinEventPowerShell
 Get-WinEventProcessCreation
 Get-WinEventService
 Get-WinEventUsb
 Get-WinEventWindowsDefender
-Get-WinRmClients                    
-Get-WirelessNetAdapter              
-Get-WordWheelQuery                  
-Import-AdUsersFromCsv               
-Install-RSAT                        
-Install-Sysmon                      
-Invoke-What2Log                     
-New-AdForest                        
-New-CustomViewsForSysmon            
-New-CustomViewsForTheSexySixEventIds
-New-GpoWallpaper                    
-Read-WinEvent                       
-Remove-App                          
-Remove-StaleDnsRecords              
-Send-Alert                          
-Set-AuditPolicy                     
-Set-FirewallPolicy                  
-Start-AdBackup                      
-Start-AdScrub                       
-Start-Eradication                   
-Start-Heartbeat                     
-Start-Panic                         
-Uninstall-Sysmon                    
+Get-WinRmClient
+Get-WirelessNetAdapter # work-in-progress (use with caution)
+Get-WordWheelQuery
+New-Alert
+New-CustomViewsForSysmon # work-in-progress (use with caution)
+Read-WinEvent
+Send-Alert # work-in-progress (use with caution)
+Set-AuditPolicy
+Set-FirewallPolicy # work-in-progress (use with caution)
+Start-AdAccountAudit
+Start-Eradication
+Start-Heartbeat
+Start-Panic # work-in-progress (use with caution)
 ```
 
 This repository includes another PowerShell module called "Suds." It includes functions auxillary to incident response and threat hunting. 
@@ -86,33 +54,22 @@ ConvertTo-Base64
 ConvertTo-BinaryString
 ConvertTo-IpAddress
 Export-Gpo
+Get-DscResourcesRequired # work-in-progress (use with caution)
+Get-EventViewer # work-in-progress (use with caution)
 Get-IpAddressRange
 Get-ProcessCreationReport
 Get-SerialNumberAndCurrentUser
+Get-Stig # work-in-progress (use with caution)
+Import-AdUsersFromCsv # work-in-progress (use with caution)
 Install-RSAT
+Install-Sysmon # work-in-progress (use with caution)
+Invoke-SecurityBaseline # work-in-progress (use with caution)
+New-AdDomainAdmin
 New-AdForest
 New-GpoWallpaper
 Remove-StaleDnsRecord
-```
-
-Below is a list of functions provided by Soap, but should be used with caution as they are not finished. 
-```pwsh
-Find-WirelessComputer
-Get-DscResourcesRequired
-Get-EnterpriseVisbility
-Get-EventForwarder
-Get-EventViewer
-Get-Stig
-Get-WirelessNetAdapter
-Import-AdUsersFromCsv
-Invoke-SecurityBaseline
-Install-Sysmon
-New-CustomViewsForSysmon
-Send-Alert
-Set-FirewallPolicy
-Start-AdBackup
-Start-Panic
-Unblock-TrafficToIpAddress
+Start-AdBackup # work-in-progress (use with caution)
+Uninstall-Sysmon
 ```
 
 ### Copyright
