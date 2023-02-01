@@ -5,6 +5,27 @@ Soap is a PowerShell module with incident response and threat hunting functions.
 Install-Module -Name Soap
 ```
 
+My favorite and most-used function provided by Soap is `Read-WinEvent`. 
+```pwsh
+Get-WinEvent -FilterHashtable @{ Id = 4625; Logname = "Security" } | 
+Read-WinEvent | 
+Where-Object { $_.LogonType -eq 2 } | 
+Select-Object -First 10 -Property TimeCreated, EventRecordId, TargetUserName, IpAddress
+
+TimeCreated         EventRecordID TargetUserName IpAddress
+-----------         ------------- -------------- ---------
+2023-01-26 10:28:51 6281781       Victor         192.168.1.23
+2023-01-24 10:39:13 6263793       Dolores        156.74.251.21
+2023-01-24 10:39:10 6263792       Dolores        156.74.251.21
+2023-01-24 10:39:08 6263790       Dolores        156.74.251.21
+2023-01-24 10:39:06 6263787       Dolores        156.74.251.21
+2023-01-21 06:46:36 6255349       Dolores        156.74.251.21
+2023-01-17 06:13:32 6223553       Hunter         156.74.251.21
+2023-01-16 11:12:25 6218380       Hunter         156.74.251.21
+2023-01-16 11:11:46 6218374       Hunter         156.74.251.21
+2023-01-16 11:11:04 6218372       Hunter         156.74.251.21
+```
+
 **Functions**
 ```pwsh
 Clear-AuditPolicy
