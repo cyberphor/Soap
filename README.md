@@ -26,7 +26,5 @@ TimeCreated         EventRecordID TargetUserName IpAddress
 2023-01-16 11:11:04 6218372       Hunter         156.74.251.21
 ```
 
-This repository includes another PowerShell module called [Suds](/Suds/). It includes functions auxillary to incident response and threat hunting.
-
 ### Copyright
 This project is licensed under the terms of the [MIT license](/LICENSE).
