@@ -1,0 +1,15 @@
+. $PSScriptRoot\Get-DscResourcesRequired.ps1
+. $PSScriptRoot\Get-EnterpriseVisbility.ps1
+. $PSScriptRoot\Get-EventForwarder.ps1
+. $PSScriptRoot\Get-EventViewer.ps1
+. $PSScriptRoot\Get-Stig.ps1
+. $PSScriptRoot\Get-WirelessNetAdapter.ps1
+. $PSScriptRoot\Import-AdUsersFromCsv.ps1
+. $PSScriptRoot\Install-Sysmon.ps1
+. $PSScriptRoot\Invoke-SecurityBaseline.ps1
+. $PSScriptRoot\New-CustomViewsForSysmon.ps1
+. $PSScriptRoot\New-Alert.ps1
+. $PSScriptRoot\Send-Alert.ps1
+. $PSScriptRoot\Set-FirewallPolicy.ps1
+. $PSScriptRoot\Start-AdBackup.ps1
+. $PSScriptRoot\Start-Panic.ps1

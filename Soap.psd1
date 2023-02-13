@@ -12,7 +12,7 @@
 RootModule = 'Soap.psm1'
 
 # Version number of this module.
-ModuleVersion = '6.0.8'
+ModuleVersion = '6.0.9'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -27,7 +27,7 @@ Author = 'Victor Fernandez III'
 CompanyName = 'cyberphor'
 
 # Copyright statement for this module
-Copyright = '(c) 2022 Victor Fernandez III. All rights reserved.'
+Copyright = '(c) 2023 Victor Fernandez III. All rights reserved.'
 
 # Description of the functionality provided by this module
 Description = 'Soap is a PowerShell module for incident response and threat hunting.'

@@ -5,11 +5,11 @@ Soap is a PowerShell module with incident response and threat hunting functions.
 Install-Module -Name Soap
 ```
 
-My favorite and most-used function provided by Soap is `Read-WinEvent`. 
+My favorite and most-used function provided by Soap is [Read-WinEvent](/Soap/Read-WinEvent.ps1). 
 ```pwsh
 Get-WinEvent -FilterHashtable @{ Id = 4625; Logname = "Security" } | 
 Read-WinEvent | 
-Where-Object { $_.LogonType -eq 2 } | 
+Where-Object { $_.LogonType -eq 3 } | 
 Select-Object -First 10 -Property TimeCreated, EventRecordId, TargetUserName, IpAddress
 
 TimeCreated         EventRecordID TargetUserName IpAddress
@@ -26,72 +26,7 @@ TimeCreated         EventRecordID TargetUserName IpAddress
 2023-01-16 11:11:04 6218372       Hunter         156.74.251.21
 ```
 
-**Functions**
-```pwsh
-Clear-AuditPolicy
-Disable-Firewall
-Disable-Ipv6
-Edit-Module
-Enable-Firewall
-Enable-Ipv6
-Enable-WinRm
-Find-IpAddressInWindowsEventLog
-Find-WirelessComputer # work-in-progress (use with caution)
-Get-AuditPolicy
-Get-AutoRuns
-Get-DiskSpace
-Get-DomainAdministrator
-Get-EnterpriseVisbility # work-in-progress (use with caution)
-Get-EventForwarder # work-in-progress (use with caution)
-Get-LocalAdministrator
-Get-ProcessByNetworkConnection
-Get-WinEventDns
-Get-WinEventFirewall
-Get-WinEventLogon
-Get-WinEventPowerShell
-Get-WinEventProcessCreation
-Get-WinEventService
-Get-WinEventUsb
-Get-WinEventWindowsDefender
-Get-WinRmClient
-Get-WirelessNetAdapter # work-in-progress (use with caution)
-Get-WordWheelQuery
-New-Alert
-New-CustomViewsForSysmon # work-in-progress (use with caution)
-Read-WinEvent
-Send-Alert # work-in-progress (use with caution)
-Set-AuditPolicy
-Set-FirewallPolicy # work-in-progress (use with caution)
-Start-AdAccountAudit
-Start-Eradication
-Start-Heartbeat
-Start-Panic # work-in-progress (use with caution)
-```
-
-This repository includes another PowerShell module called "Suds." It includes functions auxillary to incident response and threat hunting. 
-```pwsh
-ConvertFrom-Base64
-ConvertTo-Base64
-ConvertTo-BinaryString
-ConvertTo-IpAddress
-Export-Gpo
-Get-DscResourcesRequired # work-in-progress (use with caution)
-Get-EventViewer # work-in-progress (use with caution)
-Get-IpAddressRange
-Get-ProcessCreationReport
-Get-SerialNumberAndCurrentUser
-Get-Stig # work-in-progress (use with caution)
-Import-AdUsersFromCsv # work-in-progress (use with caution)
-Install-RSAT
-Install-Sysmon # work-in-progress (use with caution)
-Invoke-SecurityBaseline # work-in-progress (use with caution)
-New-AdDomainAdmin
-New-AdForest
-New-GpoWallpaper
-Remove-StaleDnsRecord
-Start-AdBackup # work-in-progress (use with caution)
-Uninstall-Sysmon
-```
+This repository includes another PowerShell module called [Suds](/Suds/). It includes functions auxillary to incident response and threat hunting.
 
 ### Copyright
 This project is licensed under the terms of the [MIT license](/LICENSE).
