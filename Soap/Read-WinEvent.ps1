@@ -18,7 +18,7 @@ filter Read-WinEvent {
   ForEach-Object {
       $Field = $_
       if ($Field -eq 'TimeCreated') {
-          $WinEvent.$Field = Get-Date -Format 'yyyy-MM-dd hh:mm:ss' $SystemData[$Field].SystemTime
+          $WinEvent.$Field = Get-Date -Format 'yyyy-MM-dd HH:mm:ss K' $SystemData[$Field].SystemTime
       } elseif ($SystemData[$Field].'#text') {
           $WinEvent.$Field = $SystemData[$Field].'#text'
       } else {
